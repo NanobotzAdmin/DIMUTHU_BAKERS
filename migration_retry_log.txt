@@ -1,0 +1,29 @@
+
+   INFO  Running migrations.  
+
+  2026_02_10_062739_add_foreign_keys_to_stm_branch_stock_and_stm_barcodes  185.41ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[22007]: Invalid datetime format: 1292 Incorrect datetime value: '0000-00-00 00:00:00' for column 'expiry_date' at row 1 (Connection: mysql, SQL: alter table `stm_branch_stock` add constraint `fk_stm_brn_stk_ord_req_prod` foreign key (`stm_order_request_has_product_id`) references `stm_order_requests_has_product` (`id`) on delete set null)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:826
+    822▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    823▕                 );
+    824▕             }
+    825▕ 
+  ➜ 826▕             throw new QueryException(
+    827▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    828▕             );
+    829▕         }
+    830▕     }
+
+      [2m+9 vendor frames [22m
+
+  10  database/migrations/2026_02_10_062739_add_foreign_keys_to_stm_branch_stock_and_stm_barcodes.php:32
+      Illuminate\Support\Facades\Facade::__callStatic("table")
+      [2m+26 vendor frames [22m
+
+  37  artisan:16
+      Illuminate\Foundation\Application::handleCommand(Object(Symfony\Component\Console\Input\ArgvInput))
+

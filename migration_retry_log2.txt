@@ -1,0 +1,5 @@
+
+   INFO  Running migrations.  
+
+  2026_02_10_062739_add_foreign_keys_to_stm_branch_stock_and_stm_barcodes  654.94ms DONE
+

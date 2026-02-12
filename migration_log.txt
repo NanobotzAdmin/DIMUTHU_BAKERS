@@ -1,0 +1,29 @@
+
+   INFO  Running migrations.  
+
+  2026_02_10_062739_add_foreign_keys_to_stm_branch_stock_and_stm_barcodes  25.31ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42S21]: Column already exists: 1060 Duplicate column name 'stm_order_request_has_product_id' (Connection: mysql, SQL: alter table `stm_branch_stock` add `stm_order_request_has_product_id` bigint unsigned null after `stm_stock_transfer_id`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:826
+    822▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    823▕                 );
+    824▕             }
+    825▕ 
+  ➜ 826▕             throw new QueryException(
+    827▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    828▕             );
+    829▕         }
+    830▕     }
+
+      [2m+9 vendor frames [22m
+
+  10  database/migrations/2026_02_10_062739_add_foreign_keys_to_stm_branch_stock_and_stm_barcodes.php:14
+      Illuminate\Support\Facades\Facade::__callStatic("table")
+      [2m+26 vendor frames [22m
+
+  37  artisan:16
+      Illuminate\Foundation\Application::handleCommand(Object(Symfony\Component\Console\Input\ArgvInput))
+

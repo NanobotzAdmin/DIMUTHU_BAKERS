@@ -1,0 +1,37 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('stm_order_requests', function (Blueprint $table) {
+            $table->dropColumn('event_type');
+        });
+
+        Schema::table('stm_order_requests', function (Blueprint $table) {
+            // 1 = Wedding, 2 = Birthday, 3 = Corporate
+            $table->tinyInteger('event_type')->nullable()->after('order_type')->comment('1=Wedding, 2=Birthday, 3=Corporate');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('stm_order_requests', function (Blueprint $table) {
+            $table->dropColumn('event_type');
+        });
+
+        Schema::table('stm_order_requests', function (Blueprint $table) {
+            $table->string('event_type', 50)->nullable()->after('order_type');
+        });
+    }
+};
