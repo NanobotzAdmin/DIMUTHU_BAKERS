@@ -58,8 +58,8 @@
                         <span class="sidebar-text ml-3 truncate">Dashboard</span>
                     </a>
 
-                    @if(isset($sidebarTopics))
-                        @foreach($sidebarTopics as $topic)
+                    @if (isset($sidebarTopics))
+                        @foreach ($sidebarTopics as $topic)
                             @php
                                 $interfaces = $topic->interfaces;
                                 $interfaceCount = $interfaces->count();
@@ -72,8 +72,8 @@
                                 }
                             @endphp
 
-                            @if($interfaceCount === 1)
-                                @php
+                            {{-- @if ($interfaceCount === 1) --}}
+                            {{-- @php
                                     $interface = $interfaces->first();
                                 @endphp
                                 <a href="{{ url($interface->path) }}"
@@ -81,35 +81,35 @@
                                     <i
                                         class="{{ $topic->menu_icon ?? 'bi bi-collection' }} w-5 h-5 text-[1rem] min-w-[1.25rem] text-center {{ $isActiveTopic ? 'text-white' : 'text-slate-400 group-hover:text-slate-300' }}"></i>
                                     <span class="sidebar-text ml-3 truncate">{{ $topic->topic_name }}</span>
-                                </a>
-                            @elseif($interfaceCount > 1)
-                                <div class="relative">
-                                    <button type="button"
-                                        class="w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $isActiveTopic ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}"
-                                        onclick="toggleMenu('topic-{{ $topic->id }}')">
-                                        <div class="flex items-center min-w-0">
-                                            <i
-                                                class="{{ $topic->menu_icon ?? 'bi bi-collection' }} w-5 h-5 text-[1rem] min-w-[1.25rem] text-center {{ $isActiveTopic ? 'text-white' : 'text-slate-400 group-hover:text-slate-300' }}"></i>
-                                            <span class="sidebar-text ml-3 truncate">{{ $topic->topic_name }}</span>
-                                        </div>
-                                        <i class="bi {{ $isActiveTopic ? 'bi-chevron-up' : 'bi-chevron-down' }} w-4 h-4 transition-transform duration-200 sidebar-text"
-                                            id="topic-{{ $topic->id }}-icon"></i>
-                                    </button>
-                                    <div class="{{ $isActiveTopic ? '' : 'hidden' }} space-y-1 ml-[22px] border-l-2 border-amber-500/75 pl-4 mt-1"
-                                        id="topic-{{ $topic->id }}">
-                                        @foreach($interfaces as $interface)
-                                            @php
-                                                $path = ltrim($interface->path, '/');
-                                                $isInterfaceActive = Request::is($path) || Request::is($path . '/*');
-                                            @endphp
-                                            <a href="{{ url($interface->path) }}"
-                                                class="block px-3 py-2 text-sm rounded-md transition-colors {{ $isInterfaceActive ? 'bg-slate-800 text-amber-500 font-medium' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                                                {{ $interface->interface_name }}
-                                            </a>
-                                        @endforeach
+                                </a> --}}
+                            {{-- @elseif($interfaceCount > 1) --}}
+                            <div class="relative">
+                                <button type="button"
+                                    class="w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $isActiveTopic ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}"
+                                    onclick="toggleMenu('topic-{{ $topic->id }}')">
+                                    <div class="flex items-center min-w-0">
+                                        <i
+                                            class="{{ $topic->menu_icon ?? 'bi bi-collection' }} w-5 h-5 text-[1rem] min-w-[1.25rem] text-center {{ $isActiveTopic ? 'text-white' : 'text-slate-400 group-hover:text-slate-300' }}"></i>
+                                        <span class="sidebar-text ml-3 truncate">{{ $topic->topic_name }}</span>
                                     </div>
+                                    <i class="bi {{ $isActiveTopic ? 'bi-chevron-up' : 'bi-chevron-down' }} w-4 h-4 transition-transform duration-200 sidebar-text"
+                                        id="topic-{{ $topic->id }}-icon"></i>
+                                </button>
+                                <div class="{{ $isActiveTopic ? '' : 'hidden' }} space-y-1 ml-[22px] border-l-2 border-amber-500/75 pl-4 mt-1"
+                                    id="topic-{{ $topic->id }}">
+                                    @foreach ($interfaces as $interface)
+                                        @php
+                                            $path = ltrim($interface->path, '/');
+                                            $isInterfaceActive = Request::is($path) || Request::is($path . '/*');
+                                        @endphp
+                                        <a href="{{ url($interface->path) }}"
+                                            class="block px-3 py-2 text-sm rounded-md transition-colors {{ $isInterfaceActive ? 'bg-slate-800 text-amber-500 font-medium' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
+                                            {{ $interface->interface_name }}
+                                        </a>
+                                    @endforeach
                                 </div>
-                            @endif
+                            </div>
+                            {{-- @endif --}}
                         @endforeach
                     @endif
 
@@ -149,7 +149,8 @@
 
                 <!-- Page Title -->
                 <div class="flex-1 flex items-center ml-4 md:ml-0">
-                    <h1 class="text-xl font-semibold text-gray-800 tracking-tight">{{ $pageTitle ?? 'Admin Dashboard' }}
+                    <h1 class="text-xl font-semibold text-gray-800 tracking-tight">
+                        {{ $pageTitle ?? 'Admin Dashboard' }}
                     </h1>
                 </div>
 
@@ -219,7 +220,8 @@
                         <!-- Dropdown menu -->
                         <div id="user-menu-dropdown"
                             class="hidden absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                            role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                            role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button"
+                            tabindex="-1">
                             <div class="px-4 py-3 border-b border-gray-100">
                                 <p class="text-sm text-gray-900 font-medium truncate">
                                     {{ Auth::user()->first_name ?? 'User' }} {{ Auth::user()->last_name ?? '' }}
@@ -227,10 +229,10 @@
                                 <p class="text-xs text-gray-500 truncate">{{ Auth::user()->user_name ?? '' }}</p>
                             </div>
 
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem"
-                                tabindex="-1" id="user-menu-item-0">Your Profile</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem"
-                                tabindex="-1" id="user-menu-item-1">Settings</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                role="menuitem" tabindex="-1" id="user-menu-item-0">Your Profile</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                role="menuitem" tabindex="-1" id="user-menu-item-1">Settings</a>
 
                             <form method="POST" action="{{ route('logout') }}" class="block">
                                 @csrf
@@ -282,11 +284,12 @@
         }
 
         // Close dropdowns when clicking outside
-        document.addEventListener('click', function (event) {
+        document.addEventListener('click', function(event) {
             const profileButton = document.getElementById('user-menu-button');
             const profileMenu = document.getElementById('user-menu-dropdown');
 
-            if (profileButton && profileMenu && !profileButton.contains(event.target) && !profileMenu.contains(event.target)) {
+            if (profileButton && profileMenu && !profileButton.contains(event.target) && !profileMenu.contains(event
+                    .target)) {
                 profileMenu.classList.add('hidden');
             }
         });
@@ -314,7 +317,8 @@
 
                 // Hide all open submenus when collapsing
                 submenus.forEach(menu => {
-                    if (!menu.id.includes('icon')) { // Avoid selecting icons if IDs clash, though selector is safe enough usually
+                    if (!menu.id.includes(
+                            'icon')) { // Avoid selecting icons if IDs clash, though selector is safe enough usually
                         menu.classList.add('hidden');
                     }
                 });
@@ -348,7 +352,7 @@
 
         // Enhance toggleMenu to auto-expand sidebar if collapsed
         const originalToggleMenu = window.toggleMenu;
-        window.toggleMenu = function (menuId) {
+        window.toggleMenu = function(menuId) {
             const sidebar = document.getElementById('sidebar');
             if (sidebar.classList.contains('w-20')) {
                 toggleSidebar(); // Expand first
