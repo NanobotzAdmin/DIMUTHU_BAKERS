@@ -65,6 +65,17 @@ class StmOrderRequest extends Model
         return $this->hasMany(StmOrderRequestHasProduct::class, 'stm_order_request_id');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(StmOrderRequestHasPayment::class, 'stm_order_request_id');
+    }
+
+    public function history()
+    {
+        return $this->hasMany(StmOrderRequestHistory::class, 'order_request_id');
+    }
+
+
     public function creator()
     {
         return $this->belongsTo(UmUser::class, 'created_by');

@@ -24,7 +24,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WasteRecoveryManagementController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'permission', 'ensure.branch'])->group(function () {
+Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function () {
     Route::get('/adminDashboard', [DashboardController::class, 'adminDashboard'])->name('adminDashboard');
 
     // User Management
@@ -99,8 +99,10 @@ Route::middleware(['auth', 'permission', 'ensure.branch'])->group(function () {
     Route::post('/api/order-management/create-customer', [DistributorAndSalesManagementController::class, 'orderManageCreateCustomer'])->name('orderManagement.createCustomer');
     Route::post('/api/order-management/store', [DistributorAndSalesManagementController::class, 'orderManageStore'])->name('orderManagement.store');
     Route::post('/api/order-management/update-status', [DistributorAndSalesManagementController::class, 'orderManageUpdateStatus'])->name('orderManagement.updateStatus');
+    Route::post('/api/order-management/approve-order', [DistributorAndSalesManagementController::class, 'approveOrder'])->name('orderManagement.approveOrder');
     Route::post('/api/order-management/dispatch-order', [DistributorAndSalesManagementController::class, 'dispatchOrder'])->name('orderManagement.dispatchOrder');
-    Route::post('/api/order-management/approve-dispatch', [DistributorAndSalesManagementController::class, 'approveDispatch'])->name('orderManagement.approveDispatch');
+    Route::post('/api/order-management/confirm-dispatch', [DistributorAndSalesManagementController::class, 'confirmDispatch'])->name('orderManagement.confirmDispatch');
+    Route::post('/api/order-management/complete-order', [DistributorAndSalesManagementController::class, 'completeOrder'])->name('orderManagement.completeOrder');
 
     Route::get('/invoice-management', [DistributorAndSalesManagementController::class, 'invoiceManageIndex'])->name('invoice-management.index');
     Route::get('/payment-tracking', [DistributorAndSalesManagementController::class, 'paymentTrackingIndex'])->name('payment-tracking.index');

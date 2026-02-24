@@ -15,6 +15,7 @@ class StmOrderRequestHasProduct extends Model
         'stm_order_request_id',
         'pm_product_item_id',
         'quantity',
+        'confirmed_quantity',
         'unit_price',
         'subtotal',
     ];
@@ -22,6 +23,7 @@ class StmOrderRequestHasProduct extends Model
     protected $casts = [
         'quantity' => 'decimal:3',
         'unit_price' => 'decimal:2',
+        'confirmed_quantity' => 'decimal:3',
         'subtotal' => 'decimal:2',
     ];
 

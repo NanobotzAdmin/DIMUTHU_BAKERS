@@ -26,9 +26,9 @@
                         </div>
                         <div class="flex items-center gap-3 text-purple-100 text-sm">
                             <div class="flex items-center gap-1.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
                                     <line x1="16" x2="16" y1="2" y2="6" />
                                     <line x1="8" x2="8" y1="2" y2="6" />
@@ -38,9 +38,9 @@
                             </div>
                             <span>•</span>
                             <div class="flex items-center gap-1.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                                     <circle cx="12" cy="10" r="3" />
                                 </svg>
@@ -51,9 +51,8 @@
                 </div>
                 <button onclick="closeOrderModal()"
                     class="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18" />
                         <path d="m6 6 18 18" />
                     </svg>
@@ -64,9 +63,8 @@
             <div class="flex gap-2 mt-4 flex-wrap">
                 <button onclick="alert('Print functionality')"
                     class="h-9 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 text-sm transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 6 2 18 2 18 9" />
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                         <rect width="12" height="8" x="6" y="14" />
@@ -75,9 +73,8 @@
                 </button>
                 <button onclick="alert('Download functionality')"
                     class="h-9 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 text-sm transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
                         <line x1="12" x2="12" y1="15" y2="3" />
@@ -103,9 +100,9 @@
                 <div class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
                     <div class="bg-gradient-to-r from-purple-50 to-blue-50 px-6 py-4 border-b border-gray-200">
                         <h3 class="text-lg text-gray-900 font-semibold flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round" class="text-purple-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-purple-600">
                                 <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path>
                             </svg>
                             Order Items
@@ -121,9 +118,8 @@
                 {{-- Customer Information --}}
                 <div class="bg-gray-50 rounded-2xl p-6">
                     <h3 class="text-lg text-gray-900 mb-4 flex items-center gap-2 font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                             <circle cx="9" cy="7" r="4"></circle>
                             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -169,12 +165,11 @@
                 </div>
 
                 {{-- Special Event Details (Hidden by default) --}}
-                <div id="modal-special-section"
-                    class="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200 hidden">
+                <div id="modal-special-section" class="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200 hidden">
                     <h3 class="text-lg text-gray-900 mb-4 flex items-center gap-2 font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" class="text-purple-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-purple-600">
                             <rect x="3" y="8" width="18" height="4" rx="1" />
                             <path d="M12 8v13" />
                             <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
@@ -195,9 +190,9 @@
                 <div id="modal-recurring-section"
                     class="bg-orange-50 rounded-2xl p-6 border-2 border-orange-200 hidden">
                     <h3 class="text-lg text-gray-900 mb-3 flex items-center gap-2 font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" class="text-orange-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-orange-600">
                             <path d="m17 2 4 4-4 4" />
                             <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
                             <path d="m7 22-4-4 4-4" />
@@ -218,6 +213,42 @@
                     <h3 class="text-lg text-gray-900 mb-4 font-semibold">Actions</h3>
                     <div class="space-y-2" id="modal-actions-container">
                         {{-- Buttons injected via JS --}}
+                    </div>
+                </div>
+
+                {{-- Payment Details --}}
+                <div id="modal-payments-section" class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg text-gray-900 font-semibold flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-emerald-600">
+                                <rect width="20" height="14" x="2" y="5" rx="2"></rect>
+                                <line x1="2" x2="22" y1="10" y2="10"></line>
+                            </svg>
+                            Payment Details
+                        </h3>
+                    </div>
+                    <div class="p-6" id="modal-payments-container">
+                        {{-- Payment records injected via JS --}}
+                    </div>
+                </div>
+
+                {{-- Audit Trail --}}
+                <div id="modal-audit-section" class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg text-gray-900 font-semibold flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="text-amber-600">
+                                <path d="M12 8v4l3 3"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            Audit Trail
+                        </h3>
+                    </div>
+                    <div class="p-6" id="modal-audit-container">
+                        {{-- Audit trail items injected via JS --}}
                     </div>
                 </div>
             </div>
@@ -304,16 +335,21 @@
                 icon: modalIcons.package
             },
             'out-for-delivery': {
-                color: 'bg-cyan-100 text-cyan-700 border-cyan-300',
-                label: 'Delivery',
+                color: 'bg-orange-100 text-orange-700 border-orange-300',
+                label: 'Out for Delivery',
                 icon: modalIcons.truck
+            },
+            'dispatch-confirmed': {
+                color: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+                label: 'Dispatch Confirmed',
+                icon: modalIcons.check
             },
             'completed': {
                 color: 'bg-green-100 text-green-700 border-green-300',
                 label: 'Completed',
                 icon: modalIcons.check
             },
-            'cancelled': {
+            'rejected': {
                 color: 'bg-red-100 text-red-700 border-red-300',
                 label: 'Cancelled',
                 icon: modalIcons.alert
@@ -412,11 +448,11 @@
         }
 
         // Streamlined Progress
-        // Only show: pending, dispatched, approved, rejected
+        // Steps: Pending -> Approved -> In Production -> Dispatched -> Completed
         if (order.status === 'cancelled' || order.status === 'rejected') {
             document.getElementById('modal-progress-section').classList.add('hidden');
         } else {
-            const steps = ['pending-approval', 'out-for-delivery', 'approved'];
+            const steps = ['pending-approval', 'approved', 'out-for-delivery', 'completed'];
             const stepContainer = document.getElementById('modal-progress-steps');
             let stepsHtml = '';
 
@@ -425,8 +461,9 @@
                 const isCompleted = steps.indexOf(order.status) >= index;
                 const labels = {
                     'pending-approval': 'Pending',
+                    'approved': 'Approved',
                     'out-for-delivery': 'Dispatched',
-                    'approved': 'Approved'
+                    'completed': 'Completed'
                 };
                 const colorClass = isCompleted ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-400';
 
@@ -435,15 +472,15 @@
                     const isLineColored = steps.indexOf(order.status) >= index;
                     const lineColor = isLineColored ? 'bg-purple-600' : 'bg-gray-200';
                     stepsHtml +=
-                        `<div class="flex-1 h-1 rounded ${lineColor} mx-2 mt-[14px] min-w-[2rem]"></div>`;
+                        `<div class="flex-1 h-1 rounded ${lineColor} mx-2 mt-[14px] min-w-[1.5rem]"></div>`;
                 }
 
                 stepsHtml += `
-                    <div class="flex flex-col items-center flex-shrink-0 min-w-[60px]">
+                    <div class="flex flex-col items-center flex-shrink-0 min-w-[50px]">
                         <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all ${colorClass}">
                             <div class="w-2 h-2 rounded-full bg-current"></div>
                         </div>
-                        <p class="text-xs mt-2 text-center text-gray-400 font-medium ${isCompleted ? 'text-purple-700' : ''}">${labels[step]}</p>
+                        <p class="text-[10px] mt-2 text-center text-gray-400 font-medium ${isCompleted ? 'text-purple-700' : ''}">${labels[step]}</p>
                     </div>
                 `;
             });
@@ -479,7 +516,7 @@
                             <tr class="border-b-2 border-gray-300">
                                 <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Product</th>
                                 <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700 w-28">Requested</th>
-                                <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700 w-28">Dispatch</th>
+                                <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700 w-28">${order.status === 'pending-approval' ? 'Approve' : 'Dispatch'}</th>
                                 <th class="text-right py-3 px-2 text-sm font-semibold text-gray-700 w-32">Unit Price</th>
                                 <th class="text-right py-3 px-2 text-sm font-semibold text-gray-700 w-32">Subtotal</th>
                             </tr>
@@ -517,10 +554,10 @@
                             ${dispatchInput}
                         </td>
                         <td class="py-3 px-2 text-right text-gray-700">
-                            Rs ${parseFloat(item.unit_price).toLocaleString('en-LK', {minimumFractionDigits: 2})}
+                            Rs ${parseFloat(item.unit_price).toLocaleString('en-LK', { minimumFractionDigits: 2 })}
                         </td>
                         <td class="py-3 px-2 text-right font-semibold text-gray-900">
-                            Rs ${subtotal.toLocaleString('en-LK', {minimumFractionDigits: 2})}
+                            Rs ${subtotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}
                         </td>
                     </tr>
                 `;
@@ -532,7 +569,7 @@
                             <tr class="border-t-2 border-gray-300 bg-gray-100">
                                 <td colspan="4" class="py-4 px-2 text-right font-bold text-gray-700 uppercase tracking-wider">Grand Total</td>
                                 <td class="py-4 px-2 text-right font-black text-purple-700 text-lg">
-                                    Rs ${totalAmount.toLocaleString('en-LK', {minimumFractionDigits: 2})}
+                                    Rs ${totalAmount.toLocaleString('en-LK', { minimumFractionDigits: 2 })}
                                 </td>
                             </tr>
                         </tfoot>
@@ -557,37 +594,121 @@
 
         // Footer buttons: Approve and Reject
         // Footer buttons: Approve and Reject
-        // MODIFIED: 0 -> 5 -> 1 Flow
+        // MODIFIED: 0 (Pending) -> 1 (Approved) -> 5 (Dispatched)
 
-        // 1. Status 0 (Pending) -> Show Dispatch Button (Transitions to 5)
+        // 1. Status 0 (Pending Approval) -> Show Approve Button (Transitions to 1)
         if (order.status === 'pending-approval') {
             footerActionsHtml +=
-                `<button onclick="dispatchOrder('${order.id}')" class="h-11 px-6 bg-orange-600 hover:bg-orange-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.truck} Dispatch</button>`;
+                `<button onclick="approveOrder('${order.id}')" class="h-11 px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.check} Approve Order</button>`;
 
             footerActionsHtml +=
                 `<button onclick="alert('Action: Reject')" class="h-11 px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">✕ Reject</button>`;
         }
 
-        // 2. Status 5 (Out for Delivery/Dispatched) -> Show Approve Button (Transitions to 1)
-        if (order.status === 'out-for-delivery') {
+        // 2. Status 1 (Approved) -> Show Dispatch Button (Transitions to 5)
+        if (order.status === 'approved') {
             footerActionsHtml +=
-                `<button onclick="approveDispatch('${order.id}')" class="h-11 px-6 bg-green-600 hover:bg-green-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.check} Approve</button>`;
+                `<button onclick="dispatchOrder('${order.id}')" class="h-11 px-6 bg-orange-600 hover:bg-orange-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.truck} Dispatch Order</button>`;
         }
 
-        // Other action buttons in the Actions section (Body)
-        if (order.status === 'approved') {
-            actionsHtml +=
-                `<button onclick="alert('Action: Start')" class="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.store} Start Production</button>`;
-        } else if (order.status === 'in-production') {
-            actionsHtml +=
-                `<button onclick="alert('Action: Ready')" class="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.package} Mark as Ready</button>`;
-        } else if (order.status === 'ready-for-pickup') {
-            actionsHtml +=
-                `<button onclick="alert('Action: Complete')" class="w-full h-11 bg-green-600 hover:bg-green-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.check} Complete Order</button>`;
-        }
+        // 3. Status 5 (Dispatched) -> Completed is handled via mobile app only
+        // No web action button for completing orders
 
         footerActionsContainer.innerHTML = footerActionsHtml;
         actionsContainer.innerHTML = actionsHtml;
+
+        // Render Payment Details
+        const paymentsContainer = document.getElementById('modal-payments-container');
+        if (order.payment_records && order.payment_records.length > 0) {
+            let paymentsHtml = `
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-gray-300">
+                                <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Date</th>
+                                <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Method</th>
+                                <th class="text-right py-3 px-2 text-sm font-semibold text-gray-700">Amount</th>
+                                <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Reference</th>
+                                <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700">Status</th>
+                                <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+            `;
+            let totalPaid = 0;
+            order.payment_records.forEach((payment, index) => {
+                const bgClass = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                const statusClass = payment.status === 'Active'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700';
+                const amount = parseFloat(payment.amount.replace(/,/g, ''));
+                if (payment.status === 'Active') totalPaid += amount;
+
+                paymentsHtml += `
+                    <tr class="${bgClass} hover:bg-green-50 transition-colors">
+                        <td class="py-3 px-2 text-sm text-gray-700">${payment.date}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700">${payment.method}</td>
+                        <td class="py-3 px-2 text-sm text-right font-semibold text-gray-900">Rs ${payment.amount}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700">${payment.reference}</td>
+                        <td class="py-3 px-2 text-center">
+                            <span class="px-2 py-1 rounded-lg text-xs font-medium ${statusClass}">${payment.status}</span>
+                        </td>
+                        <td class="py-3 px-2 text-sm text-gray-500">${payment.notes}</td>
+                    </tr>
+                `;
+            });
+            paymentsHtml += `
+                        </tbody>
+                        <tfoot>
+                            <tr class="border-t-2 border-gray-300 bg-gray-100">
+                                <td colspan="2" class="py-3 px-2 text-right font-bold text-gray-700">Total Paid</td>
+                                <td class="py-3 px-2 text-right font-black text-emerald-700">Rs ${totalPaid.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            paymentsContainer.innerHTML = paymentsHtml;
+        } else {
+            paymentsContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No payments recorded yet.</p>';
+        }
+
+        // Render Audit Trail
+        const auditContainer = document.getElementById('modal-audit-container');
+        if (order.history && order.history.length > 0) {
+            let auditHtml = '<div class="relative">';
+            // Vertical line
+            auditHtml += '<div class="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gray-200"></div>';
+
+            order.history.forEach((entry, index) => {
+                const isLast = index === order.history.length - 1;
+                const dotColor = isLast ? 'bg-purple-600 ring-4 ring-purple-100' : 'bg-gray-400';
+
+                auditHtml += `
+                    <div class="relative flex gap-4 pb-6 ${isLast ? 'pb-0' : ''}">
+                        <div class="flex-shrink-0 w-[31px] flex justify-center pt-1">
+                            <div class="w-3 h-3 rounded-full ${dotColor} z-10"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-semibold text-gray-900 text-sm">${entry.action}</span>
+                                <span class="text-xs text-gray-400">${entry.created_at}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-0.5">${entry.description || ''}</p>
+                            <p class="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                ${entry.user_name}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            });
+            auditHtml += '</div>';
+            auditContainer.innerHTML = auditHtml;
+        } else {
+            auditContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No history recorded yet.</p>';
+        }
 
         // Show Modal with Animation
         modal.classList.remove('hidden');
@@ -620,16 +741,16 @@
             if (result.isConfirmed) {
                 // Call API
                 fetch('{{ route('orderManagement.dispatchOrder') }}', { // Need to define route
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            order_id: orderId,
-                            items: items
-                        })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        items: items
                     })
+                })
                     .then(response => {
                         if (!response.ok) {
                             return response.text().then(text => {
@@ -678,35 +799,88 @@
         });
     }
 
-    // Approve Dispatch Function
+    // Approve Dispatch Function (Transitions from 5 to 6)
     function approveDispatch(orderId) {
         Swal.fire({
-            title: 'Approve Dispatch?',
-            text: "This will update barcode locations and confirm the dispatch.",
+            title: 'Confirm Delivery?',
+            text: "This will confirm that the order has been delivered and update stock locations.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, Approve it!'
+            confirmButtonText: 'Yes, Confirm it!'
         }).then((result) => {
             if (result.isConfirmed) {
                 // Call API
-                fetch('{{ route('orderManagement.approveDispatch') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            order_id: orderId
-                        })
+                fetch('{{ route('orderManagement.confirmDispatch') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId
                     })
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             Swal.fire(
-                                'Approved!',
-                                'Dispatch has been approved.',
+                                'Confirmed!',
+                                'Delivery has been confirmed.',
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message || 'Something went wrong.',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        Swal.fire(
+                            'Error!',
+                            'Server error occurred.',
+                            'error'
+                        );
+                    });
+            }
+        });
+    }
+
+    // Complete Order Function (Transitions from 6 to 7)
+    function completeOrder(orderId) {
+        Swal.fire({
+            title: 'Complete Order?',
+            text: "This will mark the order as fully settled and completed.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Complete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Call API
+                fetch('{{ route('orderManagement.completeOrder') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire(
+                                'Completed!',
+                                'Order has been fully completed.',
                                 'success'
                             ).then(() => {
                                 location.reload();
@@ -743,17 +917,16 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 // Call API
-                fetch('{{ route('orderManagement.updateStatus') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            order_id: orderId,
-                            status: 1 // Approved
-                        })
+                fetch('{{ route('orderManagement.approveOrder') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId
                     })
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
