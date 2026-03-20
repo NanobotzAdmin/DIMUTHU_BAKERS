@@ -43,7 +43,7 @@
                 <div>
                     <label for="opening_float" class="block text-sm font-medium text-gray-700 mb-1">Opening Float (Rs.)</label>
                     <input type="number" step="0.01" name="cash_drawer[opening_float]" id="opening_float" 
-                        value="{{ old('cash_drawer.opening_float', $settings->cash_drawer['opening_float'] ?? '10000') }}"
+                        value="{{ old('cash_drawer.opening_float', $settings->cash_drawer->opening_float ?? '10000') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="10000">
                     <p class="text-xs text-gray-500 mt-1">Default starting cash in drawer</p>
@@ -52,7 +52,7 @@
                 <div>
                     <label for="alert_threshold" class="block text-sm font-medium text-gray-700 mb-1">Alert Threshold (Rs.)</label>
                     <input type="number" step="0.01" name="cash_drawer[alert_threshold]" id="alert_threshold" 
-                        value="{{ old('cash_drawer.alert_threshold', $settings->cash_drawer['alert_threshold'] ?? '100000') }}"
+                        value="{{ old('cash_drawer.alert_threshold', $settings->cash_drawer->alert_threshold ?? '100000') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="100000">
                     <p class="text-xs text-gray-500 mt-1">Alert when cash exceeds this amount</p>
@@ -61,7 +61,7 @@
                 <div class="md:col-span-2">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="cash_drawer[require_float_verification]" id="require_float_verification" value="1"
-                            {{ old('cash_drawer.require_float_verification', $settings->cash_drawer['require_float_verification'] ?? false) ? 'checked' : '' }}
+                            {{ old('cash_drawer.require_float_verification', $settings->cash_drawer->require_float_verification ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="require_float_verification" class="text-sm text-gray-700 select-none">
                             Require opening float verification at shift start
@@ -80,7 +80,7 @@
                 <div>
                     <label for="receipt_header_text" class="block text-sm font-medium text-gray-700 mb-1">Receipt Header Text</label>
                     <input type="text" name="receipt[header_text]" id="receipt_header_text" 
-                        value="{{ old('receipt.header_text', $settings->receipt['header_text'] ?? 'Your Bakery - Colombo 3') }}"
+                        value="{{ old('receipt.header_text', $settings->receipt->header_text ?? 'Your Bakery - Colombo 3') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="Your Bakery - Colombo 3">
                 </div>
@@ -89,14 +89,14 @@
                     <label for="receipt_footer_text" class="block text-sm font-medium text-gray-700 mb-1">Receipt Footer Text</label>
                     <textarea name="receipt[footer_text]" id="receipt_footer_text" rows="2"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
-                        placeholder="Thank you for your business!">{{ old('receipt.footer_text', $settings->receipt['footer_text'] ?? 'Thank you for your business!') }}</textarea>
+                        placeholder="Thank you for your business!">{{ old('receipt.footer_text', $settings->receipt->footer_text ?? 'Thank you for your business!') }}</textarea>
                 </div>
 
                 <div>
                     <label for="receipt_template" class="block text-sm font-medium text-gray-700 mb-1">Receipt Template</label>
                     <select name="receipt[template]" id="receipt_template" 
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                        @php $tpl = $settings->receipt['template'] ?? 'standard'; @endphp
+                        @php $tpl = $settings->receipt->template ?? 'standard'; @endphp
                         <option value="standard" {{ $tpl == 'standard' ? 'selected' : '' }}>Standard</option>
                         <option value="compact" {{ $tpl == 'compact' ? 'selected' : '' }}>Compact</option>
                         <option value="detailed" {{ $tpl == 'detailed' ? 'selected' : '' }}>Detailed</option>
@@ -106,7 +106,7 @@
                 <div class="space-y-2">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="receipt[show_qr_code]" id="show_qr_code" value="1"
-                            {{ old('receipt.show_qr_code', $settings->receipt['show_qr_code'] ?? false) ? 'checked' : '' }}
+                            {{ old('receipt.show_qr_code', $settings->receipt->show_qr_code ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="show_qr_code" class="text-sm text-gray-700 select-none">
                             Show QR code for digital receipt
@@ -115,7 +115,7 @@
 
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="receipt[auto_print]" id="auto_print" value="1"
-                            {{ old('receipt.auto_print', $settings->receipt['auto_print'] ?? false) ? 'checked' : '' }}
+                            {{ old('receipt.auto_print', $settings->receipt->auto_print ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="auto_print" class="text-sm text-gray-700 select-none">
                             Automatically print customer receipt
@@ -164,7 +164,7 @@
                 <div>
                     <label for="max_discount_percent" class="block text-sm font-medium text-gray-700 mb-1">Maximum Discount (%)</label>
                     <input type="number" step="0.1" name="transactions[max_discount_percent]" id="max_discount_percent" 
-                        value="{{ old('transactions.max_discount_percent', $settings->transactions['max_discount_percent'] ?? '20') }}"
+                        value="{{ old('transactions.max_discount_percent', $settings->transactions->max_discount_percent ?? '20') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="20">
                 </div>
@@ -172,7 +172,7 @@
                 <div>
                     <label for="rounding_amount" class="block text-sm font-medium text-gray-700 mb-1">Rounding Amount (Rs.)</label>
                     <input type="number" step="0.1" name="transactions[rounding_amount]" id="rounding_amount" 
-                        value="{{ old('transactions.rounding_amount', $settings->transactions['rounding_amount'] ?? '0.5') }}"
+                        value="{{ old('transactions.rounding_amount', $settings->transactions->rounding_amount ?? '0.5') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="0.5">
                     <p class="text-xs text-gray-500 mt-1">Round totals to nearest Rs. 0.50</p>
@@ -182,7 +182,7 @@
                     {{-- Allow Refunds Checkbox --}}
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="transactions[allow_refunds]" id="allow_refunds" value="1"
-                            {{ old('transactions.allow_refunds', $settings->transactions['allow_refunds'] ?? false) ? 'checked' : '' }}
+                            {{ old('transactions.allow_refunds', $settings->transactions->allow_refunds ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="allow_refunds" class="text-sm text-gray-700 select-none">
                             Allow refunds
@@ -190,9 +190,9 @@
                     </div>
 
                     {{-- Conditional Supervisor Approval --}}
-                    <div id="supervisor_approval_container" class="flex items-center gap-2 ml-6 transition-all duration-300 {{ old('transactions.allow_refunds', $settings->transactions['allow_refunds'] ?? false) ? '' : 'hidden opacity-50' }}">
+                    <div id="supervisor_approval_container" class="flex items-center gap-2 ml-6 transition-all duration-300 {{ old('transactions.allow_refunds', $settings->transactions->allow_refunds ?? false) ? '' : 'hidden opacity-50' }}">
                         <input type="checkbox" name="transactions[require_supervisor_for_refunds]" id="require_supervisor_for_refunds" value="1"
-                            {{ old('transactions.require_supervisor_for_refunds', $settings->transactions['require_supervisor_for_refunds'] ?? false) ? 'checked' : '' }}
+                            {{ old('transactions.require_supervisor_for_refunds', $settings->transactions->require_supervisor_for_refunds ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="require_supervisor_for_refunds" class="text-sm text-gray-600 select-none">
                             Require supervisor approval for refunds
@@ -201,7 +201,7 @@
 
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="transactions[round_totals]" id="round_totals" value="1"
-                            {{ old('transactions.round_totals', $settings->transactions['round_totals'] ?? false) ? 'checked' : '' }}
+                            {{ old('transactions.round_totals', $settings->transactions->round_totals ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="round_totals" class="text-sm text-gray-700 select-none">
                             Round transaction totals

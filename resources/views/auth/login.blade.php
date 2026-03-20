@@ -16,6 +16,17 @@
     <style>
         body { font-family: 'Instrument Sans', sans-serif; }
         
+        :root {
+            --primary-color: {{ $settings->colors->primary ?? '#f97316' }};
+            --primary-hover: {{ $settings->colors->accent ?? '#ea580c' }};
+        }
+
+        .bg-primary { background-color: var(--primary-color) !important; }
+        .hover-bg-primary:hover { background-color: var(--primary-hover) !important; }
+        .text-primary { color: var(--primary-color) !important; }
+        .border-primary { border-color: var(--primary-color) !important; }
+        .focus-border-primary:focus { border-color: var(--primary-color) !important; }
+
         /* Custom Shake Animation for Errors */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -36,7 +47,7 @@
         <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center relative">
             
             <div class="mb-10 text-center md:text-left">
-                <img src="{{ asset('images/logo.png') }}" alt="BakeryMate Logo" class="h-24 w-auto inline-block mb-2">
+                <img src="{{ asset($settings->logos->login ?? 'images/logo.png') }}" alt="BakeryMate Logo" class="h-24 w-auto inline-block mb-2">
                 <h2 class="text-2xl font-bold text-slate-800">Welcome Back!</h2>
                 <p class="text-slate-500 text-sm mt-1">Please enter your details to sign in.</p>
             </div>
@@ -51,11 +62,11 @@
                 
                 <div class="relative group">
                     <input type="text" name="email" id="email" required 
-                        class="peer w-full h-12 bg-transparent border-b-2 border-slate-200 text-slate-900 placeholder-transparent focus:outline-none focus:border-orange-500 transition-colors duration-300 pl-8"
+                        class="peer w-full h-12 bg-transparent border-b-2 border-slate-200 text-slate-900 placeholder-transparent focus:outline-none focus-border-primary transition-colors duration-300 pl-8"
                         placeholder="Username" />
                     
                     <label for="email" 
-                        class="absolute left-8 -top-3.5 text-slate-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-400 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-orange-600 peer-focus:text-sm">
+                        class="absolute left-8 -top-3.5 text-slate-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-400 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-primary peer-focus:text-sm">
                         Username
                     </label>
                     
@@ -64,15 +75,15 @@
 
                 <div class="relative group">
                     <input type="password" name="password" id="password" required 
-                        class="peer w-full h-12 bg-transparent border-b-2 border-slate-200 text-slate-900 placeholder-transparent focus:outline-none focus:border-orange-500 transition-colors duration-300 pl-8 pr-10"
+                        class="peer w-full h-12 bg-transparent border-b-2 border-slate-200 text-slate-900 placeholder-transparent focus:outline-none focus-border-primary transition-colors duration-300 pl-8 pr-10"
                         placeholder="Password" />
                     
                     <label for="password" 
-                        class="absolute left-8 -top-3.5 text-slate-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-400 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-orange-600 peer-focus:text-sm">
+                        class="absolute left-8 -top-3.5 text-slate-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-400 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-primary peer-focus:text-sm">
                         Password
                     </label>
 
-                    <i class="bi bi-lock absolute left-0 top-3 text-lg text-slate-400 peer-focus:text-orange-500 transition-colors"></i>
+                    <i class="bi bi-lock absolute left-0 top-3 text-lg text-slate-400 peer-focus:text-primary transition-colors"></i>
                     
                     <button type="button" id="togglePassword" class="absolute right-0 top-3 text-slate-400 hover:text-slate-600 cursor-pointer focus:outline-none">
                         <i class="bi bi-eye-slash" id="eyeIcon"></i>
@@ -92,12 +103,12 @@
                     </a>
                 </div>
 
-                <button type="submit" id="submitBtn" class="group relative w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/30 transition-all duration-300 transform active:scale-[0.98] overflow-hidden">
+                <button type="submit" id="submitBtn" class="group relative w-full h-12 bg-primary hover-bg-primary text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform active:scale-[0.98] overflow-hidden">
                     <span class="relative z-10 flex items-center justify-center gap-2">
                         <span id="btnText">Sign In</span>
                         <i class="bi bi-arrow-right transition-transform group-hover:translate-x-1" id="btnIcon"></i>
                     </span>
-                    <div id="btnLoader" class="hidden absolute inset-0 items-center justify-center bg-orange-600">
+                    <div id="btnLoader" class="hidden absolute inset-0 items-center justify-center bg-primary brightness-90">
                         <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                     </div>
                 </button>

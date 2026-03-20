@@ -254,6 +254,12 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     Route::post('/variations/update', [ProductManagementController::class, 'updateVariation'])->name('variations.update');
     Route::delete('/variations/delete', [ProductManagementController::class, 'deleteVariation'])->name('variations.delete');
 
+    // Categories
+    Route::get('/categories/fetch', [ProductManagementController::class, 'fetchCategories'])->name('categories.fetch');
+    Route::post('/categories/store', [ProductManagementController::class, 'storeCategory'])->name('categories.store');
+    Route::post('/categories/update', [ProductManagementController::class, 'updateCategory'])->name('categories.update');
+    Route::delete('/categories/delete', [ProductManagementController::class, 'deleteCategory'])->name('categories.delete');
+
     // Variation Values
     Route::get('/variation-values/fetch', [ProductManagementController::class, 'fetchVariationValues'])->name('variationValues.fetch');
     Route::post('/variation-values/store', [ProductManagementController::class, 'storeVariationValue'])->name('variationValues.store');
@@ -284,6 +290,7 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
 
     // Admin Settings
     Route::get('/adminSettings', [AdminSettingsController::class, 'index'])->name('adminSettings.index');
+    Route::post('/adminSettings/save', [AdminSettingsController::class, 'saveSettings'])->name('adminSettings.save');
     Route::get('/adminSettings/branches/fetch', [AdminSettingsController::class, 'fetchBranches'])->name('adminSettings.branches.fetch');
     Route::get('/adminSettings/branch-types/fetch', [AdminSettingsController::class, 'fetchBranchTypes'])->name('adminSettings.branchTypes.fetch');
     Route::post('/adminSettings/branch-types/store', [AdminSettingsController::class, 'storeBranchType'])->name('adminSettings.branchTypes.store');

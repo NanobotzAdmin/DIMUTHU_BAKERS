@@ -547,7 +547,7 @@
                         </td>
                         <td class="py-3 px-2 text-center">
                             <span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm">
-                                ${requestedQty}
+                                ${requestedQty}${item.dispatched_quantity != null && parseFloat(item.dispatched_quantity) != parseFloat(item.quantity) ? ` <span class="text-orange-600 font-semibold">(${formatQuantity(item.dispatched_quantity)})</span>` : ''}
                             </span>
                         </td>
                         <td class="py-3 px-2 text-center">
@@ -601,8 +601,8 @@
             footerActionsHtml +=
                 `<button onclick="approveOrder('${order.id}')" class="h-11 px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.check} Approve Order</button>`;
 
-            footerActionsHtml +=
-                `<button onclick="alert('Action: Reject')" class="h-11 px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">✕ Reject</button>`;
+            // footerActionsHtml +=
+            //     `<button onclick="alert('Action: Reject')" class="h-11 px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">✕ Reject</button>`;
         }
 
         // 2. Status 1 (Approved) -> Show Dispatch Button (Transitions to 5)
@@ -924,7 +924,11 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
-                        order_id: orderId
+                        order_id: orderId,
+                        items: Array.from(document.querySelectorAll('.order-item-qty')).map(input => ({
+                            product_item_id: input.dataset.itemId,
+                            quantity: input.value
+                        }))
                     })
                 })
                     .then(response => response.json())

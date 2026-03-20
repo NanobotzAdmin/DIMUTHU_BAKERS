@@ -20,6 +20,7 @@ class SmSuperviser extends Model
         'address',
         'status',
         'agent_id',
+        'is_added',
     ];
 
     public function agent()

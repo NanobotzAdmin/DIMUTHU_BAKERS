@@ -30,6 +30,7 @@ class StmOrderRequest extends Model
         'payment_reference',
         'paid_amount',
         'status',
+        'payment_completed',
         'grand_total',
         'notes',
         'created_by',

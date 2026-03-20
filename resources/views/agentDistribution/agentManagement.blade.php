@@ -154,7 +154,7 @@
 
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div id="agent-panel"
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 transition-all duration-300 ease-out flex flex-col max-h-[90vh]">
+                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 transition-all duration-300 ease-out flex flex-col max-h-[90vh]">
 
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modal-title">Add New Agent</h3>
@@ -175,13 +175,13 @@
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm"
                                 required>
                         </div>
-                        <div>
+                        <div class="hidden">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Agent Type *</label>
                             <select id="agentType" onchange="toggleAgentFields()"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
                                 <option value="1">Salaried</option>
                                 <option value="2">Commission Only</option>
-                                <option value="3">Credit Based</option>
+                                <option selected value="3">Credit Based</option>
                             </select>
                         </div>
                         <div>
@@ -199,7 +199,7 @@
                             <input type="text" id="nicNumber"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
                         </div>
-                        <div>
+                        <div class="hidden">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
                             <select id="employmentStatus"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
@@ -223,17 +223,17 @@
                             <input type="number" id="baseSalary"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
                         </div>
-                        <div>
+                        <div class="hidden">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Commission Rate (%)</label>
                             <input type="number" step="0.1" id="commissionRate"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
                         </div>
-                        <div id="field-creditLimit" class="hidden">
+                        <div id="field-creditLimit">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Credit Limit (Rs)</label>
                             <input type="number" id="creditLimit"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
                         </div>
-                        <div id="field-creditDays" class="hidden">
+                        <div id="field-creditDays">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Credit Period (Days)</label>
                             <input type="number" id="creditPeriodDays"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
@@ -253,6 +253,52 @@
                         <!-- Bank Cards Container -->
                         <div id="bankCardsContainer" class="md:col-span-2 space-y-3">
                             <!-- Bank cards will be added here dynamically -->
+                        </div>
+
+                        <!-- Sales Targets -->
+                        <div class="md:col-span-2 mt-4">
+                            <h4 class="text-sm font-semibold text-gray-900 border-b pb-1 mb-3 flex items-center">
+                                <i class="bi bi-graph-up-arrow text-amber-600 mr-2"></i>Sales Targets
+                            </h4>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Monthly Sales Target (Rs)</label>
+                            <input type="number" step="0.01" id="monthlySalesTarget"
+                                class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm"
+                                placeholder="Enter monthly sales target amount">
+                        </div>
+
+                        <!-- Category Targets -->
+                        <div class="md:col-span-2 mt-2">
+                            <div class="flex justify-between items-center border-b pb-1 mb-3">
+                                <h4 class="text-sm font-semibold text-gray-900 flex items-center">
+                                    <i class="bi bi-tags text-blue-600 mr-2"></i>Category Targets
+                                </h4>
+                                <button type="button" onclick="addCategoryTargetCard()"
+                                    class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-full flex items-center">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="categoryTargetsContainer" class="md:col-span-2 space-y-3">
+                            <!-- Category target cards will be added here dynamically -->
+                        </div>
+
+                        <!-- SKU Targets -->
+                        <div class="md:col-span-2 mt-2">
+                            <div class="flex justify-between items-center border-b pb-1 mb-3">
+                                <h4 class="text-sm font-semibold text-gray-900 flex items-center">
+                                    <i class="bi bi-box-seam text-green-600 mr-2"></i>SKU Targets
+                                </h4>
+                                <button type="button" onclick="addItemTargetCard()"
+                                    class="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-full flex items-center">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="itemTargetsContainer" class="md:col-span-2 space-y-3">
+                            <!-- SKU target cards will be added here dynamically -->
                         </div>
                     </div>
                 </form>
@@ -276,58 +322,199 @@
             onclick="closeViewModal()"></div>
         <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
             <div id="view-panel"
-                class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 transition-all duration-300 ease-out">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-2">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-900" id="view-name">Agent Name</h3>
-                            <p class="text-sm text-gray-500" id="view-code">CODE</p>
+                class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-3xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 transition-all duration-300 ease-out flex flex-col max-h-[90vh]">
+                
+                <!-- Modal Header -->
+                <div class="bg-white px-6 py-4 border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-600">
+                            <i class="bi bi-person-badge text-2xl"></i>
                         </div>
-                        <div class="flex gap-2" id="view-badges">
-                            <!-- Badges -->
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900 leading-tight" id="view-name">Agent Name</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded" id="view-code">CODE</span>
+                                <div id="view-badges" class="flex gap-1">
+                                    <!-- Badges will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="bi bi-x-lg text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Contact Info Section -->
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                <i class="bi bi-person-lines-fill"></i> Contact Information
+                            </h4>
+                            <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <i class="bi bi-telephone text-gray-400 mt-0.5"></i>
+                                    <div>
+                                        <span class="text-xs text-gray-500 block">Phone Number</span>
+                                        <span id="view-phone" class="text-sm font-semibold text-gray-900"></span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="bi bi-envelope text-gray-400 mt-0.5"></i>
+                                    <div>
+                                        <span class="text-xs text-gray-500 block">Email Address</span>
+                                        <span id="view-email" class="text-sm font-semibold text-gray-900"></span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="bi bi-card-text text-gray-400 mt-0.5"></i>
+                                    <div>
+                                        <span class="text-xs text-gray-500 block">NIC Number</span>
+                                        <span id="view-nic" class="text-sm font-semibold text-gray-900"></span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <i class="bi bi-geo-alt text-gray-400 mt-0.5"></i>
+                                    <div>
+                                        <span class="text-xs text-gray-500 block">Residential Address</span>
+                                        <span id="view-address" class="text-sm font-semibold text-gray-900 whitespace-pre-line"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Terms Section -->
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                <i class="bi bi-currency-dollar"></i> Financial Terms
+                            </h4>
+                            <div class="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-xs text-gray-500 block">Base Salary</span>
+                                    <span id="view-salary" class="text-sm font-bold text-gray-900"></span>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-500 block">Commission</span>
+                                    <span id="view-commission" class="text-sm font-bold text-gray-900 text-purple-600"></span>
+                                </div>
+                                <div class="col-span-2 border-t border-gray-200 pt-3">
+                                    <span class="text-xs text-gray-500 block">Credit Terms</span>
+                                    <div class="flex items-center gap-3 mt-1">
+                                        <div>
+                                            <span class="text-[10px] text-gray-400 uppercase block">Limit</span>
+                                            <span id="view-limit" class="text-sm font-bold text-gray-900"></span>
+                                        </div>
+                                        <div class="w-px h-8 bg-gray-200 mx-2"></div>
+                                        <div>
+                                            <span class="text-[10px] text-gray-400 uppercase block">Period</span>
+                                            <span id="view-credit-days" class="text-sm font-bold text-gray-900"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-2 bg-red-50 -mx-4 -mb-4 p-4 rounded-b-xl flex justify-between items-center">
+                                    <span class="text-sm font-bold text-red-700">Outstanding Balance</span>
+                                    <span id="view-outstanding" class="text-lg font-black text-red-600"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <!-- Contact -->
-                        <div class="col-span-2">
-                            <h4 class="font-semibold text-gray-700">Contact Info</h4>
+                    <!-- Performance Targets Section -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                <i class="bi bi-graph-up-arrow"></i> Performance Targets
+                            </h4>
+                            <div class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
+                                Monthly Goal: <span id="view-monthly-target">Rs. 0.00</span>
+                            </div>
                         </div>
-                        <div><span class="text-gray-500 block">Phone</span><span id="view-phone" class="font-medium"></span>
-                        </div>
-                        <div><span class="text-gray-500 block">Email</span><span id="view-email" class="font-medium"></span>
-                        </div>
-                        <div><span class="text-gray-500 block">NIC</span><span id="view-nic" class="font-medium"></span>
-                        </div>
-                        <div><span class="text-gray-500 block">Address</span><span id="view-address"
-                                class="font-medium"></span></div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Category Targets View -->
+                            <div class="border border-blue-100 rounded-xl overflow-hidden bg-white">
+                                <div class="bg-blue-50 px-4 py-2 border-b border-blue-100">
+                                    <span class="text-xs font-bold text-blue-700 uppercase flex items-center gap-2">
+                                        <i class="bi bi-tags"></i> Category Targets
+                                    </span>
+                                </div>
+                                <div class="p-0 overflow-x-auto">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="bg-gray-50 text-gray-500 border-b">
+                                            <tr>
+                                                <th class="px-4 py-2">Category</th>
+                                                <th class="px-4 py-2 text-right">Target</th>
+                                                <th class="px-4 py-2 text-right">%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="view-cat-targets-body" class="divide-y divide-gray-100">
+                                            <!-- Category targets will be inserted here -->
+                                        </tbody>
+                                        <tfoot id="view-cat-targets-empty" class="hidden">
+                                            <tr>
+                                                <td colspan="3" class="px-4 py-4 text-center text-gray-400 italic">No category targets set</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
 
-                        <!-- Financials -->
-                        <div class="col-span-2 mt-2">
-                            <h4 class="font-semibold text-gray-700">Financials</h4>
+                            <!-- SKU Targets View -->
+                            <div class="border border-green-100 rounded-xl overflow-hidden bg-white">
+                                <div class="bg-green-50 px-4 py-2 border-b border-green-100">
+                                    <span class="text-xs font-bold text-green-700 uppercase flex items-center gap-2">
+                                        <i class="bi bi-box-seam"></i> SKU Targets
+                                    </span>
+                                </div>
+                                <div class="p-0 overflow-x-auto">
+                                    <table class="w-full text-xs text-left">
+                                        <thead class="bg-gray-50 text-gray-500 border-b">
+                                            <tr>
+                                                <th class="px-4 py-2">Product Item</th>
+                                                <th class="px-4 py-2 text-right">Target</th>
+                                                <th class="px-4 py-2 text-right">%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="view-item-targets-body" class="divide-y divide-gray-100">
+                                            <!-- SKU targets will be inserted here -->
+                                        </tbody>
+                                        <tfoot id="view-item-targets-empty" class="hidden">
+                                            <tr>
+                                                <td colspan="3" class="px-4 py-4 text-center text-gray-400 italic">No SKU targets set</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                        <div><span class="text-gray-500 block">Base Salary</span><span id="view-salary"
-                                class="font-medium"></span></div>
-                        <div><span class="text-gray-500 block">Commission</span><span id="view-commission"
-                                class="font-medium"></span></div>
-                        <div><span class="text-gray-500 block">Credit Limit</span><span id="view-limit"
-                                class="font-medium"></span></div>
-                        <div><span class="text-gray-500 block">Outstanding</span><span id="view-outstanding"
-                                class="font-medium text-red-600"></span></div>
+                    </div>
 
-                        <!-- Banking -->
-                        <div class="col-span-2 mt-2">
-                            <h4 class="font-semibold text-gray-700">Banking</h4>
+                    <!-- Banking Information Section -->
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="bi bi-bank"></i> Banking Information
+                        </h4>
+                        <div id="view-bank-accounts-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Bank account cards will be inserted here -->
                         </div>
-                        <div class="col-span-2">
-                            <span id="view-bank" class="block font-medium"></span>
-                            <span id="view-account" class="text-gray-500 text-xs"></span>
+                        <div id="view-bank-empty" class="hidden bg-gray-50 rounded-xl p-6 text-center text-gray-400 italic text-sm">
+                            No bank account information available
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+
+                <!-- Modal Footer -->
+                <div class="bg-gray-50 px-6 py-4 flex justify-end items-center gap-3 border-t border-gray-100 sticky bottom-0">
                     <button type="button" onclick="closeViewModal()"
-                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Close</button>
+                        class="px-5 py-2 rounded-lg bg-white border border-gray-300 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+                        Close
+                    </button>
+                    <button type="button" id="view-edit-btn"
+                        class="px-5 py-2 rounded-lg bg-amber-500 text-sm font-bold text-white hover:bg-amber-600 transition-colors shadow-sm flex items-center gap-2">
+                        <i class="bi bi-pencil"></i> Edit Agent
+                    </button>
                 </div>
             </div>
         </div>
@@ -510,6 +697,158 @@
             }
         }
 
+        // Category Targets Management
+        let categoryTargetCounter = 0;
+        const productCategories = @json($productCategories);
+
+        function addCategoryTargetCard(data = null) {
+            const cardId = `catTarget${categoryTargetCounter++}`;
+            const container = document.getElementById('categoryTargetsContainer');
+
+            let optionsHtml = '<option value="">Select Category</option>';
+            productCategories.forEach(cat => {
+                const selected = data && data.pm_product_category_id == cat.id ? 'selected' : '';
+                optionsHtml += `<option value="${cat.id}" ${selected}>${cat.category_name}${cat.category_code ? ' (' + cat.category_code + ')' : ''}</option>`;
+            });
+
+            const cardHtml = `
+                <div id="${cardId}" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h5 class="text-sm font-semibold text-blue-700"><i class="bi bi-tags mr-1"></i>Category Target</h5>
+                        <button type="button" onclick="removeCategoryTargetCard('${cardId}')" 
+                            class="text-red-600 hover:text-red-800 text-sm">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Category *</label>
+                            <select class="cat-select block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Target Amount (Rs)</label>
+                            <input type="number" step="0.01" class="cat-amount block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                                value="${data?.target_amount || ''}" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Target %</label>
+                            <input type="number" step="0.01" max="100" class="cat-percentage block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                                value="${data?.target_percentage || ''}" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        function removeCategoryTargetCard(cardId) {
+            document.getElementById(cardId)?.remove();
+        }
+
+        function collectCategoryTargets() {
+            const cards = document.querySelectorAll('#categoryTargetsContainer > div');
+            const targets = [];
+            cards.forEach(card => {
+                const catId = card.querySelector('.cat-select').value;
+                const amount = card.querySelector('.cat-amount').value;
+                const percentage = card.querySelector('.cat-percentage').value;
+                if (catId) {
+                    targets.push({
+                        pm_product_category_id: parseInt(catId),
+                        target_amount: amount || null,
+                        target_percentage: percentage || null,
+                    });
+                }
+            });
+            return targets;
+        }
+
+        function loadCategoryTargets(data) {
+            document.getElementById('categoryTargetsContainer').innerHTML = '';
+            categoryTargetCounter = 0;
+            if (data && data.length > 0) {
+                data.forEach(t => addCategoryTargetCard(t));
+            }
+        }
+
+        // SKU Targets Management
+        let itemTargetCounter = 0;
+        const productItems = @json($productItems);
+
+        function addItemTargetCard(data = null) {
+            const cardId = `itemTarget${itemTargetCounter++}`;
+            const container = document.getElementById('itemTargetsContainer');
+
+            let optionsHtml = '<option value="">Select Product Item</option>';
+            productItems.forEach(item => {
+                const selected = data && data.pm_product_item_id == item.id ? 'selected' : '';
+                optionsHtml += `<option value="${item.id}" ${selected}>${item.product_name}</option>`;
+            });
+
+            const cardHtml = `
+                <div id="${cardId}" class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <h5 class="text-sm font-semibold text-green-700"><i class="bi bi-box-seam mr-1"></i>SKU Target</h5>
+                        <button type="button" onclick="removeItemTargetCard('${cardId}')" 
+                            class="text-red-600 hover:text-red-800 text-sm">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Product Item *</label>
+                            <select class="item-select block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm">
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Target Amount (Rs)</label>
+                            <input type="number" step="0.01" class="item-amount block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" 
+                                value="${data?.target_amount || ''}" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Target %</label>
+                            <input type="number" step="0.01" max="100" class="item-percentage block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" 
+                                value="${data?.target_percentage || ''}" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        function removeItemTargetCard(cardId) {
+            document.getElementById(cardId)?.remove();
+        }
+
+        function collectItemTargets() {
+            const cards = document.querySelectorAll('#itemTargetsContainer > div');
+            const targets = [];
+            cards.forEach(card => {
+                const itemId = card.querySelector('.item-select').value;
+                const amount = card.querySelector('.item-amount').value;
+                const percentage = card.querySelector('.item-percentage').value;
+                if (itemId) {
+                    targets.push({
+                        pm_product_item_id: parseInt(itemId),
+                        target_amount: amount || null,
+                        target_percentage: percentage || null,
+                    });
+                }
+            });
+            return targets;
+        }
+
+        function loadItemTargets(data) {
+            document.getElementById('itemTargetsContainer').innerHTML = '';
+            itemTargetCounter = 0;
+            if (data && data.length > 0) {
+                data.forEach(t => addItemTargetCard(t));
+            }
+        }
+
         function openAgentModal(isEdit = false) {
             modal.classList.remove('hidden');
             void modal.offsetWidth;
@@ -520,7 +859,11 @@
 
             if (!isEdit) {
                 form.reset();
+                document.getElementById('agent-form').dataset.agentId = '';
                 loadBankCards(); // Load one empty card
+                loadCategoryTargets([]); // Clear category targets
+                loadItemTargets([]); // Clear SKU targets
+                document.getElementById('monthlySalesTarget').value = '';
                 modalTitle.innerText = "Add New Agent";
                 modalBtn.innerText = "Create Agent";
                 toggleAgentFields();
@@ -552,6 +895,7 @@
             document.getElementById('commissionRate').value = agent.commissionRate || '';
             document.getElementById('creditLimit').value = agent.creditLimit || '';
             document.getElementById('creditPeriodDays').value = agent.creditPeriodDays || '';
+            document.getElementById('monthlySalesTarget').value = agent.monthlySalesTarget || '';
 
             // Load bank cards from agent data
             let bankAccountsData = [];
@@ -566,6 +910,10 @@
                 }];
             }
             loadBankCards(bankAccountsData);
+
+            // Load targets
+            loadCategoryTargets(agent.category_targets || []);
+            loadItemTargets(agent.item_targets || []);
 
             toggleAgentFields();
 
@@ -626,7 +974,10 @@
                 commission_rate: document.getElementById('commissionRate').value || null,
                 credit_limit: document.getElementById('creditLimit').value || null,
                 credit_period_days: document.getElementById('creditPeriodDays').value || null,
-                bank_accounts: bankData  // Use collected bank data
+                monthly_sales_target: document.getElementById('monthlySalesTarget').value || null,
+                bank_accounts: bankData,
+                category_targets: collectCategoryTargets(),
+                item_targets: collectItemTargets(),
             };
 
             const url = isEdit ? `/api/agents/${agentId}/update` : '/api/agents/create';
@@ -713,6 +1064,7 @@
         function viewAgent(agentJson) {
             const agent = JSON.parse(agentJson);
 
+            // Basic Info
             document.getElementById('view-name').innerText = agent.agentName;
             document.getElementById('view-code').innerText = agent.agentCode;
             document.getElementById('view-phone').innerText = agent.contactPhone || '-';
@@ -720,23 +1072,102 @@
             document.getElementById('view-nic').innerText = agent.nicNumber || '-';
             document.getElementById('view-address').innerText = agent.address || '-';
 
-            document.getElementById('view-salary').innerText = agent.baseSalary ? 'Rs. ' + agent.baseSalary.toLocaleString() : '-';
-            document.getElementById('view-commission').innerText = agent.commissionRate + '%';
-            document.getElementById('view-limit').innerText = agent.creditLimit ? 'Rs. ' + agent.creditLimit.toLocaleString() : '-';
-            document.getElementById('view-outstanding').innerText = 'Rs. ' + (agent.outstandingBalance || 0).toLocaleString();
+            // Financials
+            const formatCurrency = (val) => val ? 'Rs. ' + parseFloat(val).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-';
+            
+            document.getElementById('view-salary').innerText = formatCurrency(agent.baseSalary);
+            document.getElementById('view-commission').innerText = agent.commissionRate ? agent.commissionRate + '%' : '0%';
+            document.getElementById('view-limit').innerText = formatCurrency(agent.creditLimit);
+            document.getElementById('view-credit-days').innerText = agent.creditPeriodDays ? agent.creditPeriodDays + ' Days' : '-';
+            document.getElementById('view-outstanding').innerText = formatCurrency(agent.outstandingBalance || 0);
 
-            document.getElementById('view-bank').innerText = agent.bankName || '-';
-            document.getElementById('view-account').innerText = (agent.bankAccountNumber || '') + (agent.bankBranch ? ' (' + agent.bankBranch + ')' : '');
+            // Targets
+            document.getElementById('view-monthly-target').innerText = formatCurrency(agent.monthlySalesTarget || 0);
+            
+            // Category Targets
+            const catBody = document.getElementById('view-cat-targets-body');
+            const catEmpty = document.getElementById('view-cat-targets-empty');
+            catBody.innerHTML = '';
+            if (agent.category_targets && agent.category_targets.length > 0) {
+                catEmpty.classList.add('hidden');
+                agent.category_targets.forEach(t => {
+                    catBody.innerHTML += `
+                        <tr class="hover:bg-blue-50/30 transition-colors">
+                            <td class="px-4 py-2 font-medium text-gray-900">${t.category_name}</td>
+                            <td class="px-4 py-2 text-right font-bold text-blue-600">${formatCurrency(t.target_amount)}</td>
+                            <td class="px-4 py-2 text-right">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded text-[10px] font-bold text-gray-600">${t.target_percentage || 0}%</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                catEmpty.classList.remove('hidden');
+            }
 
-            // Badges - map integer values to text with appropriate colors
+            // SKU Targets
+            const itemBody = document.getElementById('view-item-targets-body');
+            const itemEmpty = document.getElementById('view-item-targets-empty');
+            itemBody.innerHTML = '';
+            if (agent.item_targets && agent.item_targets.length > 0) {
+                itemEmpty.classList.add('hidden');
+                agent.item_targets.forEach(t => {
+                    itemBody.innerHTML += `
+                        <tr class="hover:bg-green-50/30 transition-colors">
+                            <td class="px-4 py-2 font-medium text-gray-900">${t.product_name}</td>
+                            <td class="px-4 py-2 text-right font-bold text-green-600">${formatCurrency(t.target_amount)}</td>
+                            <td class="px-4 py-2 text-right">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded text-[10px] font-bold text-gray-600">${t.target_percentage || 0}%</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                itemEmpty.classList.remove('hidden');
+            }
+
+            // Bank Accounts
+            const bankContainer = document.getElementById('view-bank-accounts-container');
+            const bankEmpty = document.getElementById('view-bank-empty');
+            bankContainer.innerHTML = '';
+            if (agent.bank_accounts && agent.bank_accounts.length > 0) {
+                bankEmpty.classList.add('hidden');
+                agent.bank_accounts.forEach(acc => {
+                    bankContainer.innerHTML += `
+                        <div class="border ${acc.is_primary ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200 bg-white'} rounded-xl p-4 relative">
+                            ${acc.is_primary ? '<span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Primary</span>' : ''}
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-sm">
+                                    <i class="bi bi-bank2 text-gray-400"></i>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-bold text-gray-900 block">${acc.bank_name}</span>
+                                    <span class="text-xs text-blue-600 font-medium block">${acc.account_number}</span>
+                                    <span class="text-[10px] text-gray-500 uppercase">${acc.branch || 'Main Branch'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                bankEmpty.classList.remove('hidden');
+            }
+
+            // Badges
             const badgeContainer = document.getElementById('view-badges');
             const typeColors = {1: 'bg-blue-100 text-blue-800', 2: 'bg-purple-100 text-purple-800', 3: 'bg-orange-100 text-orange-800'};
             const statusColors = {1: 'bg-green-100 text-green-800', 2: 'bg-red-100 text-red-800'};
             
             badgeContainer.innerHTML = `
-                    <span class="px-2 py-1 rounded text-xs font-medium ${typeColors[agent.agentType] || 'bg-gray-100 text-gray-800'}">${getAgentTypeText(agent.agentType)}</span>
-                    <span class="px-2 py-1 rounded text-xs font-medium ${statusColors[agent.employmentStatus] || 'bg-gray-100 text-gray-800'}">${getStatusText(agent.employmentStatus)}</span>
-                `;
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight ${typeColors[agent.agentType] || 'bg-gray-100 text-gray-800'}">${getAgentTypeText(agent.agentType)}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight ${statusColors[agent.employmentStatus] || 'bg-gray-100 text-gray-800'}">${getStatusText(agent.employmentStatus)}</span>
+            `;
+
+            // Setup Edit Button
+            document.getElementById('view-edit-btn').onclick = () => {
+                closeViewModal();
+                editAgent(agentJson);
+            };
 
             viewModal.classList.remove('hidden');
             setTimeout(() => {

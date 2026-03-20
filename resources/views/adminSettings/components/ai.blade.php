@@ -108,7 +108,7 @@
                     <div>
                         <label for="limit_per_user" class="block text-sm font-medium text-gray-700 mb-1">Per User (queries/day)</label>
                         <input type="number" name="query_limits[per_user]" id="limit_per_user" 
-                            value="{{ old('query_limits.per_user', $settings->query_limits['per_user'] ?? '100') }}"
+                            value="{{ old('query_limits.per_user', $settings->query_limits->per_user ?? '100') }}"
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                             placeholder="100">
                     </div>
@@ -116,7 +116,7 @@
                     <div>
                         <label for="limit_per_system" class="block text-sm font-medium text-gray-700 mb-1">System Total (queries/day)</label>
                         <input type="number" name="query_limits[per_system]" id="limit_per_system" 
-                            value="{{ old('query_limits.per_system', $settings->query_limits['per_system'] ?? '1000') }}"
+                            value="{{ old('query_limits.per_system', $settings->query_limits->per_system ?? '1000') }}"
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                             placeholder="1000">
                     </div>
@@ -132,7 +132,7 @@
                     <div>
                         <label for="context_window" class="block text-sm font-medium text-gray-700 mb-1">Context Window (days)</label>
                         <input type="number" name="context[window_days]" id="context_window" 
-                            value="{{ old('context.window_days', $settings->context['window_days'] ?? '30') }}"
+                            value="{{ old('context.window_days', $settings->context->window_days ?? '30') }}"
                             class="w-48 rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                             placeholder="30">
                         <p class="text-xs text-gray-500 mt-1">How many days of historical data to include</p>
@@ -141,7 +141,7 @@
                     <div class="space-y-2">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" name="context[include_financial]" id="include_financial" value="1"
-                                {{ old('context.include_financial', $settings->context['include_financial'] ?? false) ? 'checked' : '' }}
+                                {{ old('context.include_financial', $settings->context->include_financial ?? false) ? 'checked' : '' }}
                                 class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                             <label for="include_financial" class="text-sm text-gray-700 select-none">
                                 Include financial data (sales, revenue, GL)
@@ -150,7 +150,7 @@
                         
                         <div class="flex items-center gap-2">
                             <input type="checkbox" name="context[include_inventory]" id="include_inventory" value="1"
-                                {{ old('context.include_inventory', $settings->context['include_inventory'] ?? false) ? 'checked' : '' }}
+                                {{ old('context.include_inventory', $settings->context->include_inventory ?? false) ? 'checked' : '' }}
                                 class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                             <label for="include_inventory" class="text-sm text-gray-700 select-none">
                                 Include inventory data (stock levels, products)
@@ -159,7 +159,7 @@
                         
                         <div class="flex items-center gap-2">
                             <input type="checkbox" name="context[include_customer]" id="include_customer" value="1"
-                                {{ old('context.include_customer', $settings->context['include_customer'] ?? false) ? 'checked' : '' }}
+                                {{ old('context.include_customer', $settings->context->include_customer ?? false) ? 'checked' : '' }}
                                 class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                             <label for="include_customer" class="text-sm text-gray-700 select-none">
                                 Include customer data (orders, preferences)
@@ -177,7 +177,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="features[sales_analysis]" id="feat_sales" value="1"
-                            {{ old('features.sales_analysis', $settings->features['sales_analysis'] ?? false) ? 'checked' : '' }}
+                            {{ old('features.sales_analysis', $settings->features->sales_analysis ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="feat_sales" class="text-sm text-gray-700 select-none">
                             📊 Sales Analysis & Insights
@@ -186,7 +186,7 @@
                     
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="features[inventory_forecasting]" id="feat_inventory" value="1"
-                            {{ old('features.inventory_forecasting', $settings->features['inventory_forecasting'] ?? false) ? 'checked' : '' }}
+                            {{ old('features.inventory_forecasting', $settings->features->inventory_forecasting ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="feat_inventory" class="text-sm text-gray-700 select-none">
                             📦 Inventory Forecasting
@@ -195,7 +195,7 @@
                     
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="features[financial_insights]" id="feat_finance" value="1"
-                            {{ old('features.financial_insights', $settings->features['financial_insights'] ?? false) ? 'checked' : '' }}
+                            {{ old('features.financial_insights', $settings->features->financial_insights ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="feat_finance" class="text-sm text-gray-700 select-none">
                             💰 Financial Insights & Reports
@@ -204,7 +204,7 @@
                     
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="features[day_end_status]" id="feat_dayend" value="1"
-                            {{ old('features.day_end_status', $settings->features['day_end_status'] ?? false) ? 'checked' : '' }}
+                            {{ old('features.day_end_status', $settings->features->day_end_status ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="feat_dayend" class="text-sm text-gray-700 select-none">
                             🔒 Day-End Status & Checklist
@@ -213,7 +213,7 @@
                     
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="features[product_recommendations]" id="feat_product" value="1"
-                            {{ old('features.product_recommendations', $settings->features['product_recommendations'] ?? false) ? 'checked' : '' }}
+                            {{ old('features.product_recommendations', $settings->features->product_recommendations ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="feat_product" class="text-sm text-gray-700 select-none">
                             🍰 Product Recommendations

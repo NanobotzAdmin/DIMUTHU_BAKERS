@@ -67,7 +67,8 @@
             </div>
 
             {{-- Filters & Toolbar --}}
-            <div class="flex flex-col xl:flex-row gap-4 items-start xl:items-center">
+            <div class="flex flex-col gap-4">
+            <div class="flex flex-col xl:flex-row gap-4 items-start xl:items-center w-full">
                 {{-- Search --}}
                 <div class="relative flex-1 w-full xl:max-w-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -78,18 +79,22 @@
                         class="w-full h-12 pl-12 pr-4 border-2 border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-all">
                 </div>
 
-                {{-- Type Filters --}}
-                <div class="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-xl p-1 overflow-x-auto w-full xl:w-auto scrollbar-hide">
-                    <button onclick="setFilter('all')" id="filter-btn-all"
-                        class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm bg-blue-500 text-white">
-                        All
-                    </button>
-                    @foreach($productTypes as $type)
-                    <button onclick="setFilter('{{ $type->id }}')" id="filter-btn-{{ $type->id }}"
-                        class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm text-gray-600 hover:bg-gray-100">
-                        {{ $type->product_type_name }}
-                    </button>
-                    @endforeach
+                <div class="flex flex-col gap-3 w-full xl:w-auto">
+                    {{-- Type Filters --}}
+                    <div class="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-xl p-1 overflow-x-auto w-full xl:w-auto scrollbar-hide">
+                        <button onclick="setFilter('all')" id="filter-btn-all"
+                            class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm bg-blue-500 text-white">
+                            All Types
+                        </button>
+                        @foreach ($productTypes as $type)
+                            <button onclick="setFilter('{{ $type->id }}')" id="filter-btn-{{ $type->id }}"
+                                class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm text-gray-600 hover:bg-gray-100">
+                                {{ $type->product_type_name }}
+                            </button>
+                        @endforeach
+                    </div>
+
+                    
                 </div>
 
                 {{-- Layout Switcher --}}
@@ -114,6 +119,21 @@
                     </button>
                 </div>
             </div>
+            {{-- Category Filters --}}
+                    <div class="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-xl p-1 overflow-x-auto w-full xl:w-auto scrollbar-hide">
+                        <button onclick="setCategoryFilter('all')" id="cat-filter-btn-all"
+                            class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm bg-indigo-500 text-white">
+                            All Categories
+                        </button>
+                        @foreach ($categories as $category)
+                            <button onclick="setCategoryFilter('{{ $category->category_name }}')"
+                                id="cat-filter-btn-{{ Str::slug($category->category_name) }}"
+                                class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm text-gray-600 hover:bg-gray-100">
+                                {{ $category->category_name }}
+                            </button>
+                        @endforeach
+                    </div>
+                    </div>
         </div>
     </div>
 
@@ -230,6 +250,7 @@
     // State
     let state = {
         viewMode: 'all',
+        categoryFilter: 'all',
         layoutMode: 'grid',
         searchQuery: ''
     };
@@ -244,10 +265,12 @@
         return products.filter(p => {
             // Check if any of the product's types match the selected view mode
             const matchesType = state.viewMode === 'all' || (p.allTypeIds && p.allTypeIds.includes(parseInt(state.viewMode))) || p.type == state.viewMode;
+            const matchesCategory = state.categoryFilter === 'all' || p.productCategory === state.categoryFilter;
             const matchesSearch = p.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
                 p.category.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+                p.productCategory.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
                 (p.brand && p.brand.toLowerCase().includes(state.searchQuery.toLowerCase()));
-            return matchesType && matchesSearch;
+            return matchesType && matchesCategory && matchesSearch;
         });
     }
 
@@ -320,6 +343,7 @@
                         </div>` : ''}
                         </div>
                         <h3 class="font-bold text-gray-900 mb-1">${p.name}</h3>
+                        <p class="text-sm font-medium text-blue-600 mb-1">${p.productCategory}</p>
                         <p class="text-sm text-gray-600 mb-3">${p.unit}</p>
                         <div class="flex flex-wrap gap-1 mb-3">
                             ${allTypeBadges}
@@ -346,6 +370,7 @@
                         </div>
                         <div>
                             <div class="font-medium text-gray-900">${p.name}</div>
+                            <div class="text-sm text-blue-600 font-medium">${p.productCategory}</div>
                             <div class="text-sm text-gray-500">${p.id}</div>
                         </div>
                     </div>
@@ -380,8 +405,28 @@
         });
 
         const activeBtn = document.getElementById(`filter-btn-${mode}`);
-        activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
-        activeBtn.classList.add('bg-blue-500', 'text-white');
+        if(activeBtn) {
+            activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            activeBtn.classList.add('bg-blue-500', 'text-white');
+        }
+
+        renderProducts();
+    }
+
+    function setCategoryFilter(category) {
+        state.categoryFilter = category;
+        // Update Filter Button Styles
+        document.querySelectorAll('[id^="cat-filter-btn-"]').forEach(btn => {
+            btn.classList.remove('bg-indigo-500', 'text-white');
+            btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+        });
+
+        const slug = category === 'all' ? 'all' : category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const activeBtn = document.getElementById(`cat-filter-btn-${slug}`);
+        if(activeBtn) {
+            activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            activeBtn.classList.add('bg-indigo-500', 'text-white');
+        }
 
         renderProducts();
     }
@@ -407,8 +452,10 @@
     function clearFilters() {
         state.searchQuery = '';
         state.viewMode = 'all';
+        state.categoryFilter = 'all';
         document.getElementById('searchInput').value = '';
         setFilter('all');
+        setCategoryFilter('all');
     }
 
     function deleteProduct(id) {

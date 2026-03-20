@@ -89,7 +89,7 @@
     @enderror
                                                             </div> -->
 
-                        <div class="md:col-span-2" id="brandField">
+                        <div class="md:col-span-1" id="brandField">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
                             <select name="brand" id="brandSelect"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white select2-enable">
@@ -99,6 +99,20 @@
                                 @endforeach
                             </select>
                             @error('brand')
+                                <span class="text-red-500 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="md:col-span-1" id="categoryField">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Product Category <span class="text-red-500">*</span></label>
+                            <select name="category" id="categorySelect" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white select2-enable">
+                                <option value="">Select Category</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category['id'] }}">{{ $category['category_name'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('category')
                                 <span class="text-red-500 text-sm">{{ $message }}</span>
                             @enderror
                         </div>
@@ -263,6 +277,7 @@
 
             if (mode === 'simple') {
                 brandField.classList.add('hidden');
+                document.getElementById('categoryField').classList.add('hidden');
                 variantSection.classList.add('hidden');
 
                 // Clear standard generated items
@@ -274,6 +289,7 @@
                 generateSimpleProductItem();
             } else {
                 brandField.classList.remove('hidden');
+                document.getElementById('categoryField').classList.remove('hidden');
                 variantSection.classList.remove('hidden');
 
                 // Clear simple item if exists

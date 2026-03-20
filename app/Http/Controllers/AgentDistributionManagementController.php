@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\CommonVariables;
 use App\Models\AdAgent;
 use App\Models\AdAgentHasBankAccount;
+use App\Models\AdAgentHasCategoryTargets;
+use App\Models\AdAgentHasItemTargets;
 use App\Models\AdCustomerHasBusiness;
 use App\Models\AdDailyLoad;
 use App\Models\AdDailyLoadItem;
 use App\Models\AdRoute;
 use App\Models\CmCustomer;
+use App\Models\PmProductCategory;
 use App\Models\PmProductItem;
 use App\Models\UmUser;
 use Illuminate\Http\Request;
@@ -32,8 +35,8 @@ class AgentDistributionManagementController extends Controller
 
     public function agentManageIndex()
     {
-        // Fetch agents from database with bank accounts
-        $agents = AdAgent::with('primaryBankAccount')->get()->map(function ($agent) {
+        // Fetch agents from database with bank accounts and targets
+        $agents = AdAgent::with(['primaryBankAccount', 'bankAccounts', 'itemTargets.item', 'categoryTargets.category'])->get()->map(function ($agent) {
             return [
                 'id' => $agent->id,
                 'agentName' => $agent->agent_name,
@@ -48,16 +51,45 @@ class AgentDistributionManagementController extends Controller
                 'commissionRate' => $agent->commission_rate,
                 'creditLimit' => $agent->credit_limit,
                 'creditPeriodDays' => $agent->credit_period_days,
+                'monthlySalesTarget' => $agent->monthly_sales_target,
                 'bankName' => $agent->primaryBankAccount->bank_name ?? null,
                 'bankAccountNumber' => $agent->primaryBankAccount->account_number ?? null,
                 'bankBranch' => $agent->primaryBankAccount->branch ?? null,
                 'outstandingBalance' => $agent->outstanding_balance,
                 'totalSales' => $agent->total_sales,
                 'totalCollections' => $agent->total_collections,
+                'bank_accounts' => $agent->bankAccounts->map(function ($ba) {
+                    return [
+                        'bank_name' => $ba->bank_name,
+                        'account_number' => $ba->account_number,
+                        'branch' => $ba->branch,
+                        'is_primary' => $ba->is_primary,
+                    ];
+                })->toArray(),
+                'item_targets' => $agent->itemTargets->map(function ($t) {
+                    return [
+                        'pm_product_item_id' => $t->pm_product_item_id,
+                        'product_name' => $t->item->product_name ?? 'Unknown Product',
+                        'target_amount' => $t->target_amount,
+                        'target_percentage' => $t->target_percentage,
+                    ];
+                })->toArray(),
+                'category_targets' => $agent->categoryTargets->map(function ($t) {
+                    return [
+                        'pm_product_category_id' => $t->pm_product_category_id,
+                        'category_name' => $t->category->category_name ?? 'Unknown Category',
+                        'target_amount' => $t->target_amount,
+                        'target_percentage' => $t->target_percentage,
+                    ];
+                })->toArray(),
             ];
         });
 
-        return view('agentDistribution.agentManagement', compact('agents'));
+        // Fetch product items and categories for target dropdowns
+        $productItems = PmProductItem::where('status', 1)->get(['id', 'product_name']);
+        $productCategories = PmProductCategory::where('is_active', true)->get(['id', 'category_name', 'category_code']);
+
+        return view('agentDistribution.agentManagement', compact('agents', 'productItems', 'productCategories'));
     }
 
     public function dailyLoadsIndex()
@@ -923,6 +955,7 @@ class AgentDistributionManagementController extends Controller
                 'user_name' => $userName,
                 'user_password' => Hash::make($defaultPassword),
                 'contact_no' => $validated['phone'],
+                'user_role_id' => 8,
                 'is_active' => 1,
             ]);
 
@@ -940,6 +973,7 @@ class AgentDistributionManagementController extends Controller
                 'commission_rate' => $validated['commission_rate'] ?? null,
                 'credit_limit' => $validated['credit_limit'] ?? null,
                 'credit_period_days' => $validated['credit_period_days'] ?? null,
+                'monthly_sales_target' => $request->input('monthly_sales_target'),
             ]);
 
             // Create bank accounts
@@ -952,6 +986,36 @@ class AgentDistributionManagementController extends Controller
                         'branch' => $bankAccount['branch'] ?? null,
                         'is_primary' => $bankAccount['is_primary'] ?? false,
                     ]);
+                }
+            }
+
+            // Create category targets
+            if ($request->has('category_targets') && is_array($request->input('category_targets'))) {
+                foreach ($request->input('category_targets') as $ct) {
+                    if (!empty($ct['pm_product_category_id'])) {
+                        AdAgentHasCategoryTargets::create([
+                            'agent_id' => $agent->id,
+                            'pm_product_category_id' => $ct['pm_product_category_id'],
+                            'target_amount' => $ct['target_amount'] ?? null,
+                            'target_percentage' => $ct['target_percentage'] ?? null,
+                            'is_active' => true,
+                        ]);
+                    }
+                }
+            }
+
+            // Create item targets
+            if ($request->has('item_targets') && is_array($request->input('item_targets'))) {
+                foreach ($request->input('item_targets') as $it) {
+                    if (!empty($it['pm_product_item_id'])) {
+                        AdAgentHasItemTargets::create([
+                            'agent_id' => $agent->id,
+                            'pm_product_item_id' => $it['pm_product_item_id'],
+                            'target_amount' => $it['target_amount'] ?? null,
+                            'target_percentage' => $it['target_percentage'] ?? null,
+                            'is_active' => true,
+                        ]);
+                    }
                 }
             }
 
@@ -1057,6 +1121,7 @@ class AgentDistributionManagementController extends Controller
                 'commission_rate' => $validated['commission_rate'] ?? null,
                 'credit_limit' => $validated['credit_limit'] ?? null,
                 'credit_period_days' => $validated['credit_period_days'] ?? null,
+                'monthly_sales_target' => $request->input('monthly_sales_target'),
             ]);
 
             // Delete existing bank accounts and create new ones
@@ -1073,6 +1138,38 @@ class AgentDistributionManagementController extends Controller
                         'branch' => $bankAccount['branch'] ?? null,
                         'is_primary' => $bankAccount['is_primary'] ?? false,
                     ]);
+                }
+            }
+
+            // Update category targets (delete and recreate)
+            $agent->categoryTargets()->delete();
+            if ($request->has('category_targets') && is_array($request->input('category_targets'))) {
+                foreach ($request->input('category_targets') as $ct) {
+                    if (!empty($ct['pm_product_category_id'])) {
+                        AdAgentHasCategoryTargets::create([
+                            'agent_id' => $agent->id,
+                            'pm_product_category_id' => $ct['pm_product_category_id'],
+                            'target_amount' => $ct['target_amount'] ?? null,
+                            'target_percentage' => $ct['target_percentage'] ?? null,
+                            'is_active' => true,
+                        ]);
+                    }
+                }
+            }
+
+            // Update item targets (delete and recreate)
+            $agent->itemTargets()->delete();
+            if ($request->has('item_targets') && is_array($request->input('item_targets'))) {
+                foreach ($request->input('item_targets') as $it) {
+                    if (!empty($it['pm_product_item_id'])) {
+                        AdAgentHasItemTargets::create([
+                            'agent_id' => $agent->id,
+                            'pm_product_item_id' => $it['pm_product_item_id'],
+                            'target_amount' => $it['target_amount'] ?? null,
+                            'target_percentage' => $it['target_percentage'] ?? null,
+                            'is_active' => true,
+                        ]);
+                    }
                 }
             }
 

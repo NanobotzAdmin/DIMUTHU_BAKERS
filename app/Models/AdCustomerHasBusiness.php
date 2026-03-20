@@ -30,6 +30,11 @@ class AdCustomerHasBusiness extends Model
         'special_instructions',
         'delivery_instructions',
         'notes',
+        'business_name',
+        'customer_image',
+        'address',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [

@@ -28,6 +28,7 @@ class AdAgent extends Model
         'outstanding_balance',
         'total_sales',
         'total_collections',
+        'monthly_sales_target',
     ];
 
     protected $casts = [
@@ -103,5 +104,21 @@ class AdAgent extends Model
     public function user()
     {
         return $this->belongsTo(UmUser::class, 'user_id');
+    }
+
+    /**
+     * Get item targets for this agent
+     */
+    public function itemTargets()
+    {
+        return $this->hasMany(AdAgentHasItemTargets::class, 'agent_id');
+    }
+
+    /**
+     * Get category targets for this agent
+     */
+    public function categoryTargets()
+    {
+        return $this->hasMany(AdAgentHasCategoryTargets::class, 'agent_id');
     }
 }

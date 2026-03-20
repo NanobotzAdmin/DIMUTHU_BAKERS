@@ -16,6 +16,7 @@ class StmOrderRequestHasProduct extends Model
         'pm_product_item_id',
         'quantity',
         'confirmed_quantity',
+        'dispatched_quantity',
         'unit_price',
         'subtotal',
     ];
@@ -24,6 +25,7 @@ class StmOrderRequestHasProduct extends Model
         'quantity' => 'decimal:3',
         'unit_price' => 'decimal:2',
         'confirmed_quantity' => 'decimal:3',
+        'dispatched_quantity' => 'decimal:3',
         'subtotal' => 'decimal:2',
     ];
 

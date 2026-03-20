@@ -2,9 +2,8 @@
     resources/views/settings/system.blade.php 
 --}}
 
-<form id="system-settings-form" action="" method="POST" class="space-y-6">
+<form id="system-settings-form" action="{{ route('adminSettings.save') }}" method="POST" class="space-y-6">
     @csrf
-    @method('PUT')
 
     {{-- Header --}}
     <div class="flex items-center justify-between sticky top-0 bg-gray-50 z-10 py-2">
@@ -50,7 +49,7 @@
             <div class="space-y-4">
                 <div class="flex items-center gap-2">
                     <input type="checkbox" name="backup[enabled]" id="backup_enabled" value="1"
-                        {{ old('backup.enabled', $settings->backup['enabled'] ?? false) ? 'checked' : '' }}
+                        {{ old('backup.enabled', $settings->backup->enabled ?? false) ? 'checked' : '' }}
                         class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                     <label for="backup_enabled" class="text-sm font-medium text-gray-700 select-none">
                         Enable automatic backups
@@ -58,12 +57,12 @@
                 </div>
 
                 {{-- Conditional Backup Settings --}}
-                <div id="backup-settings" class="grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300 {{ old('backup.enabled', $settings->backup['enabled'] ?? false) ? '' : 'hidden opacity-50' }}">
+                <div id="backup-settings" class="grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300 {{ old('backup.enabled', $settings->backup->enabled ?? false) ? '' : 'hidden opacity-50' }}">
                     <div>
                         <label for="backup_frequency" class="block text-sm font-medium text-gray-700 mb-1">Backup Frequency</label>
                         <select name="backup[frequency]" id="backup_frequency" 
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                            @php $freq = $settings->backup['frequency'] ?? 'daily'; @endphp
+                            @php $freq = $settings->backup->frequency ?? 'daily'; @endphp
                             <option value="daily" {{ $freq == 'daily' ? 'selected' : '' }}>Daily</option>
                             <option value="weekly" {{ $freq == 'weekly' ? 'selected' : '' }}>Weekly</option>
                             <option value="monthly" {{ $freq == 'monthly' ? 'selected' : '' }}>Monthly</option>
@@ -73,7 +72,7 @@
                     <div>
                         <label for="backup_retention" class="block text-sm font-medium text-gray-700 mb-1">Retention (days)</label>
                         <input type="number" name="backup[retention_days]" id="backup_retention" 
-                            value="{{ old('backup.retention_days', $settings->backup['retention_days'] ?? '30') }}"
+                            value="{{ old('backup.retention_days', $settings->backup->retention_days ?? '30') }}"
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                     </div>
 
@@ -81,17 +80,17 @@
                         <label for="backup_location" class="block text-sm font-medium text-gray-700 mb-1">Backup Location</label>
                         <select name="backup[location]" id="backup_location" 
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                            @php $loc = $settings->backup['location'] ?? 'local'; @endphp
+                            @php $loc = $settings->backup->location ?? 'local'; @endphp
                             <option value="local" {{ $loc == 'local' ? 'selected' : '' }}>Local Storage</option>
                             <option value="s3" {{ $loc == 's3' ? 'selected' : '' }}>Amazon S3</option>
                             <option value="cloud" {{ $loc == 'cloud' ? 'selected' : '' }}>Cloud Storage</option>
                         </select>
                     </div>
 
-                    @if(!empty($settings->backup['last_backup']))
+                    @if(!empty($settings->backup->last_backup))
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Last Backup</label>
-                            <input type="text" value="{{ \Carbon\Carbon::parse($settings->backup['last_backup'])->format('Y-m-d H:i:s') }}" disabled 
+                            <input type="text" value="{{ \Carbon\Carbon::parse($settings->backup->last_backup)->format('Y-m-d H:i:s') }}" disabled 
                                 class="w-full rounded-md border-gray-200 bg-gray-50 text-gray-500 shadow-sm sm:text-sm cursor-not-allowed">
                         </div>
                     @endif
@@ -109,13 +108,13 @@
                     <div>
                         <label for="session_timeout" class="block text-sm font-medium text-gray-700 mb-1">Session Timeout (minutes)</label>
                         <input type="number" name="security[session_timeout]" id="session_timeout" 
-                            value="{{ old('security.session_timeout', $settings->security['session_timeout'] ?? '120') }}"
+                            value="{{ old('security.session_timeout', $settings->security->session_timeout ?? '120') }}"
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                     </div>
 
                     <div class="flex items-center gap-2 md:pt-6">
                         <input type="checkbox" name="security[two_factor_auth]" id="two_factor_auth" value="1"
-                            {{ old('security.two_factor_auth', $settings->security['two_factor_auth'] ?? false) ? 'checked' : '' }}
+                            {{ old('security.two_factor_auth', $settings->security->two_factor_auth ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="two_factor_auth" class="text-sm text-gray-700 select-none">
                             Require two-factor authentication
@@ -129,28 +128,28 @@
                         <div>
                             <label for="pw_min_length" class="block text-sm font-medium text-gray-700 mb-1">Minimum Length</label>
                             <input type="number" name="security[password_policy][min_length]" id="pw_min_length" 
-                                value="{{ old('security.password_policy.min_length', $settings->security['password_policy']['min_length'] ?? '8') }}"
+                                value="{{ old('security.password_policy.min_length', $settings->security->password_policy->min_length ?? '8') }}"
                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                         </div>
 
                         <div class="space-y-2">
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="security[password_policy][require_uppercase]" id="pw_uppercase" value="1"
-                                    {{ old('security.password_policy.require_uppercase', $settings->security['password_policy']['require_uppercase'] ?? false) ? 'checked' : '' }}
+                                    {{ old('security.password_policy.require_uppercase', $settings->security->password_policy->require_uppercase ?? false) ? 'checked' : '' }}
                                     class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                                 <label for="pw_uppercase" class="text-sm text-gray-700 select-none">Require uppercase</label>
                             </div>
                             
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="security[password_policy][require_numbers]" id="pw_numbers" value="1"
-                                    {{ old('security.password_policy.require_numbers', $settings->security['password_policy']['require_numbers'] ?? false) ? 'checked' : '' }}
+                                    {{ old('security.password_policy.require_numbers', $settings->security->password_policy->require_numbers ?? false) ? 'checked' : '' }}
                                     class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                                 <label for="pw_numbers" class="text-sm text-gray-700 select-none">Require numbers</label>
                             </div>
                             
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" name="security[password_policy][require_special_chars]" id="pw_special" value="1"
-                                    {{ old('security.password_policy.require_special_chars', $settings->security['password_policy']['require_special_chars'] ?? false) ? 'checked' : '' }}
+                                    {{ old('security.password_policy.require_special_chars', $settings->security->password_policy->require_special_chars ?? false) ? 'checked' : '' }}
                                     class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                                 <label for="pw_special" class="text-sm text-gray-700 select-none">Require special characters</label>
                             </div>
@@ -168,7 +167,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="flex items-center gap-2">
                     <input type="checkbox" name="performance[cache_enabled]" id="cache_enabled" value="1"
-                        {{ old('performance.cache_enabled', $settings->performance['cache_enabled'] ?? false) ? 'checked' : '' }}
+                        {{ old('performance.cache_enabled', $settings->performance->cache_enabled ?? false) ? 'checked' : '' }}
                         onchange="toggleCacheTTL(this.checked)"
                         class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                     <label for="cache_enabled" class="text-sm font-medium text-gray-700 select-none">
@@ -179,16 +178,16 @@
                 <div>
                     <label for="cache_ttl" class="block text-sm font-medium text-gray-700 mb-1">Cache TTL (seconds)</label>
                     <input type="number" name="performance[cache_ttl]" id="cache_ttl" 
-                        value="{{ old('performance.cache_ttl', $settings->performance['cache_ttl'] ?? '3600') }}"
+                        value="{{ old('performance.cache_ttl', $settings->performance->cache_ttl ?? '3600') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm disabled:bg-gray-100 disabled:text-gray-400 p-2"
-                        {{ old('performance.cache_enabled', $settings->performance['cache_enabled'] ?? false) ? '' : 'disabled' }}>
+                        {{ old('performance.cache_enabled', $settings->performance->cache_enabled ?? false) ? '' : 'disabled' }}>
                 </div>
 
                 <div>
                     <label for="log_level" class="block text-sm font-medium text-gray-700 mb-1">Log Level</label>
                     <select name="performance[log_level]" id="log_level" 
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                        @php $log = $settings->performance['log_level'] ?? 'error'; @endphp
+                        @php $log = $settings->performance->log_level ?? 'error'; @endphp
                         <option value="error" {{ $log == 'error' ? 'selected' : '' }}>Error</option>
                         <option value="warn" {{ $log == 'warn' ? 'selected' : '' }}>Warning</option>
                         <option value="info" {{ $log == 'info' ? 'selected' : '' }}>Info</option>
@@ -199,7 +198,7 @@
                 <div>
                     <label for="max_upload_size" class="block text-sm font-medium text-gray-700 mb-1">Max Upload Size (MB)</label>
                     <input type="number" name="performance[max_upload_size]" id="max_upload_size" 
-                        value="{{ old('performance.max_upload_size', $settings->performance['max_upload_size'] ?? '10') }}"
+                        value="{{ old('performance.max_upload_size', $settings->performance->max_upload_size ?? '10') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                 </div>
             </div>
@@ -221,7 +220,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="checkbox" name="maintenance[mode]" id="maintenance_mode" value="1"
-                        {{ old('maintenance.mode', $settings->maintenance['mode'] ?? false) ? 'checked' : '' }}
+                        {{ old('maintenance.mode', $settings->maintenance->mode ?? false) ? 'checked' : '' }}
                         class="w-5 h-5 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                     <label for="maintenance_mode" class="text-sm font-medium text-gray-700 select-none">
                         Enable
@@ -229,17 +228,17 @@
                 </div>
             </div>
 
-            <div id="maintenance-settings" class="space-y-4 transition-all duration-300 {{ old('maintenance.mode', $settings->maintenance['mode'] ?? false) ? '' : 'hidden opacity-50' }}">
+            <div id="maintenance-settings" class="space-y-4 transition-all duration-300 {{ old('maintenance.mode', $settings->maintenance->mode ?? false) ? '' : 'hidden opacity-50' }}">
                 <div>
                     <label for="maintenance_message" class="block text-sm font-medium text-gray-700 mb-1">Maintenance Message</label>
                     <textarea name="maintenance[message]" id="maintenance_message" rows="3"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">{{ old('maintenance.message', $settings->maintenance['message'] ?? 'We are currently performing scheduled maintenance. Please check back later.') }}</textarea>
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">{{ old('maintenance.message', $settings->maintenance->message ?? 'We are currently performing scheduled maintenance. Please check back later.') }}</textarea>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Allowed IP Addresses</label>
                     <div class="flex flex-wrap gap-2">
-                        @foreach($settings->maintenance['allowed_ips'] ?? [] as $ip)
+                        @foreach($settings->maintenance->allowed_ips ?? [] as $ip)
                             <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm border border-gray-200">
                                 {{ $ip }}
                             </span>

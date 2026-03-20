@@ -320,6 +320,7 @@ class DistributorAndSalesManagementController extends Controller
                             'product_item_id' => $op->pm_product_item_id,
                             'name' => $op->productItem->product_name ?? 'Unknown Product',
                             'quantity' => $op->quantity,
+                            'dispatched_quantity' => $op->dispatched_quantity,
                             'unit_price' => number_format($op->unit_price, 2),
                             'subtotal' => number_format($op->subtotal, 2),
                         ];
@@ -783,10 +784,26 @@ class DistributorAndSalesManagementController extends Controller
         try {
             DB::beginTransaction();
 
-            $order = StmOrderRequest::findOrFail($request->order_id);
+            $order = StmOrderRequest::with('orderProducts')->findOrFail($request->order_id);
 
             if ($order->status != CommonVariables::$orderRequestPendingApproval) {
                 return response()->json(['success' => false, 'message' => 'Order is not in a pending state.'], 400);
+            }
+
+            // Update product quantities if modified during approval
+            if ($request->has('items')) {
+                foreach ($request->items as $item) {
+                    $product = $order->orderProducts
+                        ->where('pm_product_item_id', $item['product_item_id'])
+                        ->first();
+                    if ($product) {
+                        $newQty = floatval($item['quantity']);
+                        $product->quantity = $newQty;
+                        $product->subtotal = $newQty * $product->unit_price;
+                        $product->save();
+                    }
+                }
+                $order->grand_total = $order->orderProducts()->sum('subtotal');
             }
 
             // Update order status to Approved
@@ -886,9 +903,14 @@ class DistributorAndSalesManagementController extends Controller
                 $this->processDispatchItem($item, $order, $grn, $currentBatchNum);
             }
 
-            // 4. Update Order Status
+            // 4. Recalculate grand total based on dispatched quantities
+            $order->refresh();
+            $order->grand_total = $order->orderProducts->sum(function ($p) {
+                $qty = $p->dispatched_quantity ?? $p->quantity;
+                return $qty * $p->unit_price;
+            });
+            // Set status AFTER refresh so it doesn't get overwritten
             $order->status = 5; // Out for Delivery
-            $order->grand_total = $order->orderProducts()->sum('subtotal');
             $order->save();
             \Log::info('Order Status Updated to 5');
 
@@ -1209,10 +1231,10 @@ class DistributorAndSalesManagementController extends Controller
             'updated_by' => auth()->id(),
         ]);
 
-        // Update Order Product
+        // Update Order Product – store dispatched qty separately, preserve original quantity
 
         if ($orderProduct) {
-            $orderProduct->quantity = $qty;
+            $orderProduct->dispatched_quantity = $qty;
             $orderProduct->subtotal = $qty * $orderProduct->unit_price;
             $orderProduct->save();
         }

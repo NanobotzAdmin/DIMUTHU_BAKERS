@@ -215,11 +215,22 @@ class ApiGRNController extends Controller
 
             $historyDescription = "Payment of Rs. " . number_format($request->amount, 2) . " recorded via " . $request->method;
 
+            // Update order request payment info
+            $orderRequest->paid_amount = $totalPaid;
+
             if ($totalPaid >= $orderRequest->grand_total) {
-                $orderRequest->status = 2;
-                $orderRequest->save();
-                $historyDescription .= ". Order marked as completed.";
+                $orderRequest->payment_completed = 2; // Paid
+                // Also update order status if needed, the user mentioned 7 for completed in frontend logic usually
+                // but kept the existing status = 2 logic if that's what was there. 
+                // However, common variables might be better. 
+                // Let's stick to what's requested: payment_completed = 2
+                $historyDescription .= ". Order marked as fully paid and completed.";
+            } else if ($totalPaid > 0) {
+                $orderRequest->payment_completed = 1; // Partial
+                $historyDescription .= ". Order marked as partially paid.";
             }
+            
+            $orderRequest->save();
 
             // Log History
             StmOrderRequestHistory::create([

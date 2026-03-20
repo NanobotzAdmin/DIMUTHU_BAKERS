@@ -1,6 +1,5 @@
-<form id="company-settings-form" action="" method="POST" class="space-y-6">
+<form id="company-settings-form" action="{{ route('adminSettings.save') }}" method="POST" class="space-y-6">
     @csrf
-    @method('PUT')
 
     {{-- Header --}}
     <div class="flex items-center justify-between sticky top-0 bg-gray-50 z-10 py-2">
@@ -80,7 +79,7 @@
                 <div class="md:col-span-2">
                     <label for="address_street" class="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
                     <input type="text" name="address[street]" id="address_street" 
-                        value="{{ old('address.street', $settings->address['street'] ?? '') }}"
+                        value="{{ old('address.street', $settings->address->street ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
                         placeholder="123 Galle Road">
                 </div>
@@ -88,7 +87,7 @@
                 <div>
                     <label for="address_city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
                     <input type="text" name="address[city]" id="address_city" 
-                        value="{{ old('address.city', $settings->address['city'] ?? '') }}"
+                        value="{{ old('address.city', $settings->address->city ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
                         placeholder="Colombo 3">
                 </div>
@@ -96,7 +95,7 @@
                 <div>
                     <label for="address_province" class="block text-sm font-medium text-gray-700 mb-1">Province</label>
                     <input type="text" name="address[province]" id="address_province" 
-                        value="{{ old('address.province', $settings->address['province'] ?? '') }}"
+                        value="{{ old('address.province', $settings->address->province ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
                         placeholder="Western">
                 </div>
@@ -104,7 +103,7 @@
                 <div>
                     <label for="address_postal_code" class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
                     <input type="text" name="address[postal_code]" id="address_postal_code" 
-                        value="{{ old('address.postal_code', $settings->address['postal_code'] ?? '') }}"
+                        value="{{ old('address.postal_code', $settings->address->postal_code ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
                         placeholder="00300">
                 </div>
@@ -120,7 +119,7 @@
                 <div>
                     <label for="contact_phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                     <input type="text" name="contact[phone]" id="contact_phone" 
-                        value="{{ old('contact.phone', $settings->contact['phone'] ?? '') }}"
+                        value="{{ old('contact.phone', $settings->contact->phone ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
                         placeholder="+94 11 234 5678">
                 </div>
@@ -128,7 +127,7 @@
                 <div>
                     <label for="contact_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                     <input type="email" name="contact[email]" id="contact_email" 
-                        value="{{ old('contact.email', $settings->contact['email'] ?? '') }}"
+                        value="{{ old('contact.email', $settings->contact->email ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
                         placeholder="info@yourbakery.com">
                 </div>
@@ -136,7 +135,7 @@
                 <div class="md:col-span-2">
                     <label for="contact_website" class="block text-sm font-medium text-gray-700 mb-1">Website</label>
                     <input type="url" name="contact[website]" id="contact_website" 
-                        value="{{ old('contact.website', $settings->contact['website'] ?? '') }}"
+                        value="{{ old('contact.website', $settings->contact->website ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
                         placeholder="www.yourbakery.com">
                 </div>

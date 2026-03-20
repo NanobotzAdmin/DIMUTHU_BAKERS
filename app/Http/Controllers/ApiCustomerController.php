@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiCustomerController extends Controller
 {
-    public function createCustomer (Request $request)
+    public function createCustomer(Request $request)
     {
         // 1. Validation
         $validator = Validator::make($request->all(), [
@@ -42,7 +42,9 @@ class ApiCustomerController extends Controller
             'special_instructions' => 'nullable|string',
             'delivery_instructions' => 'nullable|string',
             'notes' => 'nullable|string',
-            'customer_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Fixed to accept image files
+            'business_name' => 'nullable|string|max:255',
+            'customer_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'master_customer_id' => 'nullable|integer|exists:cm_customer,id',
         ]);
 
         if ($validator->fails()) {
@@ -65,18 +67,24 @@ class ApiCustomerController extends Controller
                 $imagePath = 'uploads/customers/' . $filename;
             }
 
-            // 3. Create Customer in cm_customer
-            $customer = CmCustomer::create([
-                'name' => $request->name,
-                'customer_type' => $request->customer_type,
-                'phone' => $request->phone,
-                'email' => $request->email,
-                'address' => $request->address,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-                'created_by' => $request->created_by ?? auth()->id() ?? 1,
-                'updated_by' => auth()->id() ?? 1,
-            ]);
+            // 3. Create or Link Customer in cm_customer
+            if ($request->master_customer_id) {
+                $customer = CmCustomer::find($request->master_customer_id);
+                // Optionally update master customer details if they changed? 
+                // For now, let's just link it.
+            } else {
+                $customer = CmCustomer::create([
+                    'name' => $request->name,
+                    'customer_type' => $request->customer_type,
+                    'phone' => $request->phone,
+                    'email' => $request->email,
+                    'address' => $request->address,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                    'created_by' => $request->created_by ?? auth()->id() ?? 1,
+                    'updated_by' => auth()->id() ?? 1,
+                ]);
+            }
 
             // 4. Create Business Details in ad_customer_has_business
             $business = AdCustomerHasBusiness::create([
@@ -98,6 +106,10 @@ class ApiCustomerController extends Controller
                 'special_instructions' => $request->special_instructions,
                 'delivery_instructions' => $request->delivery_instructions,
                 'notes' => $request->notes,
+                'business_name' => $request->business_name,
+                'address' => $request->address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
                 'customer_image' => $imagePath, // Store the public path
             ]);
 
@@ -120,5 +132,23 @@ class ApiCustomerController extends Controller
                 'message' => 'Failed to create customer: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function searchMasterCustomers(Request $request)
+    {
+        $query = $request->input('query', '');
+
+        $customers = CmCustomer::where(function ($q) use ($query) {
+            $q->where('name', 'LIKE', "%{$query}%")
+                ->orWhere('phone', 'LIKE', "%{$query}%")
+                ->orWhere('email', 'LIKE', "%{$query}%");
+        })
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $customers
+        ]);
     }
 }

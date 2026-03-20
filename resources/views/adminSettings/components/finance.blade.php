@@ -56,7 +56,7 @@
                 <div>
                     <label for="gl_cash_on_hand" class="block text-sm font-medium text-gray-700 mb-1">Cash on Hand</label>
                     <input type="text" name="gl_accounts[cash_on_hand]" id="gl_cash_on_hand" 
-                        value="{{ old('gl_accounts.cash_on_hand', $settings->gl_accounts['cash_on_hand'] ?? '') }}"
+                        value="{{ old('gl_accounts.cash_on_hand', $settings->gl_accounts->cash_on_hand ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="1010">
                 </div>
@@ -64,7 +64,7 @@
                 <div>
                     <label for="gl_sales_revenue" class="block text-sm font-medium text-gray-700 mb-1">Sales Revenue</label>
                     <input type="text" name="gl_accounts[sales_revenue]" id="gl_sales_revenue" 
-                        value="{{ old('gl_accounts.sales_revenue', $settings->gl_accounts['sales_revenue'] ?? '') }}"
+                        value="{{ old('gl_accounts.sales_revenue', $settings->gl_accounts->sales_revenue ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="4010">
                 </div>
@@ -72,7 +72,7 @@
                 <div>
                     <label for="gl_cogs" class="block text-sm font-medium text-gray-700 mb-1">Cost of Goods Sold</label>
                     <input type="text" name="gl_accounts[cost_of_goods_sold]" id="gl_cogs" 
-                        value="{{ old('gl_accounts.cost_of_goods_sold', $settings->gl_accounts['cost_of_goods_sold'] ?? '') }}"
+                        value="{{ old('gl_accounts.cost_of_goods_sold', $settings->gl_accounts->cost_of_goods_sold ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="5010">
                 </div>
@@ -80,7 +80,7 @@
                 <div>
                     <label for="gl_finished_goods" class="block text-sm font-medium text-gray-700 mb-1">Finished Goods Inventory</label>
                     <input type="text" name="gl_accounts[finished_goods_inventory]" id="gl_finished_goods" 
-                        value="{{ old('gl_accounts.finished_goods_inventory', $settings->gl_accounts['finished_goods_inventory'] ?? '') }}"
+                        value="{{ old('gl_accounts.finished_goods_inventory', $settings->gl_accounts->finished_goods_inventory ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="1310">
                 </div>
@@ -88,7 +88,7 @@
                 <div>
                     <label for="gl_wip" class="block text-sm font-medium text-gray-700 mb-1">Work in Progress (WIP)</label>
                     <input type="text" name="gl_accounts[work_in_progress]" id="gl_wip" 
-                        value="{{ old('gl_accounts.work_in_progress', $settings->gl_accounts['work_in_progress'] ?? '') }}"
+                        value="{{ old('gl_accounts.work_in_progress', $settings->gl_accounts->work_in_progress ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="1320">
                 </div>
@@ -96,7 +96,7 @@
                 <div>
                     <label for="gl_raw_materials" class="block text-sm font-medium text-gray-700 mb-1">Raw Materials Inventory</label>
                     <input type="text" name="gl_accounts[raw_materials]" id="gl_raw_materials" 
-                        value="{{ old('gl_accounts.raw_materials', $settings->gl_accounts['raw_materials'] ?? '') }}"
+                        value="{{ old('gl_accounts.raw_materials', $settings->gl_accounts->raw_materials ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="1300">
                 </div>
@@ -104,7 +104,7 @@
                 <div>
                     <label for="gl_card_clearing" class="block text-sm font-medium text-gray-700 mb-1">Card Payment Clearing</label>
                     <input type="text" name="gl_accounts[card_payment_clearing]" id="gl_card_clearing" 
-                        value="{{ old('gl_accounts.card_payment_clearing', $settings->gl_accounts['card_payment_clearing'] ?? '') }}"
+                        value="{{ old('gl_accounts.card_payment_clearing', $settings->gl_accounts->card_payment_clearing ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="1015">
                 </div>
@@ -112,7 +112,7 @@
                 <div>
                     <label for="gl_customer_deposits" class="block text-sm font-medium text-gray-700 mb-1">Customer Deposits (Liability)</label>
                     <input type="text" name="gl_accounts[customer_deposits]" id="gl_customer_deposits" 
-                        value="{{ old('gl_accounts.customer_deposits', $settings->gl_accounts['customer_deposits'] ?? '') }}"
+                        value="{{ old('gl_accounts.customer_deposits', $settings->gl_accounts->customer_deposits ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="2110">
                 </div>
@@ -120,7 +120,7 @@
                 <div>
                     <label for="gl_shipping" class="block text-sm font-medium text-gray-700 mb-1">Shipping Revenue</label>
                     <input type="text" name="gl_accounts[shipping]" id="gl_shipping" 
-                        value="{{ old('gl_accounts.shipping', $settings->gl_accounts['shipping'] ?? '') }}"
+                        value="{{ old('gl_accounts.shipping', $settings->gl_accounts->shipping ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="4020">
                 </div>
@@ -136,7 +136,7 @@
                 <div>
                     <label for="tax_vat_rate" class="block text-sm font-medium text-gray-700 mb-1">VAT Rate (%)</label>
                     <input type="number" step="0.01" name="tax_settings[vat_rate]" id="tax_vat_rate" 
-                        value="{{ old('tax_settings.vat_rate', $settings->tax_settings['vat_rate'] ?? '18') }}"
+                        value="{{ old('tax_settings.vat_rate', $settings->tax_settings->vat_rate ?? '18') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="18">
                     <p class="text-xs text-gray-500 mt-1">Standard VAT rate in Sri Lanka is 18%</p>
@@ -145,7 +145,7 @@
                 <div>
                     <label for="tax_vat_reg_number" class="block text-sm font-medium text-gray-700 mb-1">VAT Registration Number</label>
                     <input type="text" name="tax_settings[vat_registration_number]" id="tax_vat_reg_number" 
-                        value="{{ old('tax_settings.vat_registration_number', $settings->tax_settings['vat_registration_number'] ?? '') }}"
+                        value="{{ old('tax_settings.vat_registration_number', $settings->tax_settings->vat_registration_number ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="123456789">
                 </div>
@@ -154,7 +154,7 @@
                     <label for="tax_filing_frequency" class="block text-sm font-medium text-gray-700 mb-1">Tax Filing Frequency</label>
                     <select name="tax_settings[filing_frequency]" id="tax_filing_frequency" 
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                        @php $freq = $settings->tax_settings['filing_frequency'] ?? 'monthly'; @endphp
+                        @php $freq = $settings->tax_settings->filing_frequency ?? 'monthly'; @endphp
                         <option value="monthly" {{ $freq == 'monthly' ? 'selected' : '' }}>Monthly</option>
                         <option value="quarterly" {{ $freq == 'quarterly' ? 'selected' : '' }}>Quarterly</option>
                         <option value="annually" {{ $freq == 'annually' ? 'selected' : '' }}>Annually</option>
@@ -171,7 +171,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Current Period</label>
-                    <input type="text" value="{{ $settings->accounting_period['current_period'] ?? now()->format('F Y') }}" disabled
+                    <input type="text" value="{{ $settings->accounting_period->current_period ?? now()->format('F Y') }}" disabled
                         class="w-full rounded-md border-gray-200 bg-gray-50 text-gray-500 shadow-sm cursor-not-allowed sm:text-sm p-2">
                     <p class="text-xs text-gray-500 mt-1">Format: Month YYYY</p>
                 </div>
@@ -180,7 +180,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Period Locking</label>
                     <div class="flex items-center gap-2 h-10">
                         <input type="checkbox" name="accounting_period[lock_closed_periods]" id="lock_closed_periods" value="1"
-                            {{ old('accounting_period.lock_closed_periods', $settings->accounting_period['lock_closed_periods'] ?? false) ? 'checked' : '' }}
+                            {{ old('accounting_period.lock_closed_periods', $settings->accounting_period->lock_closed_periods ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="lock_closed_periods" class="text-sm text-gray-700 select-none">
                             Prevent edits to closed periods
@@ -199,7 +199,7 @@
                 <div>
                     <label for="je_auto_numbering_prefix" class="block text-sm font-medium text-gray-700 mb-1">Auto-numbering Prefix</label>
                     <input type="text" name="journal_entry_settings[auto_numbering_prefix]" id="je_auto_numbering_prefix" 
-                        value="{{ old('journal_entry_settings.auto_numbering_prefix', $settings->journal_entry_settings['auto_numbering_prefix'] ?? 'JE') }}"
+                        value="{{ old('journal_entry_settings.auto_numbering_prefix', $settings->journal_entry_settings->auto_numbering_prefix ?? 'JE') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="JE">
                     <p class="text-xs text-gray-500 mt-1">Format: JE-2024-0001</p>
@@ -208,7 +208,7 @@
                 <div>
                     <label for="je_require_approval_above" class="block text-sm font-medium text-gray-700 mb-1">Require Approval Above (Rs.)</label>
                     <input type="number" name="journal_entry_settings[require_approval_above]" id="je_require_approval_above" 
-                        value="{{ old('journal_entry_settings.require_approval_above', $settings->journal_entry_settings['require_approval_above'] ?? '50000') }}"
+                        value="{{ old('journal_entry_settings.require_approval_above', $settings->journal_entry_settings->require_approval_above ?? '50000') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="50000">
                 </div>
@@ -218,7 +218,7 @@
                     <div class="space-y-3">
                         <div class="flex items-center gap-2">
                             <input type="checkbox" name="journal_entry_settings[auto_post_pos]" id="auto_post_pos" value="1"
-                                {{ old('journal_entry_settings.auto_post_pos', $settings->journal_entry_settings['auto_post_pos'] ?? false) ? 'checked' : '' }}
+                                {{ old('journal_entry_settings.auto_post_pos', $settings->journal_entry_settings->auto_post_pos ?? false) ? 'checked' : '' }}
                                 class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                             <label for="auto_post_pos" class="text-sm text-gray-700 select-none">
                                 Auto-post POS transactions
@@ -227,7 +227,7 @@
                         
                         <div class="flex items-center gap-2">
                             <input type="checkbox" name="journal_entry_settings[auto_post_production]" id="auto_post_production" value="1"
-                                {{ old('journal_entry_settings.auto_post_production', $settings->journal_entry_settings['auto_post_production'] ?? false) ? 'checked' : '' }}
+                                {{ old('journal_entry_settings.auto_post_production', $settings->journal_entry_settings->auto_post_production ?? false) ? 'checked' : '' }}
                                 class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                             <label for="auto_post_production" class="text-sm text-gray-700 select-none">
                                 Auto-post production journals

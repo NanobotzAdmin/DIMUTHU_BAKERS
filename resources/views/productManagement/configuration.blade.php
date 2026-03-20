@@ -27,6 +27,10 @@
                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 Variations
             </button>
+            <button onclick="switchTab('categories')" id="tab-btn-categories"
+                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                Categories
+            </button>
         </nav>
     </div>
 
@@ -104,6 +108,30 @@
             <div id="variationValuesContainer" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center text-gray-500 min-h-[300px] flex items-center justify-center">
                 Select a variation to manage its values.
             </div>
+        </div>
+    </div>
+
+    {{-- Tab Content: Categories --}}
+    <div id="tab-content-categories" class="space-y-4 hidden">
+        <div class="flex justify-end">
+            <button onclick="openCategoryModal('add')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                Add Category
+            </button>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="categoriesTableBody" class="bg-white divide-y divide-gray-200">
+                    <!-- Loaded via AJAX -->
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -212,6 +240,39 @@
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button type="button" onclick="saveVariationValue()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Save</button>
                 <button type="button" onclick="closeModal('variationValueModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div id="categoryModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeModal('categoryModal')"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div class="relative z-10 inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="categoryModalTitle">Add Category</h3>
+                <div class="mt-4 space-y-3">
+                    <input type="hidden" id="categoryId">
+                    <div>
+                        <label for="categoryName" class="block text-sm font-medium text-gray-700">Category Name</label>
+                        <input type="text" id="categoryName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                    </div>
+                    <div>
+                        <label for="categoryCode" class="block text-sm font-medium text-gray-700">Category Code</label>
+                        <input type="text" id="categoryCode" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                    </div>
+                    <div>
+                        <label for="categoryDescription" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="categoryDescription" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="saveCategory()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Save</button>
+                <button type="button" onclick="closeModal('categoryModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
             </div>
         </div>
     </div>
@@ -519,6 +580,74 @@
         });
     }
 
+    // --- Categories Logic ---
+    function loadCategories() {
+        $.get('{{ route("categories.fetch") }}', function(data) {
+            let html = '';
+            if (data.length === 0) {
+                html = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No categories found.</td></tr>';
+            } else {
+                data.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.category_name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.category_code || '-'}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">${item.category_description || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                <button onclick="openCategoryModal('edit', ${item.id}, '${item.category_name.replace(/'/g, "\\'")}', '${(item.category_code || '').replace(/'/g, "\\'")}', '${(item.category_description || '').replace(/'/g, "\\'")}')" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                                <button onclick="deleteCategory(${item.id})" class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            $('#categoriesTableBody').html(html);
+        });
+    }
+
+    function openCategoryModal(mode, id = null, name = '', code = '', description = '') {
+        $('#categoryModalTitle').text(mode === 'add' ? 'Add Category' : 'Edit Category');
+        $('#categoryId').val(id);
+        $('#categoryName').val(name);
+        $('#categoryCode').val(code);
+        $('#categoryDescription').val(description);
+        $('#categoryModal').removeClass('hidden');
+    }
+
+    function saveCategory() {
+        const id = $('#categoryId').val();
+        const data = {
+            id: id,
+            category_name: $('#categoryName').val(),
+            category_code: $('#categoryCode').val(),
+            category_description: $('#categoryDescription').val()
+        };
+        const url = id ? '{{ route("categories.update") }}' : '{{ route("categories.store") }}';
+
+        $.post(url, data, function(response) {
+            closeModal('categoryModal');
+            loadCategories();
+            toastr.success('Category saved successfully');
+        }).fail(function(xhr) {
+            toastr.error('Error saving category');
+        });
+    }
+
+    function deleteCategory(id) {
+        if (!confirm('Are you sure?')) return;
+        $.ajax({
+            url: '{{ route("categories.delete") }}',
+            type: 'DELETE',
+            data: {
+                id: id
+            },
+            success: function(response) {
+                loadCategories();
+                toastr.success('Category deleted');
+            }
+        });
+    }
+
     function closeModal(id) {
         $('#' + id).addClass('hidden');
     }
@@ -526,7 +655,7 @@
     // --- Tab Switching Logic ---
     function switchTab(tabName) {
         // Hide all tab contents
-        $('#tab-content-product-types, #tab-content-brands, #tab-content-variations').addClass('hidden');
+        $('#tab-content-product-types, #tab-content-brands, #tab-content-variations, #tab-content-categories').addClass('hidden');
         // Show selected tab content
         $('#tab-content-' + tabName).removeClass('hidden');
 
@@ -534,7 +663,7 @@
         const inactiveClass = 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
         const activeClass = 'border-indigo-500 text-indigo-600';
 
-        $('#tab-btn-product-types, #tab-btn-brands, #tab-btn-variations')
+        $('#tab-btn-product-types, #tab-btn-brands, #tab-btn-variations, #tab-btn-categories')
             .removeClass(activeClass)
             .addClass(inactiveClass);
 
@@ -547,6 +676,7 @@
         if (tabName === 'product-types') loadProductTypes();
         else if (tabName === 'brands') loadBrands();
         else if (tabName === 'variations') loadVariations();
+        else if (tabName === 'categories') loadCategories();
     }
 
     // Initial load based on default active tab

@@ -14,6 +14,7 @@ class PmProductItem extends Model
     protected $fillable = [
         'pm_product_id',
         'pm_brands_id',
+        'pm_product_category_id',
         'pm_variation_id',
         'pm_variation_value_id',
         'product_name',
@@ -34,6 +35,11 @@ class PmProductItem extends Model
     public function brand()
     {
         return $this->belongsTo(PmBrand::class, 'pm_brands_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(PmProductCategory::class, 'pm_product_category_id');
     }
 
     public function variation()

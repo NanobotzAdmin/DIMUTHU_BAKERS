@@ -43,7 +43,7 @@
                 <div>
                     <label for="batch_format" class="block text-sm font-medium text-gray-700 mb-1">Batch Number Format</label>
                     <input type="text" name="batch_numbering[format]" id="batch_format" 
-                        value="{{ old('batch_numbering.format', $settings->batch_numbering['format'] ?? 'BATCH-YYYYMMDD-####') }}"
+                        value="{{ old('batch_numbering.format', $settings->batch_numbering->format ?? 'BATCH-YYYYMMDD-####') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="BATCH-YYYYMMDD-####">
                     <p class="text-xs text-gray-500 mt-1">Use YYYY for year, MM for month, DD for day, #### for sequence</p>
@@ -52,16 +52,16 @@
                 <div>
                     <label for="current_sequence" class="block text-sm font-medium text-gray-700 mb-1">Current Sequence Number</label>
                     <input type="number" name="batch_numbering[current_sequence]" id="current_sequence" 
-                        value="{{ old('batch_numbering.current_sequence', $settings->batch_numbering['current_sequence'] ?? '1234') }}"
+                        value="{{ old('batch_numbering.current_sequence', $settings->batch_numbering->current_sequence ?? '1234') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="1234">
-                    <p class="text-xs text-gray-500 mt-1">Next batch will be: BATCH-{{ now()->format('Ymd') }}-{{ str_pad(($settings->batch_numbering['current_sequence'] ?? 0) + 1, 4, '0', STR_PAD_LEFT) }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Next batch will be: BATCH-{{ now()->format('Ymd') }}-{{ str_pad(($settings->batch_numbering->current_sequence ?? 0) + 1, 4, '0', STR_PAD_LEFT) }}</p>
                 </div>
 
                 <div class="md:col-span-2">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="batch_numbering[auto_increment]" id="auto_increment" value="1"
-                            {{ old('batch_numbering.auto_increment', $settings->batch_numbering['auto_increment'] ?? false) ? 'checked' : '' }}
+                            {{ old('batch_numbering.auto_increment', $settings->batch_numbering->auto_increment ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="auto_increment" class="text-sm text-gray-700 select-none">
                             Automatically increment sequence number
@@ -87,7 +87,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="checkbox" name="waste_recovery[enabled]" id="waste_enabled" value="1"
-                        {{ old('waste_recovery.enabled', $settings->waste_recovery['enabled'] ?? false) ? 'checked' : '' }}
+                        {{ old('waste_recovery.enabled', $settings->waste_recovery->enabled ?? false) ? 'checked' : '' }}
                         class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                     <label for="waste_enabled" class="text-sm font-medium text-gray-700 select-none">
                         Enable Waste Recovery
@@ -96,7 +96,7 @@
             </div>
 
             {{-- Collapsible Content --}}
-            <div id="waste-recovery-content" class="space-y-6 transition-all duration-300 {{ old('waste_recovery.enabled', $settings->waste_recovery['enabled'] ?? false) ? '' : 'hidden opacity-50' }}">
+            <div id="waste-recovery-content" class="space-y-6 transition-all duration-300 {{ old('waste_recovery.enabled', $settings->waste_recovery->enabled ?? false) ? '' : 'hidden opacity-50' }}">
                 
                 {{-- Method Display --}}
                 <div class="bg-white rounded-lg p-4 border border-orange-200">
@@ -109,7 +109,7 @@
                 <div>
                     <label for="threshold_alert" class="block text-sm font-medium text-gray-700 mb-1">Waste Threshold Alert (%)</label>
                     <input type="number" step="0.1" name="waste_recovery[threshold_alert_percent]" id="threshold_alert" 
-                        value="{{ old('waste_recovery.threshold_alert_percent', $settings->waste_recovery['threshold_alert_percent'] ?? '10') }}"
+                        value="{{ old('waste_recovery.threshold_alert_percent', $settings->waste_recovery->threshold_alert_percent ?? '10') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="10">
                     <p class="text-xs text-gray-500 mt-1">Alert when waste exceeds this percentage of production</p>
@@ -132,7 +132,7 @@
                             <div class="w-32">
                                 <div class="flex items-center gap-2">
                                     <input type="number" step="0.01" name="waste_recovery[stage1_recovery_percent]" id="stage1_recovery"
-                                        value="{{ old('waste_recovery.stage1_recovery_percent', $settings->waste_recovery['stage1_recovery_percent'] ?? '0') }}"
+                                        value="{{ old('waste_recovery.stage1_recovery_percent', $settings->waste_recovery->stage1_recovery_percent ?? '0') }}"
                                         class="nrv-input w-full rounded-md border-gray-300 shadow-sm text-right focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                                     <span class="text-sm text-gray-600">%</span>
                                 </div>
@@ -151,7 +151,7 @@
                             <div class="w-32">
                                 <div class="flex items-center gap-2">
                                     <input type="number" step="0.01" name="waste_recovery[stage2_recovery_percent]" id="stage2_recovery"
-                                        value="{{ old('waste_recovery.stage2_recovery_percent', $settings->waste_recovery['stage2_recovery_percent'] ?? '0') }}"
+                                        value="{{ old('waste_recovery.stage2_recovery_percent', $settings->waste_recovery->stage2_recovery_percent ?? '0') }}"
                                         class="nrv-input w-full rounded-md border-gray-300 shadow-sm text-right focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                                     <span class="text-sm text-gray-600">%</span>
                                 </div>
@@ -170,7 +170,7 @@
                             <div class="w-32">
                                 <div class="flex items-center gap-2">
                                     <input type="number" step="0.01" name="waste_recovery[stage3_recovery_percent]" id="stage3_recovery"
-                                        value="{{ old('waste_recovery.stage3_recovery_percent', $settings->waste_recovery['stage3_recovery_percent'] ?? '0') }}"
+                                        value="{{ old('waste_recovery.stage3_recovery_percent', $settings->waste_recovery->stage3_recovery_percent ?? '0') }}"
                                         class="nrv-input w-full rounded-md border-gray-300 shadow-sm text-right focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                                     <span class="text-sm text-gray-600">%</span>
                                 </div>
@@ -205,7 +205,7 @@
                 <div>
                     <label for="shelf_life" class="block text-sm font-medium text-gray-700 mb-1">Default Shelf Life (Hours)</label>
                     <input type="number" name="default_settings[shelf_life_hours]" id="shelf_life" 
-                        value="{{ old('default_settings.shelf_life_hours', $settings->default_settings['shelf_life_hours'] ?? '24') }}"
+                        value="{{ old('default_settings.shelf_life_hours', $settings->default_settings->shelf_life_hours ?? '24') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="24">
                     <p class="text-xs text-gray-500 mt-1">Default shelf life for produced batches</p>
@@ -214,7 +214,7 @@
                 <div class="space-y-3 md:pt-6">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="default_settings[require_qc_approval]" id="require_qc_approval" value="1"
-                            {{ old('default_settings.require_qc_approval', $settings->default_settings['require_qc_approval'] ?? false) ? 'checked' : '' }}
+                            {{ old('default_settings.require_qc_approval', $settings->default_settings->require_qc_approval ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="require_qc_approval" class="text-sm text-gray-700 select-none">
                             Require QC approval before releasing to inventory
@@ -223,7 +223,7 @@
 
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="default_settings[track_batch_genealogy]" id="track_batch_genealogy" value="1"
-                            {{ old('default_settings.track_batch_genealogy', $settings->default_settings['track_batch_genealogy'] ?? false) ? 'checked' : '' }}
+                            {{ old('default_settings.track_batch_genealogy', $settings->default_settings->track_batch_genealogy ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="track_batch_genealogy" class="text-sm text-gray-700 select-none">
                             Track batch genealogy (ingredient traceability)

@@ -18,6 +18,7 @@ class VmVehicle extends Model
         'chassis_number',
         'vehicle_image',
         'status',
+        'is_added',
     ];
 
     public function agent()

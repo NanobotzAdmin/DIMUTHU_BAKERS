@@ -61,7 +61,7 @@
             <div class="space-y-4">
                 <div class="flex items-center gap-2">
                     <input type="checkbox" name="stock_alerts[low_stock_enabled]" id="low_stock_enabled" value="1"
-                        {{ old('stock_alerts.low_stock_enabled', $settings->stock_alerts['low_stock_enabled'] ?? false) ? 'checked' : '' }}
+                        {{ old('stock_alerts.low_stock_enabled', $settings->stock_alerts->low_stock_enabled ?? false) ? 'checked' : '' }}
                         class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                     <label for="low_stock_enabled" class="text-sm text-gray-700 font-medium select-none">
                         Enable low stock email alerts
@@ -69,11 +69,11 @@
                 </div>
 
                 {{-- Conditional Section --}}
-                <div id="stock-alerts-content" class="space-y-4 transition-all duration-300 {{ old('stock_alerts.low_stock_enabled', $settings->stock_alerts['low_stock_enabled'] ?? false) ? '' : 'hidden opacity-50' }}">
+                <div id="stock-alerts-content" class="space-y-4 transition-all duration-300 {{ old('stock_alerts.low_stock_enabled', $settings->stock_alerts->low_stock_enabled ?? false) ? '' : 'hidden opacity-50' }}">
                     <div>
                         <label for="critical_stock" class="block text-sm font-medium text-gray-700 mb-1">Critical Stock Level (%)</label>
                         <input type="number" step="1" name="stock_alerts[critical_stock_percent]" id="critical_stock" 
-                            value="{{ old('stock_alerts.critical_stock_percent', $settings->stock_alerts['critical_stock_percent'] ?? '50') }}"
+                            value="{{ old('stock_alerts.critical_stock_percent', $settings->stock_alerts->critical_stock_percent ?? '50') }}"
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                             placeholder="50">
                         <p class="text-xs text-gray-500 mt-1">Alert when stock falls below this % of reorder point</p>
@@ -83,8 +83,8 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email Recipients</label>
                         <div id="email-recipients-list" class="flex flex-wrap gap-2 mb-2">
                             {{-- Existing Recipients --}}
-                            @if(isset($settings->stock_alerts['email_recipients']))
-                                @foreach($settings->stock_alerts['email_recipients'] as $email)
+                            @if(isset($settings->stock_alerts->email_recipients))
+                                @foreach($settings->stock_alerts->email_recipients as $email)
                                     <span class="email-tag inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
                                         {{ $email }}
                                         <input type="hidden" name="stock_alerts[email_recipients][]" value="{{ $email }}">
@@ -118,7 +118,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 capitalize">{{ $type }}</label>
                     <div class="flex flex-wrap gap-2 mt-2">
-                        @foreach($settings->units_of_measure[$type] ?? [] as $unit)
+                        @foreach($settings->units_of_measure->{$type} ?? [] as $unit)
                             <span class="px-3 py-1 {{ $style['bg'] }} {{ $style['text'] }} rounded text-sm select-none">
                                 {{ $unit }}
                             </span>
@@ -131,8 +131,8 @@
                 <div class="md:col-span-3">
                     <label class="block text-sm font-medium text-gray-700">Custom Units</label>
                     <div id="custom-units-list" class="flex flex-wrap gap-2 mt-2 mb-2">
-                        @if(isset($settings->units_of_measure['custom']))
-                            @foreach($settings->units_of_measure['custom'] as $unit)
+                        @if(isset($settings->units_of_measure->custom))
+                            @foreach($settings->units_of_measure->custom as $unit)
                                 <span class="custom-unit-tag inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded text-sm">
                                     {{ $unit }}
                                     <input type="hidden" name="units_of_measure[custom][]" value="{{ $unit }}">
@@ -164,7 +164,7 @@
                 <div>
                     <label for="approval_percent" class="block text-sm font-medium text-gray-700 mb-1">Require Approval for Adjustments Above (%)</label>
                     <input type="number" step="0.1" name="stock_movements[require_approval_above_percent]" id="approval_percent" 
-                        value="{{ old('stock_movements.require_approval_above_percent', $settings->stock_movements['require_approval_above_percent'] ?? '10') }}"
+                        value="{{ old('stock_movements.require_approval_above_percent', $settings->stock_movements->require_approval_above_percent ?? '10') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
                         placeholder="10">
                     <p class="text-xs text-gray-500 mt-1">Adjustments exceeding this % of item value require manager approval</p>
@@ -173,7 +173,7 @@
                 <div class="space-y-2">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="stock_movements[require_reason]" id="require_reason" value="1"
-                            {{ old('stock_movements.require_reason', $settings->stock_movements['require_reason'] ?? false) ? 'checked' : '' }}
+                            {{ old('stock_movements.require_reason', $settings->stock_movements->require_reason ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="require_reason" class="text-sm text-gray-700 select-none">
                             Require reason for all stock adjustments
@@ -182,7 +182,7 @@
 
                     <div class="flex items-center gap-2">
                         <input type="checkbox" name="stock_movements[auto_po]" id="auto_po" value="1"
-                            {{ old('stock_movements.auto_po', $settings->stock_movements['auto_po'] ?? false) ? 'checked' : '' }}
+                            {{ old('stock_movements.auto_po', $settings->stock_movements->auto_po ?? false) ? 'checked' : '' }}
                             class="w-4 h-4 text-[#D4A017] border-gray-300 rounded focus:ring-[#D4A017]">
                         <label for="auto_po" class="text-sm text-gray-700 select-none">
                             Auto-create purchase orders when stock below reorder point

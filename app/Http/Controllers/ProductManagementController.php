@@ -8,6 +8,7 @@ use App\Models\PmProduct;
 use App\Models\PmProductItem;
 use App\Models\PmProductType;
 use App\Models\PmVariation;
+use App\Models\PmProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,7 @@ class ProductManagementController extends Controller
         // dd($request->all());
         $request->validate([
             'name' => 'required|string|max:150',
+            'category' => 'required|exists:pm_product_category,id',
             'items' => 'required|array|min:1',
         ]);
 
@@ -58,6 +60,7 @@ class ProductManagementController extends Controller
                 $productItem = PmProductItem::create([
                     'pm_product_id' => $product->id,
                     'pm_brands_id' => $request->brand ?? null, // Optional
+                    'pm_product_category_id' => $request->category,
                     'pm_variation_id' => $item['variation_id'] ?? null,
                     'pm_variation_value_id' => $item['variation_value_id'] ?? null,
                     'product_name' => $item['name'],
@@ -98,10 +101,11 @@ class ProductManagementController extends Controller
     {
         $productTypes = PmProductType::where('status', 1)->get();
         $brands = PmBrand::where('status', 1)->get();
+        $categories = PmProductCategory::where('is_active', 1)->get();
         $variants = PmVariation::with('values')->where('status', 1)->get();
         $unitOfMeasurement = CommonVariables::$UnitOfMeasurement;
 
-        return view('productManagement.productRegistration', compact('productTypes', 'brands', 'variants', 'unitOfMeasurement'));
+        return view('productManagement.productRegistration', compact('productTypes', 'brands', 'categories', 'variants', 'unitOfMeasurement'));
     }
 
     public function configurationIndex()
@@ -281,6 +285,57 @@ class ProductManagementController extends Controller
         return response()->json(['success' => true]);
     }
 
+    // Categories
+    public function fetchCategories()
+    {
+        $categories = PmProductCategory::where('is_active', 1)->get();
+
+        return response()->json($categories);
+    }
+
+    public function storeCategory(Request $request)
+    {
+        $request->validate([
+            'category_name' => 'required|string|max:150|unique:pm_product_category,category_name',
+            'category_code' => 'nullable|string|max:45',
+            'category_description' => 'nullable|string',
+        ]);
+        PmProductCategory::create([
+            'category_name' => $request->category_name,
+            'category_code' => $request->category_code,
+            'category_description' => $request->category_description,
+            'is_active' => 1,
+            'created_by' => auth()->id() ?? 1,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateCategory(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:pm_product_category,id',
+            'category_name' => 'required|string|max:150|unique:pm_product_category,category_name,'.$request->id,
+            'category_code' => 'nullable|string|max:45',
+            'category_description' => 'nullable|string',
+        ]);
+        PmProductCategory::where('id', $request->id)->update([
+            'category_name' => $request->category_name,
+            'category_code' => $request->category_code,
+            'category_description' => $request->category_description,
+            'updated_by' => auth()->id() ?? 1,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteCategory(Request $request)
+    {
+        PmProductCategory::where('id', $request->id)->update(['is_active' => 0]);
+
+        return response()->json(['success' => true]);
+    }
+
     // --- Product Search & Details Enhancements ---
 
     public function searchProducts(Request $request)
@@ -322,7 +377,7 @@ class ProductManagementController extends Controller
         $brands = PmBrand::where('status', 1)->get();
 
         // Fetch all product items with necessary relationships
-        $items = PmProductItem::with(['product', 'brand', 'variationValue', 'variation', 'productTypes'])
+        $items = PmProductItem::with(['product', 'brand', 'variationValue', 'variation', 'productTypes', 'category'])
             ->where('status', 1)
             ->get();
 
@@ -362,6 +417,7 @@ class ProductManagementController extends Controller
             return [
                 'id' => $item->id,
                 'name' => $item->product_name, // Using Item name as specific product name
+                'productCategory' => $item->category->category_name ?? 'N/A', // New Category
                 'category' => $typeName,
                 'brand' => $item->brand->brand_name ?? 'No Brand',
                 'autoRef' => $item->ref_number_auto,
@@ -380,6 +436,7 @@ class ProductManagementController extends Controller
             'stats' => $stats,
             'productTypes' => $productTypes,
             'brands' => $brands,
+            'categories' => PmProductCategory::where('is_active', 1)->get(),
         ]);
     }
 

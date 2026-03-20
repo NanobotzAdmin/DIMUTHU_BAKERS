@@ -19,6 +19,7 @@ class DmDriver extends Model
         'licences_expire_date',
         'contact_number',
         'status',
+        'is_added',
     ];
 
     public function agent()
