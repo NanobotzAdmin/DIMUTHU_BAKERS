@@ -16,6 +16,7 @@ class StmOrderRequest extends Model
         'branch_id',
         'customer_id',
         'agent_id',
+        'monthly_target_id',
         'quotation_id',
         'order_type',
         'event_type',
@@ -52,6 +53,11 @@ class StmOrderRequest extends Model
     public function agent()
     {
         return $this->belongsTo(AdAgent::class, 'agent_id');
+    }
+
+    public function monthlyTarget()
+    {
+        return $this->belongsTo(AdAgentMonthlyTarget::class, 'monthly_target_id');
     }
 
     public function products()

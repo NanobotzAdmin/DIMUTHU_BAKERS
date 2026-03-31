@@ -30,16 +30,34 @@ class ApiGRNController extends Controller
         return null;
     }
 
-    public function getProducts()
+    public function getProducts(Request $request)
     {
         try {
+            $search = $request->query('search');
+
             // Get products with product_type_id = 3 (Bakery Staff) that have stock
             // joining with pm_product_item_has_product_types
-            $products = PmProductItem::whereHas('productTypes', function ($query) {
-                $query->where('pm_product_type.id', 3);
-            })
-                ->with(['stocks'])
-                ->get()
+            $query = PmProductItem::with(['stocks']);
+
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->where('product_name', 'like', "%{$search}%")
+                      ->orWhere('reference_number', 'like', "%{$search}%");
+                });
+            } else {
+                // If no search query, return empty or a small set?
+                // User wants "only load if I search", so if search is empty, maybe return empty list?
+                // Or if it's explicitly called without search, maybe they want all?
+                // Re-reading: "here products only want to load if i search product"
+                // So if no search query is provided, we should return an empty list OR handle it in frontend.
+                // Let's return empty list if search is empty to be safe and clear.
+                return response()->json([
+                    'status' => true,
+                    'data' => []
+                ]);
+            }
+
+            $products = $query->get()
                 ->map(function ($product) {
                     // Get the earliest expiring stock or just the first available for price
                     $latestStock = $product->stocks->first();
@@ -110,6 +128,18 @@ class ApiGRNController extends Controller
             DB::beginTransaction();
 
             $agentId = $this->getAgentId();
+            $agent = AdAgent::find($agentId);
+
+            // Check Credit Limit
+            if ($agent && $agent->credit_limit > 0 && $agent->outstanding_balance > $agent->credit_limit) {
+                $needToPay = $agent->outstanding_balance - $agent->credit_limit;
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Credit Limit Exceeded! You need to pay Rs. ' . number_format($needToPay, 2) . ' to create a new order.',
+                    'need_to_pay' => $needToPay
+                ], 403);
+            }
+
             $orderNumber = 'OR-' . strtoupper(uniqid());
 
             // 1. Create Order Request
@@ -220,17 +250,25 @@ class ApiGRNController extends Controller
 
             if ($totalPaid >= $orderRequest->grand_total) {
                 $orderRequest->payment_completed = 2; // Paid
-                // Also update order status if needed, the user mentioned 7 for completed in frontend logic usually
-                // but kept the existing status = 2 logic if that's what was there. 
-                // However, common variables might be better. 
-                // Let's stick to what's requested: payment_completed = 2
                 $historyDescription .= ". Order marked as fully paid and completed.";
             } else if ($totalPaid > 0) {
                 $orderRequest->payment_completed = 1; // Partial
                 $historyDescription .= ". Order marked as partially paid.";
             }
+
+            // Handle "Credit" status if specifically used as a method
+            if (strtolower($request->method) === 'credit') {
+                $orderRequest->payment_completed = 3; // Credit
+                $historyDescription .= " (Recorded as Credit adjustment).";
+            }
             
             $orderRequest->save();
+
+            // 5. Update Agent Balance and Total Collections
+            if ($agent = AdAgent::find($orderRequest->agent_id)) {
+                $agent->adjustBalance($request->amount, 'outstanding_balance', true); // Decrease balance
+                $agent->adjustBalance($request->amount, 'total_collections', true); // Increase collections
+            }
 
             // Log History
             StmOrderRequestHistory::create([
@@ -349,10 +387,16 @@ class ApiGRNController extends Controller
                 ]);
             }
 
-            // Update order status to Confirmed (3)
+            // Update order status to Confirmed (7)
             $orderRequest->status = 7; // Complete Settled
             $orderRequest->updated_by = auth()->id();
             $orderRequest->save();
+
+            // 4. Update Agent Balance and Total Sales
+            if ($agent = AdAgent::find($agentId)) {
+                $agent->adjustBalance($orderRequest->grand_total, 'outstanding_balance', true);
+                $agent->adjustBalance($orderRequest->grand_total, 'total_sales', true);
+            }
 
             // Log Order Request History
             StmOrderRequestHistory::create([

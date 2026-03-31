@@ -3,9 +3,17 @@
 @section('content')
     <div class="p-6 max-w-full mx-auto space-y-6" id="financial-dashboard-app">
         <!-- Header -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">Agent Financial Dashboard</h1>
-            <p class="text-gray-600">Comprehensive financial overview and performance metrics</p>
+        <div class="mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Agent Financial Dashboard</h1>
+                <p class="text-gray-600">Comprehensive financial overview and performance metrics</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{{ route('agents.performanceOverview.index') }}" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+                    <i class="bi bi-graph-up"></i>
+                    View Performance Overview
+                </a>
+            </div>
         </div>
 
         <!-- Filters -->
@@ -205,11 +213,6 @@
 
             // Calc Metrics
             const totalSales = filteredSettlements.reduce((sum, s) => sum + s.totalSales, 0);
-            // Using all matching commissions for total/pending/paid logic within period if intended, or lifetime? 
-            // Based on React code, it seemed to be period based for commissioning stats.
-            // Actually commissions usually lag, but let's stick to period filter for specific period performance, 
-            // but maybe pending is a "current state" thing. Let's filter by period for report consistency.
-
             const totalCommission = filteredCommissions.reduce((sum, c) => sum + Number(c.netCommission), 0);
             const paidCommission = filteredCommissions.filter(c => c.paymentStatus === 'paid').reduce((sum, c) => sum + Number(c.netCommission), 0);
             const pendingCommission = filteredCommissions.filter(c => c.paymentStatus === 'pending').reduce((sum, c) => sum + Number(c.netCommission), 0);
@@ -217,11 +220,9 @@
             const daysWorked = filteredSettlements.length;
             const avgDailySales = daysWorked > 0 ? totalSales / daysWorked : 0;
 
-            // Mock transaction count estimate from totalSales for Average Transaction Value logic demo
-            const estTxnCount = Math.round(totalSales / 2000); // assume 2000 avg
+            const estTxnCount = Math.round(totalSales / 2000); 
             const avgTxnValue = estTxnCount > 0 ? totalSales / estTxnCount : 0;
 
-            // Cash Accuracy
             const varianceCount = filteredSettlements.filter(s => Math.abs(s.cashVariance) > 0).length;
             const accuracy = daysWorked > 0 ? ((daysWorked - varianceCount) / daysWorked) * 100 : 100;
 
@@ -255,10 +256,7 @@
             const paidPct = totalCommission > 0 ? (paidCommission / totalCommission) * 100 : 0;
             document.getElementById('overview-paid-pct').textContent = `${paidPct.toFixed(0)}% of total`;
 
-            // Render Lists
             renderRecentActivity(filteredSettlements);
-
-            // Render Charts
             updateCharts(filteredSettlements, allAgentCommissions);
         }
 
@@ -283,21 +281,16 @@
             `).join('');
         }
 
-        // --- Charting ---
         function updateCharts(settlements, allCommissions) {
-            // Prepare Data
-
-            // 1. Trend (Monthly Aggregation)
             const monthlyData = {};
             settlements.forEach(s => {
-                const m = s.settlementDate.substring(0, 7); // YYYY-MM
+                const m = s.settlementDate.substring(0, 7);
                 if (!monthlyData[m]) monthlyData[m] = { sales: 0, comm: 0 };
                 monthlyData[m].sales += s.totalSales;
                 monthlyData[m].comm += s.commissionEarned;
             });
             const sortedMonths = Object.keys(monthlyData).sort();
 
-            // 2. Payment Method
             const paymentData = { cash: 0, credit: 0, cheque: 0 };
             settlements.forEach(s => {
                 paymentData.cash += Number(s.cashSales);
@@ -305,87 +298,45 @@
                 paymentData.cheque += Number(s.chequeSales);
             });
 
-            // 3. Commission History (Last 6 distinct periods from allCommissions)
-            // Sort by date
             const sortedComms = [...allCommissions].sort((a, b) => new Date(a.periodEnd) - new Date(b.periodEnd)).slice(-6);
 
-            // --- Render Trend Chart ---
             const ctxTrend = document.getElementById('trendChart').getContext('2d');
             if (state.charts.trend) state.charts.trend.destroy();
-
             state.charts.trend = new Chart(ctxTrend, {
                 type: 'line',
                 data: {
                     labels: sortedMonths,
                     datasets: [
-                        {
-                            label: 'Sales',
-                            data: sortedMonths.map(m => monthlyData[m].sales),
-                            borderColor: '#8B5CF6',
-                            backgroundColor: '#8B5CF6',
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Commission',
-                            data: sortedMonths.map(m => monthlyData[m].comm),
-                            borderColor: '#10B981',
-                            backgroundColor: '#10B981',
-                            tension: 0.4
-                        }
+                        { label: 'Sales', data: sortedMonths.map(m => monthlyData[m].sales), borderColor: '#8B5CF6', tension: 0.4 },
+                        { label: 'Commission', data: sortedMonths.map(m => monthlyData[m].comm), borderColor: '#10B981', tension: 0.4 }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
 
-            // --- Render Payment Pie ---
             const ctxPie = document.getElementById('paymentChart').getContext('2d');
             if (state.charts.pie) state.charts.pie.destroy();
-
             state.charts.pie = new Chart(ctxPie, {
                 type: 'doughnut',
                 data: {
                     labels: ['Cash', 'Credit', 'Cheque'],
-                    datasets: [{
-                        data: [paymentData.cash, paymentData.credit, paymentData.cheque],
-                        backgroundColor: ['#10B981', '#F59E0B', '#3B82F6']
-                    }]
+                    datasets: [{ data: [paymentData.cash, paymentData.credit, paymentData.cheque], backgroundColor: ['#10B981', '#F59E0B', '#3B82F6'] }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
 
-            // --- Render Commission Bar ---
             const ctxBar = document.getElementById('commissionChart').getContext('2d');
             if (state.charts.bar) state.charts.bar.destroy();
-
             state.charts.bar = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
                     labels: sortedComms.map(c => new Date(c.periodEnd).toLocaleDateString(undefined, { month: 'short', year: '2-digit' })),
                     datasets: [
-                        {
-                            label: 'Gross',
-                            data: sortedComms.map(c => c.grossCommission),
-                            backgroundColor: '#8B5CF6'
-                        },
-                        {
-                            label: 'Net Pay',
-                            data: sortedComms.map(c => c.netCommission),
-                            backgroundColor: '#10B981'
-                        }
+                        { label: 'Gross', data: sortedComms.map(c => c.grossCommission), backgroundColor: '#8B5CF6' },
+                        { label: 'Net Pay', data: sortedComms.map(c => c.netCommission), backgroundColor: '#10B981' }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
@@ -395,11 +346,7 @@
             if (period === 'month') start.setDate(start.getDate() - 30);
             else if (period === 'quarter') start.setDate(start.getDate() - 90);
             else if (period === 'year') start.setFullYear(start.getFullYear() - 1);
-
-            return {
-                startDate: start.toISOString().split('T')[0],
-                endDate: end.toISOString().split('T')[0]
-            };
+            return { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] };
         }
 
         function formatCurrency(amount) {

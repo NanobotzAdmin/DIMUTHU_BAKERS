@@ -241,7 +241,7 @@
 
             state.agents.forEach(agent => {
                 const agentStls = state.settlements.filter(s =>
-                    s.agentId === agent.id &&
+                    Number(s.agentId) === Number(agent.id) &&
                     s.settlementDate >= start &&
                     s.settlementDate <= end &&
                     s.status === 'approved'
@@ -250,8 +250,27 @@
                 if (agentStls.length === 0) return;
 
                 const totalSales = agentStls.reduce((sum, s) => sum + Number(s.totalSales), 0);
-                const gross = agentStls.reduce((sum, s) => sum + Number(s.commissionEarned), 0);
-                const tax = gross * 0.10;
+                
+                // New Calculation Logic
+                const invoicingRate = agent.invoicingCommissionRate || 15.00;
+                const invoicingComm = totalSales * (invoicingRate / 100);
+                
+                const monthlyTarget = agent.monthlySalesTarget || 0;
+                const achievement = monthlyTarget > 0 ? (totalSales / monthlyTarget) * 100 : 0;
+                
+                let targetBonus = 0;
+                const targetRate = agent.targetCommissionRate || 5.00;
+                const threshold = agent.achievementThreshold || 80.00;
+                const reducedRate = agent.reducedTargetCommissionRate || 4.00;
+                
+                if (achievement >= 100) {
+                    targetBonus = totalSales * (targetRate / 100);
+                } else if (achievement >= threshold) {
+                    targetBonus = totalSales * (reducedRate / 100);
+                }
+                
+                const gross = invoicingComm + targetBonus;
+                const tax = gross * 0.10; // Assuming 10% tax withholding
                 const net = gross - tax;
 
                 if (gross <= 0) return;
@@ -264,7 +283,11 @@
                     periodStart: start,
                     periodEnd: end,
                     totalSales,
-                    commissionRate: agent.commissionRate,
+                    invoicingRate: invoicingRate,
+                    targetRate: targetRate,
+                    achievement: achievement.toFixed(2),
+                    invoicingComm: invoicingComm,
+                    targetBonus: targetBonus,
                     grossCommission: gross,
                     deductions: { tax, other: 0 },
                     netCommission: net,
@@ -371,12 +394,13 @@
                                     Period: ${new Date(p.periodStart).toLocaleDateString()} - ${new Date(p.periodEnd).toLocaleDateString()}
                                 </p>
 
-                                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
                                     <div><p class="text-xs text-gray-500">Total Sales</p><p class="text-sm font-medium text-gray-900">${formatCurrency(p.totalSales)}</p></div>
-                                    <div><p class="text-xs text-gray-500">Gross Comm.</p><p class="text-sm font-medium text-gray-900">${formatCurrency(p.grossCommission)}</p></div>
+                                    <div><p class="text-xs text-gray-500">Invoicing Comm.</p><p class="text-sm font-medium text-gray-900">${formatCurrency(p.invoicingComm)}</p><p class="text-[10px] text-gray-400">@ ${p.invoicingRate}%</p></div>
+                                    <div><p class="text-xs text-gray-500">Target Bonus</p><p class="text-sm font-medium text-green-600">${formatCurrency(p.targetBonus)}</p><p class="text-[10px] text-gray-400">${p.achievement}% Achieved</p></div>
                                     <div><p class="text-xs text-gray-500 text-red-600">Tax</p><p class="text-sm text-red-600">-${formatCurrency(p.deductions.tax)}</p></div>
-                                    <div><p class="text-xs text-gray-500">Net Commission</p><p class="text-sm font-bold text-green-600">${formatCurrency(p.netCommission)}</p></div>
-                                    <div><p class="text-xs text-gray-500">Rate</p><p class="text-sm font-medium text-gray-900">${p.commissionRate}%</p></div>
+                                    <div><p class="text-xs text-gray-500">Net Comm.</p><p class="text-sm font-bold text-gray-900">${formatCurrency(p.netCommission)}</p></div>
+                                    <div><p class="text-xs text-gray-500">Achievement</p><p class="text-sm font-medium ${p.achievement >= 100 ? 'text-green-600' : (p.achievement >= 80 ? 'text-amber-600' : 'text-red-600')}">${p.achievement}%</p></div>
                                 </div>
 
                                 ${p.paymentStatus === 'paid' ? `

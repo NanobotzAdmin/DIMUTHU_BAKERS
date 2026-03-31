@@ -21,21 +21,18 @@ class AdAgent extends Model
         'email',
         'nic_number',
         'address',
-        'base_salary',
-        'commission_rate',
+        'address',
         'credit_limit',
         'credit_period_days',
         'outstanding_balance',
         'total_sales',
         'total_collections',
-        'monthly_sales_target',
+        'vehicle_category',
     ];
 
     protected $casts = [
         'agent_type' => 'integer',
         'status' => 'integer',
-        'base_salary' => 'decimal:2',
-        'commission_rate' => 'decimal:2',
         'credit_limit' => 'decimal:2',
         'credit_period_days' => 'integer',
         'outstanding_balance' => 'decimal:2',
@@ -78,7 +75,7 @@ class AdAgent extends Model
             $newNumber = 1;
         }
 
-        return $prefix.str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -107,18 +104,23 @@ class AdAgent extends Model
     }
 
     /**
-     * Get item targets for this agent
+     * Get monthly targets for this agent
      */
-    public function itemTargets()
+    public function monthlyTargets()
     {
-        return $this->hasMany(AdAgentHasItemTargets::class, 'agent_id');
+        return $this->hasMany(AdAgentMonthlyTarget::class, 'agent_id');
     }
 
-    /**
-     * Get category targets for this agent
+     /**
+     * Adjust agent balance, sales, or collections
      */
-    public function categoryTargets()
+    public function adjustBalance($amount, $field = 'outstanding_balance', $isIncrease = true)
     {
-        return $this->hasMany(AdAgentHasCategoryTargets::class, 'agent_id');
+        if ($isIncrease) {
+            $this->{$field} += $amount;
+        } else {
+            $this->{$field} -= $amount;
+        }
+        $this->save();
     }
 }

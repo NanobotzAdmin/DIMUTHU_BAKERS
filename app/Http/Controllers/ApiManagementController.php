@@ -24,6 +24,9 @@ use App\Models\AdCustomerHasBusiness;
 use App\Models\AdCubusinessHasProductItem;
 use App\Models\AdDailyLoadHasCustomer;
 use App\Models\AdCubusinessHasReturnProductItem;
+use App\Models\AdAgentMonthlyTarget;
+use App\Models\UmUser;
+use Illuminate\Support\Facades\Hash;
 
 class ApiManagementController extends Controller
 {
@@ -205,8 +208,31 @@ class ApiManagementController extends Controller
         }
 
         try {
+            // Create user account first
+            $defaultPassword = 123456;
+            $userName = strtolower(str_replace(' ', '', $request->superviser_code));
+
+            // Check if username exists, append number if needed
+            $baseUserName = $userName;
+            $counter = 1;
+            while (UmUser::where('user_name', $userName)->exists()) {
+                $userName = $baseUserName . $counter;
+                $counter++;
+            }
+
+            $user = UmUser::create([
+                'first_name' => $request->superviser_name,
+                'last_name' => '',
+                'user_name' => $userName,
+                'user_password' => Hash::make($defaultPassword),
+                'contact_no' => $request->contact_number,
+                'user_role_id' => 10,
+                'is_active' => 1,
+            ]);
+
             $agentId = $this->getAgentId();
             $supervisor = SmSuperviser::create([
+                'user_id' => $user->id,
                 'agent_id' => $agentId,
                 'superviser_code' => $request->superviser_code,
                 'superviser_name' => $request->superviser_name,
@@ -307,14 +333,23 @@ class ApiManagementController extends Controller
 
     public function createVehicle(Request $request)
     {
+        Log::info('Starting vehicle creation', [
+            'upload_max_filesize' => ini_get('upload_max_filesize'),
+            'post_max_size' => ini_get('post_max_size'),
+            'has_file' => $request->hasFile('vehicle_image'),
+            'file_error' => $request->file('vehicle_image') ? $request->file('vehicle_image')->getError() : 'none',
+            'file_error_msg' => $request->file('vehicle_image') ? $request->file('vehicle_image')->getErrorMessage() : 'none',
+        ]);
+
         $validator = Validator::make($request->all(), [
             'vehicle_number' => 'required|string|max:255',
             'engine_number' => 'nullable|string|max:255',
             'chassis_number' => 'nullable|string|max:255',
-            'vehicle_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'vehicle_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Vehicle Creation Validation Failed', ['errors' => $validator->errors()->all(), 'request' => $request->all()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
@@ -323,16 +358,22 @@ class ApiManagementController extends Controller
         }
 
         try {
+            Log::info('Creating vehicle', ['request' => $request->except('vehicle_image'), 'has_image' => $request->hasFile('vehicle_image')]);
             $imagePath = null;
             if ($request->hasFile('vehicle_image')) {
                 $file = $request->file('vehicle_image');
-                $filename = time() . '_' . $file->getClientOriginalName();
+                Log::info('Processing vehicle image', [
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType()
+                ]);
                 $path = public_path('uploads/vehicles');
 
                 if (!file_exists($path)) {
                     mkdir($path, 0777, true);
                 }
 
+                $filename = time() . '_' . $file->getClientOriginalName();
                 $file->move($path, $filename);
                 $imagePath = 'uploads/vehicles/' . $filename;
             }
@@ -363,14 +404,24 @@ class ApiManagementController extends Controller
 
     public function updateVehicle(Request $request, $id)
     {
+        Log::info('Starting vehicle update', [
+            'id' => $id,
+            'upload_max_filesize' => ini_get('upload_max_filesize'),
+            'post_max_size' => ini_get('post_max_size'),
+            'has_file' => $request->hasFile('vehicle_image'),
+            'file_error' => $request->file('vehicle_image') ? $request->file('vehicle_image')->getError() : 'none',
+            'file_error_msg' => $request->file('vehicle_image') ? $request->file('vehicle_image')->getErrorMessage() : 'none',
+        ]);
+
         $validator = Validator::make($request->all(), [
             'vehicle_number' => 'required|string|max:255',
             'engine_number' => 'nullable|string|max:255',
             'chassis_number' => 'nullable|string|max:255',
-            'vehicle_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'vehicle_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Vehicle Update Validation Failed', ['id' => $id, 'errors' => $validator->errors()->all(), 'request' => $request->all()]);
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
@@ -379,6 +430,7 @@ class ApiManagementController extends Controller
         }
 
         try {
+            Log::info('Updating vehicle', ['id' => $id, 'request' => $request->except('vehicle_image'), 'has_image' => $request->hasFile('vehicle_image')]);
             $agentId = $this->getAgentId();
             $vehicle = VmVehicle::where('id', $id)->where('agent_id', $agentId)->first();
 
@@ -391,6 +443,11 @@ class ApiManagementController extends Controller
 
             if ($request->hasFile('vehicle_image')) {
                 $file = $request->file('vehicle_image');
+                Log::info('Processing updated vehicle image', [
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType()
+                ]);
                 $filename = time() . '_' . $file->getClientOriginalName();
                 $path = public_path('uploads/vehicles');
 
@@ -846,7 +903,7 @@ class ApiManagementController extends Controller
                             'product_item_id' => $productItemId,
                             'stm_branch_stock_id' => $branchStockIdsUsed[0] ?? null,
                             'loaded_qty' => $requestedQty,
-                            'available_quantity' => $totalAvailableQty,
+                            'available_quantity' => $requestedQty,
                             'price' => $item['price'],
                             'total_value' => $requestedQty * $item['price'],
                         ]);
@@ -1125,8 +1182,13 @@ class ApiManagementController extends Controller
     {
         try {
             $agentId = $this->getAgentId();
-            $products = PmProductItem::whereHas('productTypes', function ($query) {
-                $query->where('pm_product_type.id', 3);
+            // Get products that have stock for this agent
+            $products = PmProductItem::whereIn('id', function($query) use ($agentId) {
+                $query->select('pm_product_item_id')
+                    ->from('stm_branch_stock')
+                    ->where('agent_id', $agentId)
+                    ->groupBy('pm_product_item_id')
+                    ->havingRaw('SUM(quantity) > 0');
             })
                 ->get()
                 ->map(function ($product) use ($agentId) {
@@ -1322,6 +1384,97 @@ class ApiManagementController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Start trip error: ' . $e->getMessage());
             return response()->json(['status' => false, 'message' => 'Failed to start trip'], 500);
+        }
+    }
+
+    /**
+     * Get agent dashboard statistics and data.
+     */
+    public function getAgentDashboard()
+    {
+        try {
+            $agentId = $this->getAgentId();
+            if (!$agentId) {
+                return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
+            }
+
+            $today = date('Y-m-d');
+            $year = date('Y');
+            $month = date('n');
+
+            $agent = AdAgent::find($agentId);
+
+            // 1. Today's Sales
+            $todaySales = AdCubusinessHasInvoice::where('created_at', '>=', $today)
+                ->whereHas('business', function ($q) use ($agentId) {
+                    $q->where('agent_id', $agentId);
+                })
+                ->sum('net_price');
+
+            // 2. Total Customers
+            $totalCustomers = AdCustomerHasBusiness::where('agent_id', $agentId)->count();
+
+            // 3. Monthly Stats (Target & Commission)
+            $monthlyTarget = AdAgentMonthlyTarget::where('agent_id', $agentId)
+                ->where('target_year', $year)
+                ->where('target_month', $month)
+                ->first();
+
+            $targetAmount = $monthlyTarget ? (float)$monthlyTarget->monthly_sales_target : 0;
+            $commissionAmount = $monthlyTarget ? (float)$monthlyTarget->monthly_commission : 0;
+
+            // Calculate achieved sales for this month
+            $monthStart = date('Y-m-01');
+            $achievedSales = AdCubusinessHasInvoice::where('created_at', '>=', $monthStart)
+                ->whereHas('business', function ($q) use ($agentId) {
+                    $q->where('agent_id', $agentId);
+                })
+                ->sum('net_price');
+
+            // 4. Recent Visits (Latest 5 invoices as a proxy for visits)
+            $recentVisits = AdCubusinessHasInvoice::whereHas('business', function ($q) use ($agentId) {
+                $q->where('agent_id', $agentId);
+            })
+            ->with('business.customer')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($invoice) {
+                return [
+                    'id' => $invoice->id,
+                    'customer_name' => $invoice->business->business_name ?: ($invoice->business->customer->name ?? 'N/A'),
+                    'amount' => (float)$invoice->net_price,
+                    'time' => $invoice->created_at->format('h:i A'),
+                    'date' => $invoice->created_at->format('Y-m-d'),
+                    'status' => 'Order placed'
+                ];
+            });
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'stats' => [
+                        'today_sales' => (float)$todaySales,
+                        'total_customers' => $totalCustomers,
+                        'commission' => (float)$commissionAmount,
+                    ],
+                    'target' => [
+                        'monthly_target' => $targetAmount,
+                        'achieved_sales' => (float)$achievedSales,
+                        'progress_percentage' => $targetAmount > 0 ? min(100, round(($achievedSales / $targetAmount) * 100)) : 0,
+                    ],
+                    'credit' => [
+                        'credit_limit' => $agent ? (float)$agent->credit_limit : 0,
+                        'outstanding_balance' => $agent ? (float)$agent->outstanding_balance : 0,
+                        'credit_period_days' => $agent ? (int)$agent->credit_period_days : 0,
+                    ],
+                    'recent_visits' => $recentVisits
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Fetch agent dashboard error: ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Failed to fetch dashboard data'], 500);
         }
     }
 
@@ -2166,7 +2319,7 @@ class ApiManagementController extends Controller
 
             $activeLoad = AdDailyLoad::where('supervisor_id', $supervisorId)
                 ->where('status', 1) // Active
-                ->with(['route', 'vehicle', 'driver', 'items.product'])
+                ->with(['route.customers.customer', 'vehicle', 'driver', 'items.product'])
                 ->first();
 
             if (!$activeLoad) {
@@ -2247,6 +2400,35 @@ class ApiManagementController extends Controller
 
                 if (!$load) {
                     return response()->json(['status' => false, 'message' => 'Daily load not found'], 404);
+                }
+
+                // 1. Update Agent Stock based on unload_qty
+                $items = AdDailyLoadItem::where('daily_load_id', $load->id)->get();
+                foreach ($items as $item) {
+                    if ($item->unload_qty > 0) {
+                        if ($item->stm_branch_stock_id) {
+                            StmBranchStock::where('id', $item->stm_branch_stock_id)
+                                ->increment('quantity', $item->unload_qty);
+                        }
+
+                        // 2. Release barcodes for the unloaded quantities
+                        $barcodesToRelease = StmBarcode::where('ad_daily_load_id', $load->id)
+                            ->where('pm_product_item_id', $item->product_item_id)
+                            ->where('is_sold', false)
+                            ->limit((int) $item->unload_qty)
+                            ->get();
+
+                        foreach ($barcodesToRelease as $barcode) {
+                            $barcode->update(['ad_daily_load_id' => null]);
+                            
+                            StmBarcodesHistory::create([
+                                'barcode_id' => $barcode->id,
+                                'created_by' => auth()->id(),
+                                'action' => 'DAILY_LOAD_RELEASED',
+                                'description' => "Released from Daily Load #{$load->id} due to unloading",
+                            ]);
+                        }
+                    }
                 }
 
                 // Update load status as requested: status 1, load_status 5

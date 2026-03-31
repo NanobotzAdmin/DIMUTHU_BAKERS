@@ -14,6 +14,8 @@ class AdAgentHasBankAccount extends Model
 
     protected $fillable = [
         'agent_id',
+        'account_owner_name',
+        'bank_id',
         'bank_name',
         'account_number',
         'branch',
@@ -30,5 +32,13 @@ class AdAgentHasBankAccount extends Model
     public function agent()
     {
         return $this->belongsTo(AdAgent::class, 'agent_id');
+    }
+
+    /**
+     * Relationship back to bank
+     */
+    public function bank()
+    {
+        return $this->belongsTo(SoBank::class, 'bank_id');
     }
 }

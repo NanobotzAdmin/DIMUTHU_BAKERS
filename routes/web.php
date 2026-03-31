@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
+
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\AdvancedPlannerController;
 use App\Http\Controllers\AgentDistributionManagementController;
@@ -111,6 +113,7 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     // Agent Distribution System
     Route::get('/agent-distribution-dashboard', [AgentDistributionManagementController::class, 'agentDistributionSystemIndex'])->name('agentDistributionSystem.index');
     Route::get('/agent-management', [AgentDistributionManagementController::class, 'agentManageIndex'])->name('agentManagement.index');
+    Route::get('/agent-monthly-targets', [AgentDistributionManagementController::class, 'monthlyTargetsIndex'])->name('agentMonthlyTargets.index');
     Route::get('/route-management', [AgentDistributionManagementController::class, 'routeManageIndex'])->name('routeManagement.index');
     Route::get('/route-management/{id}/builder', [AgentDistributionManagementController::class, 'routeBuilderView'])->name('routeBuilder.view');
     Route::get('/daily-loads', [AgentDistributionManagementController::class, 'dailyLoadsIndex'])->name('dailyLoads.index');
@@ -118,6 +121,9 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     Route::get('/distributor-customer-management/{id}', [App\Http\Controllers\AgentDistributionManagementController::class, 'distributorCustomerDetail'])->name('distributor.customer.detail');
     Route::get('/settlement-list', [AgentDistributionManagementController::class, 'settlementListIndex'])->name('settlementList.index');
     Route::get('/agent-distribution/settlements/{id}', [AgentDistributionManagementController::class, 'settlementDetail'])->name('settlementDetail.index');
+    Route::post('/agent-distribution/settlements/update-status', [AgentDistributionManagementController::class, 'updateSettlementStatus'])->name('settlements.updateStatus');
+    Route::post('/agent-distribution/settlements/store', [AgentDistributionManagementController::class, 'storeSettlement'])->name('settlements.store');
+    Route::get('/agent-distribution/settlements/agent-loads/{agentId}', [AgentDistributionManagementController::class, 'getAgentDailyLoads'])->name('settlements.agentLoads');
     Route::get('/gl-posting', [AgentDistributionManagementController::class, 'glPostingIndex'])->name('glPosting.index');
     Route::get('/commission-overview', [AgentDistributionManagementController::class, 'commissionOverviewIndex'])->name('commissionOverview.index');
     Route::get('/commission-payment', [AgentDistributionManagementController::class, 'commissionPaymentIndex'])->name('commissionPayment.index');
@@ -134,6 +140,15 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     Route::get('/api/agents/{id}', [AgentDistributionManagementController::class, 'loadAgentDetails'])->name('agents.details');
     Route::put('/api/agents/{id}/update', [AgentDistributionManagementController::class, 'updateAgent'])->name('agents.update');
     Route::delete('/api/agents/{id}/deactivate', [AgentDistributionManagementController::class, 'deactivateAgent'])->name('agents.deactivate');
+    Route::post('/api/agents/{id}/toggle-status', [AgentDistributionManagementController::class, 'toggleAgentStatus'])->name('agents.toggleStatus');
+    Route::post('/api/agents/quick-save', [AgentDistributionManagementController::class, 'quickSaveAgent'])->name('agents.quickSave');
+
+    // Agent Targets API Routes
+    Route::get('/api/agents/monthly-targets/load', [AgentDistributionManagementController::class, 'getMonthlyTargets'])->name('agents.monthlyTargets.load');
+    Route::post('/api/agents/monthly-targets/save', [AgentDistributionManagementController::class, 'saveMonthlyTargets'])->name('agents.monthlyTargets.save');
+    Route::post('/api/agents/monthly-targets/update-payment-status', [AgentDistributionManagementController::class, 'updatePaymentStatus'])->name('agents.monthlyTargets.updatePaymentStatus');
+    Route::get('/agent-performance-overview', [AgentDistributionManagementController::class, 'performanceOverviewIndex'])->name('agents.performanceOverview.index');
+    Route::get('/api/agents/performance-overview/get-data', [AgentDistributionManagementController::class, 'getPerformanceOverviewData'])->name('agents.performanceOverview.getData');
 
     // Route CRUD API Routes
     Route::post('/api/routes/create', [AgentDistributionManagementController::class, 'createRoute'])->name('routes.create');
@@ -179,6 +194,7 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     Route::post('/product/status', [ProductManagementController::class, 'updateProductStatus'])->name('product.status.update');
     Route::post('/product/update-item-types', [ProductManagementController::class, 'updateProductItemTypes'])->name('product.item.types.update');
     Route::get('/product-management', [ProductManagementController::class, 'productManageIndex'])->name('productManagement.index');
+    Route::get('/product-management/export', [ProductManagementController::class, 'exportProducts'])->name('productManagement.export');
     Route::get('/product-configuration', [ProductManagementController::class, 'configurationIndex'])->name('productConfiguration.index');
 
     // Customer Kiosk Configuration
@@ -390,5 +406,3 @@ Route::get('/test-qty', function () {
         return response()->json(['error' => $e->getMessage()]);
     }
 });
-
-

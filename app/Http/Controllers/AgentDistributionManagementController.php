@@ -7,6 +7,7 @@ use App\Models\AdAgent;
 use App\Models\AdAgentHasBankAccount;
 use App\Models\AdAgentHasCategoryTargets;
 use App\Models\AdAgentHasItemTargets;
+use App\Models\AdAgentMonthlyTarget;
 use App\Models\AdCustomerHasBusiness;
 use App\Models\AdDailyLoad;
 use App\Models\AdDailyLoadItem;
@@ -14,8 +15,12 @@ use App\Models\AdRoute;
 use App\Models\CmCustomer;
 use App\Models\PmProductCategory;
 use App\Models\PmProductItem;
+use App\Models\StmOrderRequest;
 use App\Models\UmUser;
+use App\Models\AdSettlement;
+use App\Models\SoBank;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -35,8 +40,8 @@ class AgentDistributionManagementController extends Controller
 
     public function agentManageIndex()
     {
-        // Fetch agents from database with bank accounts and targets
-        $agents = AdAgent::with(['primaryBankAccount', 'bankAccounts', 'itemTargets.item', 'categoryTargets.category'])->get()->map(function ($agent) {
+        // Fetch agents from database with bank accounts
+        $agents = AdAgent::with(['primaryBankAccount', 'bankAccounts'])->get()->map(function ($agent) {
             return [
                 'id' => $agent->id,
                 'agentName' => $agent->agent_name,
@@ -51,45 +56,30 @@ class AgentDistributionManagementController extends Controller
                 'commissionRate' => $agent->commission_rate,
                 'creditLimit' => $agent->credit_limit,
                 'creditPeriodDays' => $agent->credit_period_days,
-                'monthlySalesTarget' => $agent->monthly_sales_target,
-                'bankName' => $agent->primaryBankAccount->bank_name ?? null,
-                'bankAccountNumber' => $agent->primaryBankAccount->account_number ?? null,
-                'bankBranch' => $agent->primaryBankAccount->branch ?? null,
+                'bank_accounts' => $agent->bankAccounts->map(
+                    function ($ba) {
+                        return [
+                            'bank_id' => $ba->bank_id,
+                            'bank_name' => $ba->bank_name,
+                            'account_owner_name' => $ba->account_owner_name,
+                            'account_number' => $ba->account_number,
+                            'branch' => $ba->branch,
+                            'is_primary' => $ba->is_primary,
+                        ];
+                    }
+                )->toArray(),
                 'outstandingBalance' => $agent->outstanding_balance,
-                'totalSales' => $agent->total_sales,
-                'totalCollections' => $agent->total_collections,
-                'bank_accounts' => $agent->bankAccounts->map(function ($ba) {
-                    return [
-                        'bank_name' => $ba->bank_name,
-                        'account_number' => $ba->account_number,
-                        'branch' => $ba->branch,
-                        'is_primary' => $ba->is_primary,
-                    ];
-                })->toArray(),
-                'item_targets' => $agent->itemTargets->map(function ($t) {
-                    return [
-                        'pm_product_item_id' => $t->pm_product_item_id,
-                        'product_name' => $t->item->product_name ?? 'Unknown Product',
-                        'target_amount' => $t->target_amount,
-                        'target_percentage' => $t->target_percentage,
-                    ];
-                })->toArray(),
-                'category_targets' => $agent->categoryTargets->map(function ($t) {
-                    return [
-                        'pm_product_category_id' => $t->pm_product_category_id,
-                        'category_name' => $t->category->category_name ?? 'Unknown Category',
-                        'target_amount' => $t->target_amount,
-                        'target_percentage' => $t->target_percentage,
-                    ];
-                })->toArray(),
             ];
         });
 
         // Fetch product items and categories for target dropdowns
         $productItems = PmProductItem::where('status', 1)->get(['id', 'product_name']);
         $productCategories = PmProductCategory::where('is_active', true)->get(['id', 'category_name', 'category_code']);
+        
+        // Fetch active banks for dropdown
+        $soBanks = SoBank::where('is_active', 1)->get(['id', 'bank_name', 'bank_code']);
 
-        return view('agentDistribution.agentManagement', compact('agents', 'productItems', 'productCategories'));
+        return view('agentDistribution.agentManagement', compact('agents', 'productItems', 'productCategories', 'soBanks'));
     }
 
     public function dailyLoadsIndex()
@@ -109,21 +99,23 @@ class AgentDistributionManagementController extends Controller
 
             return [
                 'id' => $load->id,
-                'loadNumber' => 'LOAD-'.$load->id, // Simple ID based number for now
+                'loadNumber' => 'LOAD-' . $load->id, // Simple ID based number for now
                 'agentId' => $load->agent_id,
                 'status' => $this->getLoadStatusLabel($load->status),
                 'status_code' => $load->status,
                 'loadDate' => $load->load_date->format('Y-m-d'),
                 'totalQuantity' => $totalQty,
                 'totalValue' => $totalVal,
-                'items' => $load->items->map(function ($item) {
-                    return [
-                        'id' => $item->id,
-                        'productName' => $item->product ? $item->product->product_name : 'Unknown',
-                        'loadedQuantity' => $item->quantity,
-                        'unitPrice' => $item->price,
-                    ];
-                })->toArray(),
+                'items' => $load->items->map(
+                    function ($item) {
+                        return [
+                            'id' => $item->id,
+                            'productName' => $item->product ? $item->product->product_name : 'Unknown',
+                            'loadedQuantity' => $item->quantity,
+                            'unitPrice' => $item->price,
+                        ];
+                    }
+                )->toArray(),
                 'notes' => $load->notes,
                 'isMarkedAsLoaded' => $load->is_mark_as_loaded,
             ];
@@ -135,10 +127,14 @@ class AgentDistributionManagementController extends Controller
     private function getLoadStatusLabel($status)
     {
         switch ($status) {
-            case CommonVariables::$dailyLoadStatusDraft: return 'draft';
-            case CommonVariables::$dailyLoadStatusLoaded: return 'loaded';
-            case CommonVariables::$dailyLoadStatusCompleted: return 'completed';
-            default: return 'draft';
+            case CommonVariables::$dailyLoadStatusDraft:
+                return 'draft';
+            case CommonVariables::$dailyLoadStatusLoaded:
+                return 'loaded';
+            case CommonVariables::$dailyLoadStatusCompleted:
+                return 'completed';
+            default:
+                return 'draft';
         }
     }
 
@@ -250,108 +246,197 @@ class AgentDistributionManagementController extends Controller
 
     public function settlementListIndex()
     {
-        $agents = [
-            ['id' => 'agt_1', 'agentName' => 'John Doe', 'agentCode' => 'AGT001', 'status' => 'active'],
-            ['id' => 'agt_2', 'agentName' => 'Sarah Smith', 'agentCode' => 'AGT002', 'status' => 'active'],
-            ['id' => 'agt_3', 'agentName' => 'Mike Johnson', 'agentCode' => 'AGT003', 'status' => 'active'],
-        ];
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
+            ->get()
+            ->map(function ($a) {
+                return ['id' => $a->id, 'agentName' => $a->agent_name, 'agentCode' => $a->agent_code];
+            });
 
-        // Mock Settlements - Last 30 days mixed data
-        $settlements = [];
-        $baseDate = date('Y-m-d');
-
-        // Helper for random settlements
-        for ($i = 0; $i < 40; $i++) {
-            $agent = $agents[rand(0, 2)];
-            $status = ['pending', 'reviewed', 'approved', 'disputed'][rand(0, 3)];
-            $sales = rand(10000, 30000);
-
-            // Variance logic
-            $expected = $sales * 0.6; // Assuming 60% cash sales
-            $variance = 0;
-            if (rand(0, 100) > 80) {
-                $variance = rand(-500, 200);
-            } // 20% chance of variance
-
-            $actual = $expected + $variance;
-
-            $settlements[] = [
-                'id' => "stl_$i",
-                'agentId' => $agent['id'],
-                'settlementNumber' => 'SET-'.date('Ymd', strtotime("$baseDate -$i days"))."-$i",
-                'settlementDate' => date('Y-m-d', strtotime("$baseDate -$i days")),
-                'status' => $status,
-                'totalSales' => $sales,
-                'expectedCash' => $expected,
-                'actualCash' => $actual,
-                'cashVariance' => $variance,
-                'totalCollections' => rand(0, 5000),
-                'returnedValue' => rand(0, 1000),
-                'amountDueToBakery' => $actual, // Simplified
-                'commissionEarned' => $sales * 0.05,
-                'varianceNotes' => $variance != 0 ? 'Cash mismatch detected' : '',
-                'notes' => '',
-                'submittedAt' => date('Y-m-d H:i:s', strtotime("$baseDate -$i days 17:00:00")),
-                'reviewedAt' => $status != 'pending' ? date('Y-m-d H:i:s', strtotime("$baseDate -$i days 18:00:00")) : null,
-                'approvedAt' => $status == 'approved' ? date('Y-m-d H:i:s', strtotime("$baseDate -$i days 19:00:00")) : null,
-            ];
-        }
-
-        // Ensure at least one pending with variance for testing
-        $settlements[0]['status'] = 'pending';
-        $settlements[0]['cashVariance'] = -250;
-        $settlements[0]['varianceNotes'] = 'Shortage detected';
+        $settlements = AdSettlement::with(['agent'])
+            ->orderBy('settlement_date', 'desc')
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'agentId' => $s->agent_id,
+                    'settlementNumber' => $s->settlement_number,
+                    'settlementDate' => $s->settlement_date,
+                    'status' => $s->status,
+                    'totalSales' => $s->total_sales,
+                    'expectedCash' => $s->cash_sales, // In the mock, actualCash is what agent submitted. Here cash_sales is what they submitted. 
+                    'actualCash' => $s->cash_sales,   // Assuming cash_sales is the physical cash they claim to have.
+                    'cashVariance' => 0, // We might need to calculate this against invoices later
+                    'totalCollections' => 0, // Placeholder
+                    'returnedValue' => 0,    // Placeholder
+                    'amountDueToBakery' => $s->cash_sales, // Simplified
+                    'commissionEarned' => $s->commission_earned,
+                    'varianceNotes' => '',
+                    'notes' => '',
+                    'submittedAt' => $s->created_at->format('Y-m-d H:i:s'),
+                ];
+            });
 
         return view('agentDistribution.settlementList', compact('agents', 'settlements'));
     }
 
     public function settlementDetail($id)
     {
-        // Mocking single settlement retrieval
-        $idParts = explode('_', $id);
-        $agentId = 'agt_1'; // Default Fallback
+        $settlementData = AdSettlement::with(['agent', 'route', 'dailyLoad'])->find($id);
 
-        // Basic Mock Settlement
+        if (!$settlementData) {
+            return redirect()->route('settlementList.index')->with('error', 'Settlement not found');
+        }
+
         $settlement = [
-            'id' => $id,
-            'settlementNumber' => 'SET-20260113-001',
-            'agentId' => $agentId,
-            'settlementDate' => date('Y-m-d'),
-            'status' => 'pending',
-            'totalSales' => 25000,
-            'cashSales' => 15000,
-            'creditSales' => 5000,
-            'chequeSales' => 5000,
-            'expectedCash' => 15000,
-            'actualCash' => 15000,
+            'id' => $settlementData->id,
+            'settlementNumber' => $settlementData->settlement_number,
+            'agentId' => $settlementData->agent_id,
+            'settlementDate' => $settlementData->settlement_date,
+            'status' => $settlementData->status,
+            'totalSales' => $settlementData->total_sales,
+            'cashSales' => $settlementData->cash_sales,
+            'creditSales' => $settlementData->credit_sales,
+            'chequeSales' => $settlementData->cheque_sales,
+            'expectedCash' => $settlementData->cash_sales, // Simplified
+            'actualCash' => $settlementData->cash_sales,
             'cashVariance' => 0,
-            'totalCollections' => 2500,
-            'returnedValue' => 500,
-            'amountDueToBakery' => 17000, // actualCash + collections - returns (simplified)
-            'commissionEarned' => 1250,
-            'loadedValue' => 30000,
-            'submittedAt' => date('Y-m-d H:i:s', strtotime('-2 hours')),
+            'totalCollections' => 0,
+            'returnedValue' => 0,
+            'amountDueToBakery' => $settlementData->cash_sales,
+            'commissionEarned' => $settlementData->commission_earned,
+            'loadedValue' => 0,
+            'submittedAt' => $settlementData->created_at->format('Y-m-d H:i:s'),
             'varianceNotes' => '',
-            'notes' => 'Sales were good today.',
+            'notes' => $settlementData->notes,
         ];
 
-        $agent = ['id' => $agentId, 'agentName' => 'John Doe', 'agentCode' => 'AGT001', 'agentType' => 'Permanent', 'commissionRate' => 5.0];
-        $load = ['loadNumber' => 'LOAD-001', 'loadDate' => date('Y-m-d'), 'totalQuantity' => 150, 'totalValue' => 30000];
-
-        $sales = [
-            ['id' => 'sale_1', 'invoiceNumber' => 'INV-001', 'customerName' => 'City Cafe', 'saleDate' => date('Y-m-d H:i:s'), 'totalAmount' => 5000, 'paymentMethod' => 'cash', 'totalQuantity' => 20, 'subtotal' => 5000],
-            ['id' => 'sale_2', 'invoiceNumber' => 'INV-002', 'customerName' => 'Metro Mart', 'saleDate' => date('Y-m-d H:i:s'), 'totalAmount' => 10000, 'paymentMethod' => 'credit', 'totalQuantity' => 50, 'subtotal' => 10000],
+        $agent = [
+            'id' => $settlementData->agent->id,
+            'agentName' => $settlementData->agent->agent_name,
+            'agentCode' => $settlementData->agent->agent_code,
+            'agentType' => $settlementData->agent->agent_type,
+            'commissionRate' => $settlementData->agent->commission_rate
         ];
+        $load = null;
+        if ($settlementData->dailyLoad) {
+            $load = [
+                'loadNumber' => 'LOAD-' . $settlementData->dailyLoad->id,
+                'loadDate' => $settlementData->dailyLoad->load_date->format('Y-m-d'),
+                'totalQuantity' => 0,
+                'totalValue' => 0
+            ];
+        }
 
-        $collections = [
-            ['id' => 'col_1', 'receiptNumber' => 'REC-001', 'customerName' => 'Old Town Store', 'collectionDate' => date('Y-m-d H:i:s'), 'amount' => 2500, 'paymentMethod' => 'cash', 'notes' => 'Previous balance'],
-        ];
+        $sales = [];
 
-        $returns = [
-            ['id' => 'ret_1', 'returnNumber' => 'RET-001', 'totalQuantity' => 10, 'totalValue' => 500, 'goodConditionValue' => 200, 'damagedValue' => 300, 'notes' => 'Expired items'],
-        ];
+        $collections = [];
+
+        $returns = [];
 
         return view('agentDistribution.settlementDetail', compact('settlement', 'agent', 'load', 'sales', 'collections', 'returns'));
+    }
+
+    public function getAgentDailyLoads($agentId)
+    {
+        $loads = AdDailyLoad::where('agent_id', $agentId)
+            ->where('load_status', '>=', 1) // Assuming 1+ means it's a valid load
+            ->orderBy('load_date', 'desc')
+            ->get()
+            ->map(function ($l) {
+                return [
+                    'id' => $l->id,
+                    'load_number' => $l->load_number,
+                    'load_date' => $l->load_date
+                ];
+            });
+
+        return response()->json([
+            'status' => true,
+            'data' => $loads
+        ]);
+    }
+
+    public function storeSettlement(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required',
+            'daily_load_id' => 'required',
+            'settlement_date' => 'required|date',
+            'total_sales' => 'required|numeric',
+            'cash_sales' => 'required|numeric',
+            'credit_sales' => 'required|numeric',
+            'cheque_sales' => 'required|numeric',
+            'commission_earned' => 'required|numeric',
+            'notes' => 'nullable|string'
+        ]);
+
+        try {
+            // Generate a settlement number (e.g., SET-YYYYMMDD-ID)
+            $datePart = date('Ymd', strtotime($request->settlement_date));
+            $lastSettlement = AdSettlement::where('settlement_number', 'LIKE', "SET-$datePart-%")
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $sequence = 1;
+            if ($lastSettlement) {
+                $lastNum = explode('-', $lastSettlement->settlement_number);
+                $sequence = (int) end($lastNum) + 1;
+            }
+            $settlementNumber = "SET-$datePart-" . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+
+            $settlement = AdSettlement::create([
+                'agent_id' => $request->agent_id,
+                'daily_load_id' => $request->daily_load_id,
+                'settlement_number' => $settlementNumber,
+                'settlement_date' => $request->settlement_date,
+                'total_sales' => $request->total_sales,
+                'cash_sales' => $request->cash_sales,
+                'credit_sales' => $request->credit_sales,
+                'cheque_sales' => $request->cheque_sales,
+                'commission_earned' => $request->commission_earned,
+                'notes' => $request->notes,
+                'status' => 'pending',
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Settlement created successfully',
+                'data' => $settlement
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create settlement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateSettlementStatus(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+            'status' => 'required|in:pending,reviewed,approved,disputed',
+            'notes' => 'nullable|string'
+        ]);
+
+        try {
+            $settlement = AdSettlement::findOrFail($request->id);
+            $settlement->status = $request->status;
+            if ($request->notes) {
+                $settlement->notes = $request->notes;
+            }
+            $settlement->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Settlement status updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update settlement status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function glPostingIndex()
@@ -381,11 +466,11 @@ class AgentDistributionManagementController extends Controller
             $settlements[] = [
                 'id' => "stl_gl_$i",
                 'agentId' => $agent['id'],
-                'settlementNumber' => 'SET-'.date('Ymd', strtotime($date))."-$i",
+                'settlementNumber' => 'SET-' . date('Ymd', strtotime($date)) . "-$i",
                 'settlementDate' => $date,
                 'status' => $isPosted ? 'gl_posted' : 'approved',
                 'glPosted' => $isPosted,
-                'glJournalEntryId' => $isPosted ? 'JE-AGT-'.strtotime($date)."-$i" : null,
+                'glJournalEntryId' => $isPosted ? 'JE-AGT-' . strtotime($date) . "-$i" : null,
                 'totalSales' => $sales,
                 'actualCash' => $actual,
                 'amountDueToBakery' => $actual, // Simplified
@@ -401,259 +486,585 @@ class AgentDistributionManagementController extends Controller
 
     public function commissionOverviewIndex()
     {
-        return view('errors.under-development');
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)->get();
+
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+
+        $stats = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->select(
+                DB::raw('SUM(i.net_price) as total_sales'),
+                DB::raw('SUM(i.return_price) as total_returns'),
+                DB::raw('COUNT(i.id) as total_invoices')
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->first();
+
+        $agentBreakdown = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->join('ad_agent as a', 'l.agent_id', '=', 'a.id')
+            ->select(
+                'a.agent_name',
+                'a.agent_code',
+                DB::raw('SUM(i.net_price) as sales'),
+                DB::raw('SUM(i.net_price * 0.15) as commission')
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->groupBy('a.id', 'a.agent_name', 'a.agent_code')
+            ->get();
+
+        return view('agentDistribution.commissionOverview', compact('agents', 'stats', 'agentBreakdown'));
     }
 
     public function commissionPaymentIndex()
     {
-        $agents = [
-            ['id' => 'agt_1', 'agentName' => 'John Doe', 'agentCode' => 'AGT001', 'commissionRate' => 5.0, 'status' => 'active'],
-            ['id' => 'agt_2', 'agentName' => 'Sarah Smith', 'agentCode' => 'AGT002', 'commissionRate' => 4.5, 'status' => 'active'],
-            ['id' => 'agt_3', 'agentName' => 'Mike Johnson', 'agentCode' => 'AGT003', 'commissionRate' => 5.0, 'status' => 'active'],
-        ];
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
+            ->get()
+            ->map(function ($agent) {
+                return [
+                    'id' => $agent->id,
+                    'agentName' => $agent->agent_name,
+                    'agentCode' => $agent->agent_code,
+                    'commissionRate' => $agent->commission_rate,
+                    'invoicingCommissionRate' => $agent->invoicing_commission_rate,
+                    'targetCommissionRate' => $agent->target_commission_rate,
+                    'achievementThreshold' => $agent->achievement_threshold,
+                    'reducedTargetCommissionRate' => $agent->reduced_target_commission_rate,
+                    'monthlySalesTarget' => $agent->monthly_sales_target,
+                    'status' => 1,
+                ];
+            });
 
-        // Mock Settlements for calculating commissions (Last 90 days)
-        $settlements = [];
+        // Fetch Data from Invoices for the last 90 days
         $startDate = date('Y-m-d', strtotime('-90 days'));
-
-        for ($i = 0; $i < 90; $i++) {
-            $date = date('Y-m-d', strtotime("$startDate +$i days"));
-
-            foreach ($agents as $agent) {
-                // Generates settlements
-                if (rand(1, 100) > 30) {
-                    $sales = rand(10000, 30000);
-                    $settlements[] = [
-                        'id' => "stl_{$agent['id']}_$i",
-                        'agentId' => $agent['id'],
-                        'settlementNumber' => 'SET-'.date('Ymd', strtotime($date))."-{$agent['id']}",
-                        'settlementDate' => $date,
-                        'totalSales' => $sales,
-                        'status' => 'approved',
-                        'commissionEarned' => $sales * ($agent['commissionRate'] / 100),
-                    ];
-                }
-            }
-        }
+        $settlements = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->select(
+                'l.agent_id',
+                'i.invoice_number as settlement_number',
+                'i.net_price as total_sales',
+                'i.invoice_price',
+                'i.return_price',
+                'i.created_at as settlement_date',
+                'l.route_id',
+                'i.status'
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->agent_id . '_' . strtotime($s->settlement_date) . '_' . $s->settlement_number, // Generate a pseudo ID
+                    'agentId' => $s->agent_id,
+                    'settlementNumber' => $s->settlement_number,
+                    'settlementDate' => $s->settlement_date,
+                    'totalSales' => $s->total_sales,
+                    'cashSales' => 0,
+                    'creditSales' => 0,
+                    'chequeSales' => 0,
+                    'status' => $s->status == 1 ? 'approved' : 'pending', // Map to JS expectation
+                    'commissionEarned' => 0, // Calculated in UI
+                ];
+            });
 
         return view('agentDistribution.commissionPayments', compact('agents', 'settlements'));
     }
 
     public function commissionStatementsIndex()
     {
-        $agents = [
-            ['id' => 'agt_1', 'agentName' => 'John Doe', 'agentCode' => 'AGT001', 'commissionRate' => 5.0, 'status' => 'active'],
-            ['id' => 'agt_2', 'agentName' => 'Sarah Smith', 'agentCode' => 'AGT002', 'commissionRate' => 4.5, 'status' => 'active'],
-            ['id' => 'agt_3', 'agentName' => 'Mike Johnson', 'agentCode' => 'AGT003', 'commissionRate' => 5.0, 'status' => 'active'],
-        ];
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
+            ->get()
+            ->map(function ($agent) {
+                return [
+                    'id' => $agent->id,
+                    'agentName' => $agent->agent_name,
+                    'agentCode' => $agent->agent_code,
+                    'commissionRate' => $agent->commission_rate,
+                    'invoicingCommissionRate' => $agent->invoicing_commission_rate,
+                    'targetCommissionRate' => $agent->target_commission_rate,
+                    'achievementThreshold' => $agent->achievement_threshold,
+                    'reducedTargetCommissionRate' => $agent->reduced_target_commission_rate,
+                    'monthlySalesTarget' => $agent->monthly_sales_target,
+                    'status' => 1,
+                ];
+            });
 
-        // Mock Settlements for generating statements (Last 6 months)
-        $settlements = [];
-        $startDate = date('Y-m-d', strtotime('-6 months'));
-
-        for ($i = 0; $i < 180; $i++) {
-            $date = date('Y-m-d', strtotime("$startDate +$i days"));
-
-            foreach ($agents as $agent) {
-                // Generates settlements
-                if (rand(1, 100) > 30) {
-                    $sales = rand(15000, 25000);
-                    $settlements[] = [
-                        'id' => "stl_{$agent['id']}_$i",
-                        'agentId' => $agent['id'],
-                        'settlementNumber' => 'SET-'.date('Ymd', strtotime($date))."-{$agent['id']}",
-                        'settlementDate' => $date,
-                        'totalSales' => $sales,
-                        'cashSales' => $sales * 0.6, // 60% cash
-                        'creditSales' => $sales * 0.3, // 30% credit
-                        'chequeSales' => $sales * 0.1, // 10% cheque
-                        'status' => 'approved',
-                        'commissionEarned' => $sales * ($agent['commissionRate'] / 100),
-                    ];
-                }
-            }
-        }
+        // Fetch Data from Invoices for the last 6 months
+        $startDate = date('Y-m-d', strtotime('-180 days'));
+        $settlements = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->select(
+                'l.agent_id',
+                'i.invoice_number as settlement_number',
+                'i.net_price as total_sales',
+                'i.invoice_price',
+                'i.return_price',
+                'i.created_at as settlement_date',
+                'l.route_id',
+                'i.status'
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->agent_id . '_' . strtotime($s->settlement_date) . '_' . $s->settlement_number,
+                    'agentId' => $s->agent_id,
+                    'settlementNumber' => $s->settlement_number,
+                    'settlementDate' => $s->settlement_date,
+                    'totalSales' => $s->total_sales,
+                    'cashSales' => 0,
+                    'creditSales' => 0,
+                    'chequeSales' => 0,
+                    'status' => $s->status == 1 ? 'approved' : 'pending',
+                    'commissionEarned' => 0,
+                ];
+            });
 
         return view('agentDistribution.commissionStatements', compact('agents', 'settlements'));
     }
 
     public function agentAnalyticsIndex()
     {
-        $agents = [
-            ['id' => 'agt_1', 'agentName' => 'John Doe', 'agentCode' => 'AGT001', 'status' => 'active'],
-            ['id' => 'agt_2', 'agentName' => 'Sarah Smith', 'agentCode' => 'AGT002', 'status' => 'active'],
-            ['id' => 'agt_3', 'agentName' => 'Mike Johnson', 'agentCode' => 'AGT003', 'status' => 'active'],
-            ['id' => 'agt_4', 'agentName' => 'Emily Brown', 'agentCode' => 'AGT004', 'status' => 'active'],
-            ['id' => 'agt_5', 'agentName' => 'David Wilson', 'agentCode' => 'AGT005', 'status' => 'active'],
-        ];
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
+            ->get()
+            ->map(function ($agent) {
+                return [
+                    'id' => (string) $agent->id,
+                    'agentName' => $agent->agent_name,
+                    'agentCode' => $agent->agent_code,
+                ];
+            });
 
-        // Mock Settlements - generate enough for 90 days analysis
-        $settlements = [];
+        // Fetch Settlements for the last 90 days
         $startDate = date('Y-m-d', strtotime('-90 days'));
 
-        // Helper to generate random settlements
-        for ($i = 0; $i < 90; $i++) {
-            $date = date('Y-m-d', strtotime("$startDate +$i days"));
+        $settlements = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->select(
+                'l.agent_id',
+                'i.net_price as total_sales',
+                'i.created_at as settlement_date',
+                'i.id as invoice_id'
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => (string) $s->invoice_id,
+                    'agentId' => (string) $s->agent_id,
+                    'settlementDate' => date('Y-m-d', strtotime($s->settlement_date)),
+                    'totalSales' => (double) $s->total_sales,
+                    'cashVariance' => 0, // Placeholder as not directly in invoice table
+                    'commissionEarned' => (double) $s->total_sales * 0.15, // Using standard 15% for overall analytics
+                ];
+            });
 
-            foreach ($agents as $agent) {
-                // Not every agent works every day - 80% chance
-                if (rand(1, 100) > 20) {
-                    $sales = rand(10000, 30000);
-                    $variance = 0;
-
-                    // Simulate occasional variance
-                    if (rand(1, 100) > 90) {
-                        $variance = rand(-500, 200);
-                    }
-
-                    $settlements[] = [
-                        'id' => "stl_{$agent['id']}_$i",
-                        'agentId' => $agent['id'],
-                        'settlementDate' => $date,
-                        'totalSales' => $sales,
-                        'actualCash' => $sales + $variance,
-                        'cashVariance' => $variance,
-                        'commissionEarned' => $sales * 0.05, // 5% comm
-                    ];
+        // Fetch Individual Sales (Invoices with primary payment method)
+        $sales = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->leftJoin('ad_cubusiness_invoice_payments as p', 'i.id', '=', 'p.ad_cubusiness_has_invoice_id')
+            ->select(
+                'l.agent_id',
+                'i.created_at as sale_date',
+                'i.net_price as total_amount',
+                'p.payment_type'
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->get()
+            ->map(function ($s) {
+                $method = 'cash';
+                if ($s->payment_type) {
+                    $pt = strtolower($s->payment_type);
+                    if (str_contains($pt, 'cash'))
+                        $method = 'cash';
+                    elseif (str_contains($pt, 'credit'))
+                        $method = 'credit';
+                    elseif (str_contains($pt, 'cheque'))
+                        $method = 'cheque';
                 }
-            }
-        }
-
-        // Mock Sales for payment method distribution
-        $sales = [];
-        // Generate a sample set, mapped to settlements implicitly by date/agent logic reuse if needed,
-        // but for analytics report we just need aggregate stats.
-        // Let's generate a pool of sales records.
-        for ($i = 0; $i < 500; $i++) {
-            $date = date('Y-m-d', strtotime("-$i hours")); // Spread over recent time
-            $sales[] = [
-                'id' => "sale_$i",
-                'agentId' => $agents[rand(0, 4)]['id'],
-                'saleDate' => $date, // This might need to align with date filters more carefully in JS
-                'paymentMethod' => ['cash', 'cash', 'cash', 'credit', 'credit', 'cheque'][rand(0, 5)],
-                'totalAmount' => rand(500, 5000),
-            ];
-        }
-        // *Correction*: ensuring date range cover for sales to match filters
-        $sales = [];
-        for ($i = 0; $i < 90; $i++) {
-            $date = date('Y-m-d', strtotime("$startDate +$i days"));
-            // avg 10 sales per day per agent
-            foreach ($agents as $agent) {
-                for ($j = 0; $j < 5; $j++) {
-                    $sales[] = [
-                        'id' => "sale_{$agent['id']}_{$i}_{$j}",
-                        'agentId' => $agent['id'],
-                        'saleDate' => $date,
-                        'paymentMethod' => ['cash', 'cash', 'cash', 'credit', 'credit', 'cheque'][rand(0, 5)],
-                        'totalAmount' => rand(500, 5000),
-                    ];
-                }
-            }
-        }
+                return [
+                    'agentId' => (string) $s->agent_id,
+                    'saleDate' => date('Y-m-d', strtotime($s->sale_date)),
+                    'paymentMethod' => $method,
+                    'totalAmount' => (double) $s->total_amount,
+                ];
+            });
 
         return view('agentDistribution.agentAnalytics', compact('agents', 'settlements', 'sales'));
     }
 
     public function financialDashboardIndex()
     {
-        $agents = [
-            ['id' => 'agt_1', 'agentName' => 'John Doe', 'agentCode' => 'AGT001', 'commissionRate' => 5.0, 'status' => 'active'],
-            ['id' => 'agt_2', 'agentName' => 'Sarah Smith', 'agentCode' => 'AGT002', 'commissionRate' => 4.5, 'status' => 'active'],
-            ['id' => 'agt_3', 'agentName' => 'Mike Johnson', 'agentCode' => 'AGT003', 'commissionRate' => 5.0, 'status' => 'active'],
-        ];
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
+            ->get()
+            ->map(function ($agent) {
+                return [
+                    'id' => (string) $agent->id,
+                    'agentName' => $agent->agent_name,
+                    'agentCode' => $agent->agent_code,
+                    'commissionRate' => (double) $agent->commission_rate,
+                ];
+            });
 
-        // Mock Settlements (Last 12 months data for trends)
-        $settlements = [];
-        // Generate some realistic looking data
-        for ($i = 0; $i < 12; $i++) {
-            $month = date('Y-m', strtotime("-$i months"));
+        $startDate = date('Y-m-d', strtotime('-180 days'));
 
-            // Agent 1 Data
-            $settlements[] = [
-                'id' => "stl_a1_$i",
-                'agentId' => 'agt_1',
-                'settlementNumber' => "SET-A1-$i",
-                'settlementDate' => "$month-15",
-                'totalSales' => rand(140000, 160000),
-                'cashSales' => rand(80000, 90000),
-                'creditSales' => rand(50000, 60000),
-                'chequeSales' => 10000,
-                'actualCash' => rand(80000, 90000),
-                'cashVariance' => 0,
-                'commissionEarned' => rand(7000, 8000),
-                'status' => 'approved',
+        $settlements = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->select(
+                'l.agent_id',
+                'i.invoice_number as settlement_number',
+                'i.net_price as total_sales',
+                'i.created_at as settlement_date',
+                'i.status'
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'agentId' => (string) $s->agent_id,
+                    'settlementNumber' => $s->settlement_number,
+                    'settlementDate' => date('Y-m-d', strtotime($s->settlement_date)),
+                    'totalSales' => (double) $s->total_sales,
+                    'cashSales' => (double) $s->total_sales, // Placeholder
+                    'creditSales' => 0,
+                    'chequeSales' => 0,
+                    'actualCash' => (double) $s->total_sales,
+                    'cashVariance' => 0,
+                    'commissionEarned' => (double) $s->total_sales * 0.15,
+                    'status' => 'approved',
+                ];
+            });
+
+        $commissionPayments = [];
+
+        return view('agentDistribution.financialDashboard', compact('agents', 'settlements', 'commissionPayments'));
+    }
+
+    public function performanceOverviewIndex()
+    {
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
+            ->get(['id', 'agent_name', 'agent_code']);
+
+        return view('agentDistribution.performanceOverview', compact('agents'));
+    }
+
+    public function getPerformanceOverviewData(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|exists:ad_agent,id',
+            'year' => 'required|integer',
+            'month' => 'required|integer|between:1,12',
+        ]);
+
+        try {
+            $agentId = $request->agent_id;
+            $year = $request->year;
+            $month = $request->month;
+
+            $target = AdAgentMonthlyTarget::with(['categoryTargets.category'])
+                ->where('agent_id', $agentId)
+                ->where('target_year', $year)
+                ->where('target_month', $month)
+                ->first();
+
+            // 1. Calculate Actual Sales (Agent to Customer Invoices)
+            $salesData = DB::table('ad_cubusiness_has_invoice as i')
+                ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+                ->where('l.agent_id', $agentId)
+                ->where('i.status', 1) // Active/Approved Invoices
+                ->whereMonth('i.created_at', $month)
+                ->whereYear('i.created_at', $year)
+                ->select(
+                    DB::raw('SUM(i.net_price) as total_sales'),
+                    DB::raw('COUNT(i.id) as invoice_count')
+                )
+                ->first();
+
+            $totalSales = (double)($salesData->total_sales ?? 0);
+            $invoiceCount = (int)($salesData->invoice_count ?? 0);
+
+            // 2. Calculate "Getting Amount" (Stock requests from bakery)
+            // Including all valid stages of getting stock: Approved to Settled
+            $gettingStatuses = [
+                CommonVariables::$orderRequestApproved,
+                CommonVariables::$orderRequestProductionStarted,
+                CommonVariables::$orderRequestReadyToDispatch,
+                CommonVariables::$orderRequestDispatchCompleted,
+                CommonVariables::$orderRequestDispatchConfirmed,
+                CommonVariables::$orderRequestCompleteSettled
             ];
 
-            // Agent 2 Data
-            $settlements[] = [
-                'id' => "stl_a2_$i",
-                'agentId' => 'agt_2',
-                'settlementNumber' => "SET-A2-$i",
-                'settlementDate' => "$month-12",
-                'totalSales' => rand(90000, 110000),
-                'cashSales' => rand(50000, 60000),
-                'creditSales' => rand(30000, 40000),
-                'chequeSales' => 5000,
-                'actualCash' => rand(49900, 59900),
-                'cashVariance' => -rand(0, 200), // Some variance
-                'commissionEarned' => rand(4000, 5000),
-                'status' => 'approved',
+            $gettingAmount = StmOrderRequest::where('agent_id', $agentId)
+                ->whereIn('status', $gettingStatuses)
+                ->whereMonth('delivery_date', $month)
+                ->whereYear('delivery_date', $year)
+                ->sum('grand_total');
+
+            // Calculate Temporary Commission based on REFINED Total Sales
+            $tempCommission = 0;
+            $commBreakdown = [
+                'base_commission' => 0,
+                'bonus_commission' => 0,
+                'invoicing_rate' => 0,
+                'bonus_rate' => 0,
+                'is_target_achieved' => false,
+                'achievement_pct' => 0,
+                'achievement_msg' => 'No Target Set'
             ];
+
+            if ($target) {
+                $invoicingRate = (float)$target->invoicing_commission_rate;
+                $bonusRate = 0;
+                
+                $achievementPct = $target->monthly_sales_target > 0 
+                    ? ($totalSales / $target->monthly_sales_target) * 100 
+                    : ($totalSales > 0 ? 100 : 0);
+                
+                $threshold = (float)($target->achievement_threshold ?? 80);
+                $baseComm = 0;
+                $bonusComm = 0;
+
+                if ($achievementPct >= 100) {
+                    $baseComm = ($totalSales * ($invoicingRate / 100));
+                    $bonusRate = (float)$target->target_commission_rate;
+                    $bonusComm = ($totalSales * ($bonusRate / 100));
+                    $isTargetAchieved = true;
+                    $achievementMsg = '100% Achieved (Full Bonus)';
+                } elseif ($achievementPct >= $threshold) {
+                    $bonusRate = (float)$target->reduced_target_commission_rate;
+                    $bonusComm = ($totalSales * ($bonusRate / 100));
+                    $isTargetAchieved = true;
+                    $achievementMsg = number_format($achievementPct, 1) . '% Achieved (Reduced Bonus)';
+                } else {
+                    $bonusRate = (float)$target->reduced_target_commission_rate; // Still show the potential rate
+                    $isTargetAchieved = false;
+                    $achievementMsg = number_format($achievementPct, 1) . '% Achieved (No Bonus Yet)';
+                }
+
+                $commBreakdown = [
+                    'base_commission' => $baseComm,
+                    'bonus_commission' => $bonusComm,
+                    'invoicing_rate' => $invoicingRate,
+                    'bonus_rate' => $bonusRate,
+                    'is_target_achieved' => $isTargetAchieved,
+                    'achievement_pct' => $achievementPct,
+                    'achievement_msg' => $achievementMsg
+                ];
+
+                $tempCommission = $baseComm + $bonusComm;
+            }
+
+            // 3. Prepare Chart Data (Trends - 6 Months ending at selected month)
+            // Note: For trend chart, we use the same refined sales logic
+            $history = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $time = mktime(0, 0, 0, $month - $i, 1, $year);
+                $hYear = (int)date('Y', $time);
+                $hMonth = (int)date('n', $time);
+
+                $hTarget = AdAgentMonthlyTarget::where('agent_id', $agentId)
+                    ->where('target_year', $hYear)
+                    ->where('target_month', $hMonth)
+                    ->first();
+                
+                if ($hTarget) {
+                    $history[] = $hTarget;
+                } else {
+                    // Create a pseudo-target with 0s if it doesn't exist for the trend line
+                    $history[] = (object)[
+                        'target_year' => $hYear,
+                        'target_month' => $hMonth,
+                        'monthly_sales_target' => 0,
+                        'monthly_commission' => 0,
+                        'payment_status' => 0
+                    ];
+                }
+            }
+
+            $trendLabels = [];
+            $trendSales = [];
+            $trendGetting = [];
+            $trendTargets = [];
+            $commissionHistory = [];
+
+            foreach ($history as $h) {
+                $label = date('M Y', mktime(0, 0, 0, $h->target_month, 1, $h->target_year));
+                $trendLabels[] = $label;
+                
+                $monthSales = DB::table('ad_cubusiness_has_invoice as i')
+                    ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+                    ->where('l.agent_id', $agentId)
+                    ->where('i.status', 1)
+                    ->whereMonth('i.created_at', $h->target_month)
+                    ->whereYear('i.created_at', $h->target_year)
+                    ->sum('i.net_price');
+
+                $monthGetting = StmOrderRequest::where('agent_id', $agentId)
+                    ->whereIn('status', $gettingStatuses)
+                    ->whereMonth('delivery_date', $h->target_month)
+                    ->whereYear('delivery_date', $h->target_year)
+                    ->sum('grand_total');
+
+                $trendSales[] = (double)$monthSales;
+                $trendGetting[] = (double)$monthGetting;
+                $trendTargets[] = (double)$h->monthly_sales_target;
+                
+                $commissionHistory[] = [
+                    'label' => $label,
+                    'amount' => (double)$h->monthly_commission,
+                    'status' => $h->payment_status
+                ];
+            }
+
+            $categoryBreakdown = [];
+            if ($target) {
+                foreach ($target->categoryTargets as $ct) {
+                    $catSales = DB::table('ad_cubusiness_has_invoice as i')
+                        ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+                        ->join('ad_cubusiness_has_product_item as ii', 'i.id', '=', 'ii.ad_cubusiness_has_invoice_id')
+                        ->join('pm_product_item as pi', 'ii.pm_product_item_id', '=', 'pi.id')
+                        ->where('l.agent_id', $agentId)
+                        ->where('i.status', 1)
+                        ->whereMonth('i.created_at', $month)
+                        ->whereYear('i.created_at', $year)
+                        ->where('pi.pm_product_category_id', $ct->pm_product_category_id)
+                        ->sum('ii.total_price');
+
+                    $catGetting = DB::table('stm_order_requests as o')
+                        ->join('stm_order_requests_has_product as op', 'o.id', '=', 'op.stm_order_request_id')
+                        ->join('pm_product_item as pi', 'op.pm_product_item_id', '=', 'pi.id')
+                        ->where('o.agent_id', $agentId)
+                        ->whereIn('o.status', $gettingStatuses)
+                        ->whereMonth('o.delivery_date', $month)
+                        ->whereYear('o.delivery_date', $year)
+                        ->where('pi.pm_product_category_id', $ct->pm_product_category_id)
+                        ->sum('op.subtotal');
+
+                    $categoryBreakdown[] = [
+                        'name' => $ct->category->category_name ?? 'Other',
+                        'target' => (double)$ct->target_amount,
+                        'actual' => (double)$catSales,
+                        'getting' => (double)$catGetting
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'metrics' => [
+                    'totalSales' => (double)$totalSales,
+                    'gettingAmount' => (double)$gettingAmount,
+                    'targetAmount' => $target ? (double)$target->monthly_sales_target : 0,
+                    'baseSalary' => $target ? (double)$target->base_salary : 0,
+                    'commission' => $target ? (double)($target->monthly_commission > 0 ? $target->monthly_commission : $tempCommission) : 0,
+                    'tempCommission' => (double)$tempCommission,
+                    'commissionBreakdown' => $commBreakdown,
+                    'paymentStatus' => $target ? $target->payment_status : 0,
+                    'orderCount' => $invoiceCount,
+                    'achievement' => $target && $target->monthly_sales_target > 0 ? ($totalSales / $target->monthly_sales_target) * 100 : 0
+                ],
+                'charts' => [
+                    'trend' => [
+                        'labels' => $trendLabels,
+                        'sales' => $trendSales,
+                        'getting' => $trendGetting,
+                        'targets' => $trendTargets
+                    ],
+                    'categories' => $categoryBreakdown,
+                    'commissions' => $commissionHistory
+                ],
+                'target_details' => $target
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
-
-        // Transaction counts mock (sales)
-        $sales = [];
-        // We'll simulate transaction counts in JS calculations or just pass summary data if needed,
-        // but let's pass a small sample to show structure
-        $sales = [
-            ['id' => 'sale_1', 'agentId' => 'agt_1', 'saleDate' => date('Y-m-d'), 'amount' => 1500],
-            ['id' => 'sale_2', 'agentId' => 'agt_1', 'saleDate' => date('Y-m-d'), 'amount' => 2500],
-        ];
-
-        $commissionPayments = [
-            ['id' => 'cp_1', 'agentId' => 'agt_1', 'periodEnd' => date('Y-m-d', strtotime('-1 month')), 'grossCommission' => 8000, 'deductions' => ['tax' => 100, 'advances' => 0, 'other' => 0], 'netCommission' => 7900, 'paymentStatus' => 'paid'],
-            ['id' => 'cp_2', 'agentId' => 'agt_1', 'periodEnd' => date('Y-m-d'), 'grossCommission' => 8500, 'deductions' => ['tax' => 120, 'advances' => 500, 'other' => 0], 'netCommission' => 7880, 'paymentStatus' => 'pending'],
-            ['id' => 'cp_3', 'agentId' => 'agt_2', 'periodEnd' => date('Y-m-d', strtotime('-1 month')), 'grossCommission' => 4500, 'deductions' => ['tax' => 50, 'advances' => 0, 'other' => 0], 'netCommission' => 4450, 'paymentStatus' => 'paid'],
-        ];
-
-        return view('agentDistribution.financialDashboard', compact('agents', 'settlements', 'sales', 'commissionPayments'));
     }
 
     public function agentDistributionReportIndex()
     {
-        $agents = [
-            ['id' => 'agt_1', 'agentName' => 'John Doe', 'agentCode' => 'AGT001', 'commissionRate' => 5.0],
-            ['id' => 'agt_2', 'agentName' => 'Sarah Smith', 'agentCode' => 'AGT002', 'commissionRate' => 4.5],
-            ['id' => 'agt_3', 'agentName' => 'Mike Johnson', 'agentCode' => 'AGT003', 'commissionRate' => 5.0],
-        ];
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
+            ->get()
+            ->map(function ($agent) {
+                return [
+                    'id' => (string) $agent->id,
+                    'agentName' => $agent->agent_name,
+                    'agentCode' => $agent->agent_code,
+                    'commissionRate' => (double) $agent->commission_rate,
+                ];
+            });
 
-        // Mock Settlements Data (Last 30 days)
-        $settlements = [
-            // Agent 1
-            ['id' => 'stl_1', 'agentId' => 'agt_1', 'settlementNumber' => 'SET-001', 'settlementDate' => date('Y-m-d'), 'totalSales' => 15000, 'cashSales' => 10000, 'creditSales' => 5000, 'chequeSales' => 0, 'actualCash' => 10000, 'cashVariance' => 0, 'totalCollections' => 2000, 'returnedValue' => 0, 'commissionEarned' => 750, 'status' => 'approved', 'varianceNotes' => ''],
-            ['id' => 'stl_2', 'agentId' => 'agt_1', 'settlementNumber' => 'SET-004', 'settlementDate' => date('Y-m-d', strtotime('-1 day')), 'totalSales' => 18000, 'cashSales' => 12000, 'creditSales' => 6000, 'chequeSales' => 0, 'actualCash' => 12000, 'cashVariance' => 0, 'totalCollections' => 1500, 'returnedValue' => 100, 'commissionEarned' => 900, 'status' => 'approved', 'varianceNotes' => ''],
+        $startDate = date('Y-m-d', strtotime('-180 days'));
 
-            // Agent 2 (Shortage example)
-            ['id' => 'stl_3', 'agentId' => 'agt_2', 'settlementNumber' => 'SET-002', 'settlementDate' => date('Y-m-d'), 'totalSales' => 12000, 'cashSales' => 8000, 'creditSales' => 4000, 'chequeSales' => 0, 'actualCash' => 7900, 'cashVariance' => -100, 'totalCollections' => 0, 'returnedValue' => 50, 'commissionEarned' => 540, 'status' => 'reviewed', 'varianceNotes' => 'Miscalculation in change'],
+        $settlements = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->select(
+                'l.agent_id',
+                'i.invoice_number as settlement_number',
+                'i.net_price as total_sales',
+                'i.return_price',
+                'i.created_at as settlement_date',
+                'i.status'
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'agentId' => (string) $s->agent_id,
+                    'settlementNumber' => $s->settlement_number,
+                    'settlementDate' => date('Y-m-d', strtotime($s->settlement_date)),
+                    'totalSales' => (double) $s->total_sales,
+                    'cashSales' => (double) $s->total_sales, // Simple assumption for report placeholder
+                    'creditSales' => 0,
+                    'chequeSales' => 0,
+                    'actualCash' => (double) $s->total_sales,
+                    'cashVariance' => 0,
+                    'commissionEarned' => (double) $s->total_sales * 0.15,
+                    'status' => 'approved',
+                    'varianceNotes' => '',
+                ];
+            });
 
-            // Agent 3 (Surplus example)
-            ['id' => 'stl_4', 'agentId' => 'agt_3', 'settlementNumber' => 'SET-003', 'settlementDate' => date('Y-m-d'), 'totalSales' => 20000, 'cashSales' => 15000, 'creditSales' => 5000, 'chequeSales' => 0, 'actualCash' => 15050, 'cashVariance' => 50, 'totalCollections' => 5000, 'returnedValue' => 200, 'commissionEarned' => 1000, 'status' => 'pending', 'varianceNotes' => 'Found extra cash'],
-        ];
+        // Collections from payments table
+        $sales = DB::table('ad_cubusiness_has_invoice as i')
+            ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+            ->leftJoin('ad_cubusiness_invoice_payments as p', 'i.id', '=', 'p.ad_cubusiness_has_invoice_id')
+            ->select(
+                'l.agent_id',
+                'i.created_at as sale_date',
+                'p.payment_type',
+                'p.amount as total_amount'
+            )
+            ->where('i.created_at', '>=', $startDate)
+            ->where('i.status', 1)
+            ->get()
+            ->map(function ($s) {
+                $method = 'cash';
+                if ($s->payment_type) {
+                    $pt = strtolower($s->payment_type);
+                    if (str_contains($pt, 'cash'))
+                        $method = 'cash';
+                    elseif (str_contains($pt, 'credit'))
+                        $method = 'credit';
+                    elseif (str_contains($pt, 'cheque'))
+                        $method = 'cheque';
+                }
+                return [
+                    'agentId' => (string) $s->agent_id,
+                    'saleDate' => date('Y-m-d', strtotime($s->sale_date)),
+                    'paymentMethod' => $method,
+                    'totalAmount' => (double) ($s->total_amount ?? 0),
+                ];
+            });
 
-        // Simple mock for transaction counts
-        $sales = [
-            ['id' => 'sale_1', 'agentId' => 'agt_1', 'saleDate' => date('Y-m-d'), 'amount' => 500],
-            ['id' => 'sale_2', 'agentId' => 'agt_1', 'saleDate' => date('Y-m-d'), 'amount' => 1000],
-            ['id' => 'sale_3', 'agentId' => 'agt_2', 'saleDate' => date('Y-m-d'), 'amount' => 800],
-            ['id' => 'sale_4', 'agentId' => 'agt_3', 'saleDate' => date('Y-m-d'), 'amount' => 2500],
-            // More historic data simulated by JS logic if needed, or we just rely on aggregated settlement data for reports usually
-        ];
-
-        $collections = [];
-        $returns = [];
-
-        return view('agentDistribution.reports', compact('agents', 'settlements', 'sales', 'collections', 'returns'));
+        return view('agentDistribution.reports', compact('agents', 'settlements', 'sales'));
     }
 
     public function sattlementAutomationIndex()
@@ -801,7 +1212,7 @@ class AgentDistributionManagementController extends Controller
                 $orderTotal += $total;
 
                 $items[] = [
-                    'productName' => ['Bun', 'Bread', 'Cake', 'Pastry', 'Muffin'][rand(0, 4)].' '.chr(65 + rand(0, 5)),
+                    'productName' => ['Bun', 'Bread', 'Cake', 'Pastry', 'Muffin'][rand(0, 4)] . ' ' . chr(65 + rand(0, 5)),
                     'quantity' => $qty,
                     'unitPrice' => $price,
                     'total' => $total,
@@ -810,7 +1221,7 @@ class AgentDistributionManagementController extends Controller
 
             $orders[] = [
                 'id' => "ord_$i",
-                'orderNumber' => 'ORD-'.date('Ymd')."-$i",
+                'orderNumber' => 'ORD-' . date('Ymd') . "-$i",
                 'date' => date('Y-m-d', strtotime("-$i weeks")),
                 'deliveryDate' => date('Y-m-d', strtotime("-$i weeks + 1 day")),
                 'totalAmount' => $orderTotal,
@@ -830,24 +1241,24 @@ class AgentDistributionManagementController extends Controller
             // Mock FIFO Allocations
             if (rand(0, 1)) {
                 $allocations[] = [
-                    'invoiceNumber' => 'INV-'.date('Ymd').'-'.rand(100, 999),
+                    'invoiceNumber' => 'INV-' . date('Ymd') . '-' . rand(100, 999),
                     'allocatedAmount' => $amount * 0.6,
                 ];
                 $allocations[] = [
-                    'invoiceNumber' => 'INV-'.date('Ymd').'-'.rand(100, 999),
+                    'invoiceNumber' => 'INV-' . date('Ymd') . '-' . rand(100, 999),
                     'allocatedAmount' => $amount * 0.4,
                 ];
             }
 
             $payments[] = [
                 'id' => "pay_$i",
-                'receiptNumber' => 'REC-'.date('Ymd')."-$i",
+                'receiptNumber' => 'REC-' . date('Ymd') . "-$i",
                 'date' => date('Y-m-d', strtotime("-$i months")),
                 'amount' => $amount,
                 'method' => ['cash', 'cheque', 'bank_transfer', 'card'][rand(0, 3)],
                 'status' => 'verified',
                 'agentName' => 'John Doe',
-                'reference' => rand(0, 1) ? 'REF-'.rand(1000, 9999) : null,
+                'reference' => rand(0, 1) ? 'REF-' . rand(1000, 9999) : null,
                 'allocations' => $allocations,
                 'notes' => rand(0, 1) ? 'Payment received with thanks' : null,
             ];
@@ -856,8 +1267,8 @@ class AgentDistributionManagementController extends Controller
         $visits = [];
         for ($i = 0; $i < 10; $i++) {
             $visitDate = date('Y-m-d', strtotime("-$i days"));
-            $checkIn = date('H:i', strtotime('09:00 + '.($i * 30).' minutes'));
-            $checkOut = date('H:i', strtotime($checkIn.' + '.rand(10, 45).' minutes'));
+            $checkIn = date('H:i', strtotime('09:00 + ' . ($i * 30) . ' minutes'));
+            $checkOut = date('H:i', strtotime($checkIn . ' + ' . rand(10, 45) . ' minutes'));
 
             $status = ['completed', 'skipped', 'in_progress'][rand(0, 2)];
             $orderPlaced = rand(0, 1);
@@ -865,7 +1276,7 @@ class AgentDistributionManagementController extends Controller
 
             $visits[] = [
                 'id' => "vis_$i",
-                'visitNumber' => 'VISIT-'.date('Ymd')."-$i",
+                'visitNumber' => 'VISIT-' . date('Ymd') . "-$i",
                 'date' => $visitDate,
                 'checkInTime' => $checkIn,
                 'checkOutTime' => $status === 'in_progress' ? null : $checkOut,
@@ -926,26 +1337,26 @@ class AgentDistributionManagementController extends Controller
                 'email' => 'nullable|email|max:255',
                 'nic_number' => 'nullable|string|max:20',
                 'address' => 'nullable|string',
-                'base_salary' => 'nullable|numeric|min:0',
-                'commission_rate' => 'nullable|numeric|min:0|max:100',
                 'credit_limit' => 'nullable|numeric|min:0',
                 'credit_period_days' => 'nullable|integer|min:0',
                 'bank_accounts' => 'required|array|min:1',
-                'bank_accounts.*.bank_name' => 'required|string|max:255',
+                'bank_accounts.*.bank_id' => 'required|exists:so_banks,id',
+                'bank_accounts.*.account_owner_name' => 'nullable|string|max:255',
                 'bank_accounts.*.account_number' => 'required|string|max:50',
                 'bank_accounts.*.branch' => 'nullable|string|max:255',
                 'bank_accounts.*.is_primary' => 'nullable|boolean',
+                'vehicle_category' => 'nullable|string|max:255',
             ]);
 
             // Create user account first
             $defaultPassword = 123456;
-            $userName = strtolower(str_replace(' ', '', $validated['agent_name'])).'_agent';
+            $userName = strtolower(str_replace(' ', '', $validated['agent_name'])) . '_agent';
 
             // Check if username exists, append number if needed
             $baseUserName = $userName;
             $counter = 1;
             while (UmUser::where('user_name', $userName)->exists()) {
-                $userName = $baseUserName.$counter;
+                $userName = $baseUserName . $counter;
                 $counter++;
             }
 
@@ -969,19 +1380,20 @@ class AgentDistributionManagementController extends Controller
                 'email' => $validated['email'] ?? null,
                 'nic_number' => $validated['nic_number'] ?? null,
                 'address' => $validated['address'] ?? null,
-                'base_salary' => $validated['base_salary'] ?? null,
-                'commission_rate' => $validated['commission_rate'] ?? null,
                 'credit_limit' => $validated['credit_limit'] ?? null,
                 'credit_period_days' => $validated['credit_period_days'] ?? null,
-                'monthly_sales_target' => $request->input('monthly_sales_target'),
+                'vehicle_category' => $validated['vehicle_category'] ?? null,
             ]);
 
             // Create bank accounts
             if (isset($validated['bank_accounts']) && is_array($validated['bank_accounts'])) {
                 foreach ($validated['bank_accounts'] as $bankAccount) {
+                    $bank = SoBank::find($bankAccount['bank_id']);
                     AdAgentHasBankAccount::create([
                         'agent_id' => $agent->id,
-                        'bank_name' => $bankAccount['bank_name'],
+                        'bank_id' => $bankAccount['bank_id'],
+                        'bank_name' => $bank ? $bank->bank_name : 'Unknown',
+                        'account_owner_name' => $bankAccount['account_owner_name'] ?? null,
                         'account_number' => $bankAccount['account_number'],
                         'branch' => $bankAccount['branch'] ?? null,
                         'is_primary' => $bankAccount['is_primary'] ?? false,
@@ -989,35 +1401,7 @@ class AgentDistributionManagementController extends Controller
                 }
             }
 
-            // Create category targets
-            if ($request->has('category_targets') && is_array($request->input('category_targets'))) {
-                foreach ($request->input('category_targets') as $ct) {
-                    if (!empty($ct['pm_product_category_id'])) {
-                        AdAgentHasCategoryTargets::create([
-                            'agent_id' => $agent->id,
-                            'pm_product_category_id' => $ct['pm_product_category_id'],
-                            'target_amount' => $ct['target_amount'] ?? null,
-                            'target_percentage' => $ct['target_percentage'] ?? null,
-                            'is_active' => true,
-                        ]);
-                    }
-                }
-            }
-
-            // Create item targets
-            if ($request->has('item_targets') && is_array($request->input('item_targets'))) {
-                foreach ($request->input('item_targets') as $it) {
-                    if (!empty($it['pm_product_item_id'])) {
-                        AdAgentHasItemTargets::create([
-                            'agent_id' => $agent->id,
-                            'pm_product_item_id' => $it['pm_product_item_id'],
-                            'target_amount' => $it['target_amount'] ?? null,
-                            'target_percentage' => $it['target_percentage'] ?? null,
-                            'is_active' => true,
-                        ]);
-                    }
-                }
-            }
+            // Bank accounts are created above
 
             return response()->json([
                 'success' => true,
@@ -1030,7 +1414,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating agent: '.$e->getMessage(),
+                'message' => 'Error creating agent: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1055,13 +1439,14 @@ class AgentDistributionManagementController extends Controller
                     'email' => $agent->email,
                     'nic_number' => $agent->nic_number,
                     'address' => $agent->address,
-                    'base_salary' => $agent->base_salary,
-                    'commission_rate' => $agent->commission_rate,
                     'credit_limit' => $agent->credit_limit,
                     'credit_period_days' => $agent->credit_period_days,
+                    'vehicle_category' => $agent->vehicle_category,
                     'bank_accounts' => $agent->bankAccounts->map(function ($bankAccount) {
                         return [
+                            'bank_id' => $bankAccount->bank_id,
                             'bank_name' => $bankAccount->bank_name,
+                            'account_owner_name' => $bankAccount->account_owner_name,
                             'account_number' => $bankAccount->account_number,
                             'branch' => $bankAccount->branch,
                             'is_primary' => $bankAccount->is_primary,
@@ -1075,7 +1460,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading agent: '.$e->getMessage(),
+                'message' => 'Error loading agent: ' . $e->getMessage(),
             ], 404);
         }
     }
@@ -1097,15 +1482,13 @@ class AgentDistributionManagementController extends Controller
                 'email' => 'nullable|email|max:255',
                 'nic_number' => 'nullable|string|max:20',
                 'address' => 'nullable|string',
-                'base_salary' => 'nullable|numeric|min:0',
-                'commission_rate' => 'nullable|numeric|min:0|max:100',
-                'credit_limit' => 'nullable|numeric|min:0',
-                'credit_period_days' => 'nullable|integer|min:0',
                 'bank_accounts' => 'required|array|min:1',
-                'bank_accounts.*.bank_name' => 'required|string|max:255',
+                'bank_accounts.*.bank_id' => 'required|exists:so_banks,id',
+                'bank_accounts.*.account_owner_name' => 'nullable|string|max:255',
                 'bank_accounts.*.account_number' => 'required|string|max:50',
                 'bank_accounts.*.branch' => 'nullable|string|max:255',
                 'bank_accounts.*.is_primary' => 'nullable|boolean',
+                'vehicle_category' => 'nullable|string|max:255',
             ]);
 
             // Update agent
@@ -1117,11 +1500,9 @@ class AgentDistributionManagementController extends Controller
                 'email' => $validated['email'] ?? null,
                 'nic_number' => $validated['nic_number'] ?? null,
                 'address' => $validated['address'] ?? null,
-                'base_salary' => $validated['base_salary'] ?? null,
-                'commission_rate' => $validated['commission_rate'] ?? null,
                 'credit_limit' => $validated['credit_limit'] ?? null,
                 'credit_period_days' => $validated['credit_period_days'] ?? null,
-                'monthly_sales_target' => $request->input('monthly_sales_target'),
+                'vehicle_category' => $validated['vehicle_category'] ?? null,
             ]);
 
             // Delete existing bank accounts and create new ones
@@ -1131,45 +1512,16 @@ class AgentDistributionManagementController extends Controller
 
                 // Create new bank accounts
                 foreach ($validated['bank_accounts'] as $bankAccount) {
+                    $bank = SoBank::find($bankAccount['bank_id']);
                     AdAgentHasBankAccount::create([
                         'agent_id' => $agent->id,
-                        'bank_name' => $bankAccount['bank_name'],
+                        'bank_id' => $bankAccount['bank_id'],
+                        'bank_name' => $bank ? $bank->bank_name : 'Unknown',
+                        'account_owner_name' => $bankAccount['account_owner_name'] ?? null,
                         'account_number' => $bankAccount['account_number'],
                         'branch' => $bankAccount['branch'] ?? null,
                         'is_primary' => $bankAccount['is_primary'] ?? false,
                     ]);
-                }
-            }
-
-            // Update category targets (delete and recreate)
-            $agent->categoryTargets()->delete();
-            if ($request->has('category_targets') && is_array($request->input('category_targets'))) {
-                foreach ($request->input('category_targets') as $ct) {
-                    if (!empty($ct['pm_product_category_id'])) {
-                        AdAgentHasCategoryTargets::create([
-                            'agent_id' => $agent->id,
-                            'pm_product_category_id' => $ct['pm_product_category_id'],
-                            'target_amount' => $ct['target_amount'] ?? null,
-                            'target_percentage' => $ct['target_percentage'] ?? null,
-                            'is_active' => true,
-                        ]);
-                    }
-                }
-            }
-
-            // Update item targets (delete and recreate)
-            $agent->itemTargets()->delete();
-            if ($request->has('item_targets') && is_array($request->input('item_targets'))) {
-                foreach ($request->input('item_targets') as $it) {
-                    if (!empty($it['pm_product_item_id'])) {
-                        AdAgentHasItemTargets::create([
-                            'agent_id' => $agent->id,
-                            'pm_product_item_id' => $it['pm_product_item_id'],
-                            'target_amount' => $it['target_amount'] ?? null,
-                            'target_percentage' => $it['target_percentage'] ?? null,
-                            'is_active' => true,
-                        ]);
-                    }
                 }
             }
 
@@ -1181,7 +1533,37 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating agent: '.$e->getMessage(),
+                'message' => 'Error updating agent: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Toggle agent status (Active/Inactive)
+     */
+    public function toggleAgentStatus($id)
+    {
+        try {
+            $agent = AdAgent::findOrFail($id);
+            $newStatus = ($agent->status == CommonVariables::$agentStatusActive)
+                ? CommonVariables::$agentStatusInactive
+                : CommonVariables::$agentStatusActive;
+
+            $agent->update([
+                'status' => $newStatus,
+            ]);
+
+            $statusText = ($newStatus == CommonVariables::$agentStatusActive) ? 'activated' : 'deactivated';
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Agent ' . $statusText . ' successfully',
+                'new_status' => $newStatus,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error toggling status: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1205,7 +1587,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deactivating agent: '.$e->getMessage(),
+                'message' => 'Error deactivating agent: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1260,7 +1642,7 @@ class AgentDistributionManagementController extends Controller
                 $d = $c->businessDetails;
 
                 // If no business details exist, create defaults so customer still appears
-                if (! $d) {
+                if (!$d) {
                     $d = (object) [
                         'b2b_customer_type' => null,
                         'contact_person_name' => null,
@@ -1277,7 +1659,7 @@ class AgentDistributionManagementController extends Controller
                     'location' => [
                         'address' => $c->address ?? 'Unknown',
                         'city' => 'Colombo',
-                        'latitude' => $c->latitude ?? 6.9271,  // Real from database
+                        'latitude' => $c->latitude ?? 6.9271, // Real from database
                         'longitude' => $c->longitude ?? 79.8612, // Real from database
                     ],
                     'contact' => [
@@ -1286,8 +1668,8 @@ class AgentDistributionManagementController extends Controller
                     ],
                     'assignedRouteId' => $d->route_id ?? null,
                     'stopSequence' => $d->stop_sequence ?? null,
-                    'savedDistance' => $c->saved_distance,  // From ad_route_has_customers
-                    'savedDuration' => $c->saved_duration,  // From ad_route_has_customers
+                    'savedDistance' => $c->saved_distance, // From ad_route_has_customers
+                    'savedDuration' => $c->saved_duration, // From ad_route_has_customers
                 ];
             })
             ->filter() // Remove null entries
@@ -1329,7 +1711,7 @@ class AgentDistributionManagementController extends Controller
             ->map(function ($c) {
                 $d = $c->businessDetails;
 
-                if (! $d) {
+                if (!$d) {
                     $d = (object) [
                         'b2b_customer_type' => null,
                         'contact_person_name' => null,
@@ -1402,7 +1784,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating route: '.$e->getMessage(),
+                'message' => 'Error creating route: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1433,7 +1815,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading route: '.$e->getMessage(),
+                'message' => 'Error loading route: ' . $e->getMessage(),
             ], 404);
         }
     }
@@ -1474,7 +1856,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating route: '.$e->getMessage(),
+                'message' => 'Error updating route: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1495,7 +1877,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deactivating route: '.$e->getMessage(),
+                'message' => 'Error deactivating route: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1520,7 +1902,7 @@ class AgentDistributionManagementController extends Controller
                 'address' => $request->location['address'] ?? '',
                 'latitude' => $request->location['latitude'] ?? null,
                 'longitude' => $request->location['longitude'] ?? null,
-                'created_by' => auth()->id() ?? 1,
+                'created_by' => Auth::id() ?? 1,
             ]);
 
             // Map string constants from frontend to IDs for new table
@@ -1577,7 +1959,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -1655,7 +2037,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -1667,7 +2049,7 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Customer deleted successfully']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -1682,7 +2064,7 @@ class AgentDistributionManagementController extends Controller
             'id' => $customerRecord->id,
             'businessName' => $customerRecord->name,
             'tradeName' => $customerRecord->name, // Placeholder
-            'customerCode' => 'CUS-'.$customerRecord->id, // Placeholder
+            'customerCode' => 'CUS-' . $customerRecord->id, // Placeholder
             'customerType' => $customerRecord->customer_type == CommonVariables::$customerTypeB2B ? 'b2b' : 'b2c',
             'b2bType' => $this->getB2BTypeName($details->b2b_customer_type ?? 0),
             'isVerified' => false, // Placeholder
@@ -1823,7 +2205,7 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: '.$e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1930,7 +2312,7 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating load: '.$e->getMessage(),
+                'message' => 'Error creating load: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1953,6 +2335,221 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function monthlyTargetsIndex()
+    {
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)->get();
+        $productItems = PmProductItem::with('category')->where('status', 1)->get(['id', 'product_name', 'pm_product_category_id']);
+        $productCategories = PmProductCategory::where('is_active', true)->get(['id', 'category_name', 'category_code']);
+        
+        // Fetch existing targets for the list view, ordered by most recent first
+        $monthlyTargets = AdAgentMonthlyTarget::with('agent')
+            ->orderBy('target_year', 'desc')
+            ->orderBy('target_month', 'desc')
+            ->get();
+
+        return view('agentDistribution.monthlyTargets', compact('agents', 'productItems', 'productCategories', 'monthlyTargets'));
+    }
+
+    public function getMonthlyTargets(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|exists:ad_agent,id',
+            'year' => 'required|integer',
+            'month' => 'required|integer|between:1,12',
+        ]);
+
+        $monthlyTarget = AdAgentMonthlyTarget::with(['categoryTargets.category', 'itemTargets.item'])
+            ->where('agent_id', $request->agent_id)
+            ->where('target_year', $request->year)
+            ->where('target_month', $request->month)
+            ->first();
+
+        if (!$monthlyTarget) {
+            return response()->json([
+                'success' => true,
+                'data' => null
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $monthlyTarget->id,
+                'monthly_sales_target' => $monthlyTarget->monthly_sales_target,
+                'base_salary' => $monthlyTarget->base_salary,
+                'commission_rate' => $monthlyTarget->commission_rate,
+                'invoicing_commission_rate' => $monthlyTarget->invoicing_commission_rate,
+                'target_commission_rate' => $monthlyTarget->target_commission_rate,
+                'achievement_threshold' => $monthlyTarget->achievement_threshold,
+                'reduced_target_commission_rate' => $monthlyTarget->reduced_target_commission_rate,
+                'status' => $monthlyTarget->status,
+                'category_targets' => $monthlyTarget->categoryTargets->map(function ($ct) {
+                    return [
+                        'pm_product_category_id' => $ct->pm_product_category_id,
+                        'category_name' => $ct->category->category_name ?? 'Unknown',
+                        'target_amount' => $ct->target_amount,
+                        'target_percentage' => $ct->target_percentage,
+                    ];
+                }),
+                'item_targets' => $monthlyTarget->itemTargets->map(function ($it) {
+                    return [
+                        'pm_product_item_id' => $it->pm_product_item_id,
+                        'product_name' => $it->item->product_name ?? 'Unknown',
+                        'target_amount' => $it->target_amount,
+                        'target_percentage' => $it->target_percentage,
+                    ];
+                }),
+            ]
+        ]);
+    }
+
+    public function saveMonthlyTargets(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|exists:ad_agent,id',
+            'year' => 'required|integer',
+            'month' => 'required|integer|between:1,12',
+            'monthly_sales_target' => 'nullable|numeric',
+            'base_salary' => 'nullable|numeric',
+            'commission_rate' => 'nullable|numeric',
+            'invoicing_commission_rate' => 'nullable|numeric',
+            'target_commission_rate' => 'nullable|numeric',
+            'achievement_threshold' => 'nullable|numeric',
+            'reduced_target_commission_rate' => 'nullable|numeric',
+            'category_targets' => 'nullable|array',
+            'item_targets' => 'nullable|array',
+            'status' => 'nullable|integer',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $monthlyTarget = AdAgentMonthlyTarget::updateOrCreate(
+                [
+                    'agent_id' => $request->agent_id,
+                    'target_year' => $request->year,
+                    'target_month' => $request->month,
+                ],
+                [
+                    'monthly_sales_target' => $request->monthly_sales_target ?? 0.00,
+                    'base_salary' => $request->base_salary,
+                    'commission_rate' => $request->commission_rate,
+                    'invoicing_commission_rate' => $request->invoicing_commission_rate ?? 15.00,
+                    'target_commission_rate' => $request->target_commission_rate ?? 5.00,
+                    'achievement_threshold' => $request->achievement_threshold ?? 80.00,
+                    'reduced_target_commission_rate' => $request->reduced_target_commission_rate ?? 4.00,
+                    'status' => $request->status ?? 1,
+                    'updated_by' => Auth::id(),
+                    'created_by' => AdAgentMonthlyTarget::where([
+                        'agent_id' => $request->agent_id,
+                        'target_year' => $request->year,
+                        'target_month' => $request->month,
+                    ])->exists() ? null : Auth::id(),
+                ]
+            );
+
+            // Save Category Targets
+            $monthlyTarget->categoryTargets()->delete();
+            if ($request->has('category_targets') && is_array($request->category_targets)) {
+                foreach ($request->category_targets as $ct) {
+                    if (!empty($ct['pm_product_category_id'])) {
+                        AdAgentHasCategoryTargets::create([
+                            'monthly_target_id' => $monthlyTarget->id,
+                            'pm_product_category_id' => $ct['pm_product_category_id'],
+                            'target_amount' => $ct['target_amount'] ?? null,
+                            'target_percentage' => $ct['target_percentage'] ?? null,
+                            'is_active' => true,
+                            'created_by' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+
+            // Save Item Targets
+            $monthlyTarget->itemTargets()->delete();
+            if ($request->has('item_targets') && is_array($request->item_targets)) {
+                foreach ($request->item_targets as $it) {
+                    if (!empty($it['pm_product_item_id'])) {
+                        AdAgentHasItemTargets::create([
+                            'monthly_target_id' => $monthlyTarget->id,
+                            'pm_product_item_id' => $it['pm_product_item_id'],
+                            'target_amount' => $it['target_amount'] ?? null,
+                            'target_percentage' => $it['target_percentage'] ?? null,
+                            'is_active' => true,
+                            'created_by' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Monthly targets saved successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving monthly targets: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function quickSaveAgent(Request $request)
+    {
+        $request->validate([
+            'agent_name' => 'required|string|max:255',
+            'contact_phone' => 'nullable|string|max:20',
+        ]);
+
+        try {
+            $agent = AdAgent::create([
+                'agent_name' => $request->agent_name,
+                'phone' => $request->contact_phone,
+                'agent_type' => 3, // Default to Credit Based
+                'status' => 1, // Active
+                'outstanding_balance' => 0,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Agent created successfully',
+                'agent' => [
+                    'id' => $agent->id,
+                    'agent_name' => $agent->agent_name,
+                    'agent_code' => $agent->agent_code
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updatePaymentStatus(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:ad_agent_has_monthly_targets,id',
+            'payment_status' => 'required|integer|in:0,1,2'
+        ]);
+
+        try {
+            $target = AdAgentMonthlyTarget::findOrFail($request->id);
+            $target->update(['payment_status' => $request->payment_status]);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
                 'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }

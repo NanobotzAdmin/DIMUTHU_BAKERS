@@ -8,7 +8,7 @@ class AdAgentHasItemTargets extends Model
 {
     protected $table = 'ad_agent_has_item_targets';
     protected $fillable = [
-        'agent_id',
+        'monthly_target_id',
         'pm_product_item_id',
         'target_amount',
         'target_percentage',
@@ -17,9 +17,9 @@ class AdAgentHasItemTargets extends Model
         'updated_by',
     ];
 
-    public function agent()
+    public function monthlyTarget()
     {
-        return $this->belongsTo(AdAgent::class, 'agent_id');
+        return $this->belongsTo(AdAgentMonthlyTarget::class, 'monthly_target_id');
     }
 
     public function item()

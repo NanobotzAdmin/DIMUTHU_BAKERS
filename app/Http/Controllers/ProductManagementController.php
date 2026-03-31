@@ -68,6 +68,8 @@ class ProductManagementController extends Controller
                     'ref_number_auto' => $autoRefNumber,
                     'reference_number' => $item['reference_number'] ?? null,
                     'selling_price' => $item['selling_price'] ?? 0,
+                    'distributor_percentage' => $item['distributor_percentage'] ?? 0,
+                    'wholesale_percentage' => $item['wholesale_percentage'] ?? 0,
                     'status' => 1,
                     'created_by' => auth()->id() ?? 1,
                     'updated_by' => auth()->id() ?? 1,
@@ -394,6 +396,13 @@ class ProductManagementController extends Controller
             })->count();
         }
 
+        // Calculate Stats based on Product Category
+        $categoryStats = [];
+        $activeCategories = PmProductCategory::where('is_active', 1)->get();
+        foreach ($activeCategories as $category) {
+            $categoryStats[$category->id] = $items->where('pm_product_category_id', $category->id)->count();
+        }
+
         // Transform for View
         $formattedProducts = $items->map(function ($item) {
             // Get all product types for this item
@@ -428,15 +437,19 @@ class ProductManagementController extends Controller
                 'allTypeIds' => $allTypeIds, // Include all type IDs
                 'allTypeNames' => $allTypeNames, // Include all type names
                 'isActive' => $item->status == 1,
+                'sellingPrice' => $item->selling_price,
+                'distributorPercentage' => $item->distributor_percentage,
+                'wholesalePercentage' => $item->wholesale_percentage,
             ];
         });
 
         return view('productManagement.productManage', [
             'products' => $formattedProducts,
             'stats' => $stats,
+            'categoryStats' => $categoryStats,
             'productTypes' => $productTypes,
             'brands' => $brands,
-            'categories' => PmProductCategory::where('is_active', 1)->get(),
+            'categories' => $activeCategories,
         ]);
     }
 
@@ -474,8 +487,9 @@ class ProductManagementController extends Controller
     {
         $request->validate([
             'item_id' => 'required|exists:pm_product_item,id',
-            'product_types' => 'array', // Can be empty if clearing all types
-            'product_types.*' => 'exists:pm_product_type,id',
+            'selling_price' => 'nullable|numeric',
+            'distributor_percentage' => 'nullable|numeric',
+            'wholesale_percentage' => 'nullable|numeric',
         ]);
 
         try {
@@ -483,21 +497,21 @@ class ProductManagementController extends Controller
 
             $productItem = PmProductItem::findOrFail($request->item_id);
 
-            // Sync the product types
-            // If product_types is not present or empty, sync([]) will remove all associations
-            $types = $request->input('product_types', []);
-            $productItem->productTypes()->sync($types);
-
-            // Touch updated_by
-            $productItem->update(['updated_by' => auth()->id() ?? 1]);
+            // Update price fields
+            $productItem->update([
+                'selling_price' => $request->input('selling_price', 0),
+                'distributor_percentage' => $request->input('distributor_percentage'),
+                'wholesale_percentage' => $request->input('wholesale_percentage'),
+                'updated_by' => auth()->id() ?? 1
+            ]);
 
             DB::commit();
 
-            return response()->json(['success' => true, 'message' => 'Product types updated successfully.']);
+            return response()->json(['success' => true, 'message' => 'Product prices updated successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => 'Error updating product types: '.$e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error updating product prices: '.$e->getMessage()], 500);
         }
     }
 }

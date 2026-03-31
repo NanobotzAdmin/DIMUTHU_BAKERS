@@ -20,6 +20,8 @@ class PmProductItem extends Model
         'product_name',
         'bin_code',
         'selling_price',
+        'distributor_percentage',
+        'wholesale_percentage',
         'ref_number_auto',
         'reference_number',
         'status',
