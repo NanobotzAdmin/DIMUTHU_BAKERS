@@ -19,6 +19,9 @@ use App\Models\StmOrderRequest;
 use App\Models\UmUser;
 use App\Models\AdSettlement;
 use App\Models\SoBank;
+use App\Models\DmDriver;
+use App\Models\SmSuperviser;
+use App\Models\VmVehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -2550,6 +2553,89 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false, 
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function agentOverviewIndex()
+    {
+        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
+            ->get(['id', 'agent_name', 'agent_code']);
+
+        return view('agentDistribution.agentOverview', compact('agents'));
+    }
+
+    public function getAgentOverviewData($id)
+    {
+        try {
+            $agent = AdAgent::findOrFail($id);
+            
+            // 1. Basic Stats
+            $stats = [
+                'total_sales' => (double) $agent->total_sales,
+                'outstanding_balance' => (double) $agent->outstanding_balance,
+                'total_collections' => (double) $agent->total_collections,
+                'credit_limit' => (double) $agent->credit_limit,
+            ];
+
+            // 2. Routes
+            $routes = AdRoute::where('agent_id', $id)
+                ->withCount('customers')
+                ->get();
+
+            // 3. Daily Loads (Enhanced)
+            $dailyLoads = AdDailyLoad::where('agent_id', $id)
+                ->with([
+                    'route', 
+                    'driver', 
+                    'vehicle', 
+                    'supervisor',
+                    'items.product',
+                    'invoices' => function($q) {
+                        $q->with(['business', 'items.product', 'newReturnItems.product']);
+                    }
+                ])
+                ->orderBy('load_date', 'desc')
+                ->limit(10)
+                ->get();
+
+            // 4. Team (Drivers & Supervisors)
+            $drivers = DmDriver::where('agent_id', $id)->get();
+            $supervisors = SmSuperviser::where('agent_id', $id)->get();
+
+            // 5. Vehicles
+            $vehicles = VmVehicle::where('agent_id', $id)->get();
+
+            // 6. Customers
+            $customers = AdCustomerHasBusiness::where('agent_id', $id)
+                ->with('customer')
+                ->get();
+
+            // 7. Order Requests (Enhanced)
+            $orders = StmOrderRequest::where('agent_id', $id)
+                ->with(['customer', 'orderProducts.productItem'])
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'agent' => $agent,
+                    'stats' => $stats,
+                    'routes' => $routes,
+                    'dailyLoads' => $dailyLoads,
+                    'drivers' => $drivers,
+                    'supervisors' => $supervisors,
+                    'vehicles' => $vehicles,
+                    'customers' => $customers,
+                    'orders' => $orders,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
                 'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }

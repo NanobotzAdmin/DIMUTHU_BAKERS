@@ -49,8 +49,8 @@
                         class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500">
                         <option value="all">All Types</option>
                         <option value="1">Salaried</option>
-                        <option value="2">Commission Only</option>
-                        <option value="3">Credit Based</option>
+                        <option value="2">Cash</option>
+                        <option value="3">Credit</option>
                     </select>
 
                     <select id="filterStatus"
@@ -94,7 +94,7 @@
                                         {{ $agent['agentName'] }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @php
-                                            $typeLabels = [1 => 'Salaried', 2 => 'Commission Only', 3 => 'Credit Based'];
+                                            $typeLabels = [1 => 'Salaried', 2 => 'Cash', 3 => 'Credit'];
                                             $typeColors = [1 => 'bg-blue-100 text-blue-800', 2 => 'bg-purple-100 text-purple-800', 3 => 'bg-orange-100 text-orange-800'];
                                         @endphp
                                         <span
@@ -184,18 +184,19 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Agent Name *</label>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Agent Name <span class="text-red-500">*</span></label>
                             <input type="text" id="agentName"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm"
                                 required>
                         </div>
-                        <div class="hidden">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Agent Type *</label>
+                        <div class="">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Agent Type <span class="text-red-500">*</span></label>
                             <select id="agentType" onchange="toggleAgentFields()"
                                 class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
-                                <option value="1">Salaried</option>
-                                <option value="2">Commission Only</option>
-                                <option selected value="3">Credit Based</option>
+                                {{-- <option value="1">Salaried</option> --}}
+                                <option value="">Select Agent Type</option>
+                                <option value="2">Cash</option>
+                                <option value="3">Credit</option>
                             </select>
                         </div>
                         <div>
@@ -468,8 +469,8 @@
         function getAgentTypeText(type) {
             const types = {
                 1: 'Salaried',
-                2: 'Commission Only',
-                3: 'Credit Based'
+                2: 'Cash',
+                3: 'Credit'
             };
             return types[type] || type;
         }

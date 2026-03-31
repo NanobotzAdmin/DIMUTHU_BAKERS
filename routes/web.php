@@ -149,6 +149,8 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     Route::post('/api/agents/monthly-targets/update-payment-status', [AgentDistributionManagementController::class, 'updatePaymentStatus'])->name('agents.monthlyTargets.updatePaymentStatus');
     Route::get('/agent-performance-overview', [AgentDistributionManagementController::class, 'performanceOverviewIndex'])->name('agents.performanceOverview.index');
     Route::get('/api/agents/performance-overview/get-data', [AgentDistributionManagementController::class, 'getPerformanceOverviewData'])->name('agents.performanceOverview.getData');
+    Route::get('/agent-overview', [AgentDistributionManagementController::class, 'agentOverviewIndex'])->name('agentOverview.index');
+    Route::get('/api/agent-overview/data/{id}', [AgentDistributionManagementController::class, 'getAgentOverviewData'])->name('agentOverview.data');
 
     // Route CRUD API Routes
     Route::post('/api/routes/create', [AgentDistributionManagementController::class, 'createRoute'])->name('routes.create');
