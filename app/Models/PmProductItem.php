@@ -11,6 +11,8 @@ class PmProductItem extends Model
 
     protected $table = 'pm_product_item';
 
+    protected $appends = ['wholesale_price', 'distributor_price'];
+
     protected $fillable = [
         'pm_product_id',
         'pm_brands_id',
@@ -84,5 +86,19 @@ class PmProductItem extends Model
     public function branchStocks()
     {
         return $this->hasMany(StmBranchStock::class, 'pm_product_item_id');
+    }
+
+    public function getWholesalePriceAttribute()
+    {
+        $sellingPrice = (float)($this->selling_price ?? 0);
+        $wholesalePercentage = (float)($this->wholesale_percentage ?? 0);
+        return round($sellingPrice * (1 - $wholesalePercentage / 100), 2);
+    }
+ 
+    public function getDistributorPriceAttribute()
+    {
+        $wholesalePrice = (float)$this->wholesale_price; // Calls the accessor above
+        $distributorPercentage = (float)($this->distributor_percentage ?? 0);
+        return round($wholesalePrice * (1 - $distributorPercentage / 100), 2);
     }
 }

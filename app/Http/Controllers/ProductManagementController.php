@@ -497,11 +497,15 @@ class ProductManagementController extends Controller
 
             $productItem = PmProductItem::findOrFail($request->item_id);
 
+            $sellingPrice = $request->input('selling_price', 0);
+            $distributorPercentage = $request->input('distributor_percentage', 0);
+            $wholesalePercentage = $request->input('wholesale_percentage', 0);
+
             // Update price fields
             $productItem->update([
-                'selling_price' => $request->input('selling_price', 0),
-                'distributor_percentage' => $request->input('distributor_percentage'),
-                'wholesale_percentage' => $request->input('wholesale_percentage'),
+                'selling_price' => $sellingPrice,
+                'distributor_percentage' => $distributorPercentage,
+                'wholesale_percentage' => $wholesalePercentage,
                 'updated_by' => auth()->id() ?? 1
             ]);
 

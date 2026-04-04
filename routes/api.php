@@ -22,8 +22,11 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [ApiUserController::class , 'logout']);
+    Route::post('/user/update-fcm-token', [ApiUserController::class, 'updateFcmToken']);
 
     Route::post('/create-customer', [ApiCustomerController::class , 'createCustomer']);
+    Route::post('/update-customer/{id}', [ApiCustomerController::class, 'updateCustomer']);
+    Route::get('/get-customer-edit/{id}', [ApiCustomerController::class, 'getCustomerForEdit']);
     Route::get('/search-master-customers', [ApiCustomerController::class , 'searchMasterCustomers']);
 
     // Management Routes
@@ -67,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/order-request/products', [ApiGRNController::class , 'getProducts']);
     Route::post('/order-request/create', [ApiGRNController::class , 'createOrderRequest']);
     Route::post('/order-request/{id}/payment', [ApiGRNController::class , 'addPayment']);
+    Route::post('/order-request/bulk-payment', [ApiGRNController::class , 'addBulkPayment']);
     Route::get('/order-request/{id}', [ApiGRNController::class , 'show']);
     Route::post('/order-request/{id}/confirm', [ApiGRNController::class , 'confirmOrder']);
 

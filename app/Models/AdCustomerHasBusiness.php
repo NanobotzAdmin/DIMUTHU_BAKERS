@@ -35,6 +35,7 @@ class AdCustomerHasBusiness extends Model
         'address',
         'latitude',
         'longitude',
+        'sm_superviser_id',
     ];
 
     protected $casts = [
@@ -46,5 +47,10 @@ class AdCustomerHasBusiness extends Model
     public function customer()
     {
         return $this->belongsTo(CmCustomer::class, 'customer_id');
+    }
+
+    public function supervisor()
+    {
+        return $this->belongsTo(SmSuperviser::class, 'sm_superviser_id');
     }
 }

@@ -630,6 +630,7 @@
                                 <th class="text-right py-3 px-2 text-sm font-semibold text-gray-700">Amount</th>
                                 <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Reference</th>
                                 <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700">Status</th>
+                                <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700">Action</th>
                                 <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Notes</th>
                             </tr>
                         </thead>
@@ -640,7 +641,18 @@
                 const bgClass = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                 const statusClass = payment.status === 'Active'
                     ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700';
+                    : (payment.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
+                
+                // Approve button for pending payments
+                let actionBtn = '';
+                if (payment.status_raw === 1) {
+                    actionBtn = `
+                        <button onclick="approvePaymentDetail(${payment.id}, ${order.id})" class="ml-2 p-1 text-green-600 hover:text-green-800 transition-colors" title="Approve Payment">
+                            <i class="bi bi-check-circle"></i>Approve
+                        </button>
+                    `;
+                }
+
                 const amount = parseFloat(payment.amount.replace(/,/g, ''));
                 if (payment.status === 'Active') totalPaid += amount;
 
@@ -651,8 +663,9 @@
                         <td class="py-3 px-2 text-sm text-right font-semibold text-gray-900">Rs ${payment.amount}</td>
                         <td class="py-3 px-2 text-sm text-gray-700">${payment.reference}</td>
                         <td class="py-3 px-2 text-center">
-                            <span class="px-2 py-1 rounded-lg text-xs font-medium ${statusClass}">${payment.status}</span>
-                        </td>
+                                <span class="px-2 py-1 rounded-lg text-xs font-medium ${statusClass}">${payment.status}</span>
+                                </td>
+                                <td>${actionBtn}</td>
                         <td class="py-3 px-2 text-sm text-gray-500">${payment.notes}</td>
                     </tr>
                 `;
@@ -661,9 +674,9 @@
                         </tbody>
                         <tfoot>
                             <tr class="border-t-2 border-gray-300 bg-gray-100">
-                                <td colspan="2" class="py-3 px-2 text-right font-bold text-gray-700">Total Paid</td>
+                                <td colspan="3" class="py-3 px-2 text-right font-bold text-gray-700">Total Paid</td>
                                 <td class="py-3 px-2 text-right font-black text-emerald-700">Rs ${totalPaid.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</td>
-                                <td colspan="3"></td>
+                                <td colspan="4"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -906,18 +919,26 @@
     }
 
     function approveOrder(orderId) {
+        // Collect updated quantities from the table
+        const items = [];
+        document.querySelectorAll('.order-item-qty').forEach(input => {
+            items.push({
+                product_item_id: input.dataset.itemId,
+                quantity: input.value
+            });
+        });
+
         Swal.fire({
             title: 'Approve Order?',
-            text: "This will move the order to 'Approved' status.",
-            icon: 'warning',
+            text: "This will approve the order and update the agent's outstanding balance if applicable.",
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
+            confirmButtonColor: '#7c3aed',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, Approve it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Call API
-                fetch('{{ route('orderManagement.approveOrder') }}', {
+            confirmButtonText: 'Yes, Approve it!',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch('{{ route('orderManagement.approveOrder') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -925,37 +946,77 @@
                     },
                     body: JSON.stringify({
                         order_id: orderId,
-                        items: Array.from(document.querySelectorAll('.order-item-qty')).map(input => ({
-                            product_item_id: input.dataset.itemId,
-                            quantity: input.value
-                        }))
+                        items: items
                     })
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire(
-                                'Approved!',
-                                'Order has been approved.',
-                                'success'
-                            ).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire(
-                                'Error!',
-                                data.message || 'Something went wrong.',
-                                'error'
-                            );
-                        }
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(json => { throw new Error(json.message || 'Server error'); });
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Request failed: ${error}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed && result.value.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Approved!',
+                    text: 'Order has been approved successfully.',
+                    timer: 1500
+                }).then(() => {
+                    location.reload();
+                });
+            } else if (result.isConfirmed && !result.value.success) {
+                Swal.fire('Error', result.value.message || 'Approval failed', 'error');
+            }
+        });
+    }
+
+    // Approve specific payment record
+    function approvePaymentDetail(paymentId, orderId) {
+        Swal.fire({
+            title: 'Approve Payment?',
+            text: "This will finalize the payment, update the order balance and agent outstanding balance.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Approve it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('{{ route('orderManagement.approvePayment') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        payment_id: paymentId
                     })
-                    .catch(error => {
-                        Swal.fire(
-                            'Error!',
-                            'Server error occurred.',
-                            'error'
-                        );
-                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Approved!',
+                            text: data.message,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message || 'Something went wrong', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire('Error', 'Server communication error', 'error');
+                });
             }
         });
     }

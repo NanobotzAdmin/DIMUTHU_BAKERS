@@ -30,25 +30,25 @@ use Illuminate\Support\Facades\Hash;
 
 class ApiManagementController extends Controller
 {
-    private function getAgentId()
-    {
-        $user = auth()->user();
-        if ($user && $user->user_role_id == 8) {
-            $agent = AdAgent::where('user_id', $user->id)->first();
-            return $agent ? $agent->id : null;
-        }
-        return null;
-    }
+    // private function getAgentId()
+    // {
+    //     $user = auth()->user();
+    //     if ($user && $user->user_role_id == 8) {
+    //         $agent = AdAgent::where('user_id', $user->id)->first();
+    //         return $agent ? $agent->id : null;
+    //     }
+    //     return null;
+    // }
 
-    private function getSupervisorId()
-    {
-        $user = auth()->user();
-        if ($user && $user->user_role_id == 10) {
-            $supervisor = SmSuperviser::where('user_id', $user->id)->first();
-            return $supervisor ? $supervisor->id : null;
-        }
-        return null;
-    }
+    // private function getSupervisorId()
+    // {
+    //     $user = auth()->user();
+    //     if ($user && $user->user_role_id == 10) {
+    //         $supervisor = SmSuperviser::where('user_id', $user->id)->first();
+    //         return $supervisor ? $supervisor->id : null;
+    //     }
+    //     return null;
+    // }
 
     // Driver Management
     public function getDrivers(Request $request)
@@ -496,6 +496,9 @@ class ApiManagementController extends Controller
                         $q->with(['supervisor', 'driver', 'vehicle'])->where('load_date', date('Y-m-d'));
                     }
                 ])
+                ->when($this->getSupervisorId(), function ($q, $supervisorId) {
+                    return $q->where('sm_superviser_id', $supervisorId);
+                })
                 ->get()
                 ->map(function ($route) {
                     $load = $route->latestDailyLoad;
@@ -610,8 +613,10 @@ class ApiManagementController extends Controller
 
         try {
             $agentId = $this->getAgentId();
+            $supervisorId = $this->getSupervisorId();
             $route = AdRoute::create([
                 'agent_id' => $agentId,
+                'sm_superviser_id' => $supervisorId,
                 'route_name' => $request->route_name,
                 'description' => $request->description,
                 'target_distance_km' => $request->target_distance_km,
@@ -1201,6 +1206,7 @@ class ApiManagementController extends Controller
                         'product_name' => $product->product_name,
                         'reference_number' => $product->reference_number,
                         'selling_price' => (float) ($product->selling_price ?? 0),
+                        'wholesale_price' => (float) ($product->wholesale_price ?? 0),
                         'stock_quantity' => (float) $stockQty,
                     ];
                 });
@@ -1229,6 +1235,9 @@ class ApiManagementController extends Controller
             // and filter by the current agent
             $customers = \App\Models\AdCustomerHasBusiness::with('customer:id,name,phone,address')
                 ->where('agent_id', $agentId)
+                ->when($this->getSupervisorId(), function ($q, $supervisorId) {
+                    return $q->where('sm_superviser_id', $supervisorId);
+                })
                 ->get()
                 ->map(function ($item) {
                     return [
@@ -1287,42 +1296,62 @@ class ApiManagementController extends Controller
                 ], 404);
             }
 
-            // Build sync data: [customer_id => pivot_data]
-            $syncData = [];
-            foreach ($request->customers as $item) {
-                $syncData[$item['customer_id']] = [
-                    'stop_sequence' => $item['stop_sequence'] ?? null,
-                    'distance_km' => $item['distance_km'] ?? null,
-                    'duration_minutes' => $item['duration_minutes'] ?? null,
-                ];
-            }
+            return DB::transaction(function () use ($request, $route, $id) {
+                // Build sync data: [customer_id => pivot_data]
+                $syncData = [];
+                foreach ($request->customers as $item) {
+                    $syncData[$item['customer_id']] = [
+                        'stop_sequence' => $item['stop_sequence'] ?? null,
+                        'distance_km' => $item['distance_km'] ?? null,
+                        'duration_minutes' => $item['duration_minutes'] ?? null,
+                    ];
+                }
 
-            $route->customers()->sync($syncData);
+                $changes = $route->customers()->sync($syncData);
 
-            $route->load('customers.customer');
+                // Update route_id and stop_sequence in ad_customer_has_business for assigned customers
+                foreach ($request->customers as $item) {
+                    AdCustomerHasBusiness::where('id', $item['customer_id'])
+                        ->update([
+                            'route_id' => $id,
+                            'stop_sequence' => $item['stop_sequence'] ?? null,
+                        ]);
+                }
 
-            // Flatten for response
-            $route->assigned_customers = $route->customers->map(function ($biz) {
-                return [
-                    'id' => $biz->id,
-                    'name' => $biz->business_name ?: ($biz->customer->name ?? 'N/A'),
-                    'phone' => $biz->contact_person_phone ?: ($biz->customer->phone ?? ''),
-                    'address' => $biz->address ?: ($biz->customer->address ?? ''),
-                    'pivot' => [
-                        'stop_sequence' => $biz->pivot->stop_sequence,
-                        'distance_km' => $biz->pivot->distance_km,
-                        'duration_minutes' => $biz->pivot->duration_minutes,
-                    ]
-                ];
+                // Nullify route_id and stop_sequence for detached customers
+                if (!empty($changes['detached'])) {
+                    AdCustomerHasBusiness::whereIn('id', $changes['detached'])
+                        ->update([
+                            'route_id' => null,
+                            'stop_sequence' => null,
+                        ]);
+                }
+
+                $route->load('customers.customer');
+
+                // Flatten for response
+                $route->assigned_customers = $route->customers->map(function ($biz) {
+                    return [
+                        'id' => $biz->id,
+                        'name' => $biz->business_name ?: ($biz->customer->name ?? 'N/A'),
+                        'phone' => $biz->contact_person_phone ?: ($biz->customer->phone ?? ''),
+                        'address' => $biz->address ?: ($biz->customer->address ?? ''),
+                        'pivot' => [
+                            'stop_sequence' => $biz->pivot->stop_sequence,
+                            'distance_km' => $biz->pivot->distance_km,
+                            'duration_minutes' => $biz->pivot->duration_minutes,
+                        ]
+                    ];
+                });
+                $route->customers = $route->assigned_customers;
+                unset($route->assigned_customers);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Route customers updated successfully',
+                    'data' => $route
+                ], 200);
             });
-            $route->customers = $route->assigned_customers;
-            unset($route->assigned_customers);
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Route customers updated successfully',
-                'data' => $route
-            ], 200);
         } catch (\Exception $e) {
             Log::error('Route Customers Sync Failed: ' . $e->getMessage());
             return response()->json([
@@ -1453,6 +1482,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'data' => [
+                    'agent_id' => (int)$agentId,
                     'stats' => [
                         'today_sales' => (float)$todaySales,
                         'total_customers' => $totalCustomers,
@@ -1467,6 +1497,7 @@ class ApiManagementController extends Controller
                         'credit_limit' => $agent ? (float)$agent->credit_limit : 0,
                         'outstanding_balance' => $agent ? (float)$agent->outstanding_balance : 0,
                         'credit_period_days' => $agent ? (int)$agent->credit_period_days : 0,
+                        'agent_type' => $agent ? (int)$agent->agent_type : 0,
                     ],
                     'recent_visits' => $recentVisits
                 ]

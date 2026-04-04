@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\CommonVariables;
+use App\Models\AdAgentBalanceHistory;
 use App\Models\CmCustomer;
 use App\Models\PmProductItem;
 use App\Models\StmOrderRequest;
+use App\Models\StmOrderRequestHasPayment;
 use App\Models\StmOrderRequestHasProduct;
 use App\Models\StmQuotation;
 use App\Models\StmQuotationHasProduct;
@@ -15,11 +17,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\StmOrderRequestHistory;
 use App\Models\StmStockTransfer;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class DistributorAndSalesManagementController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+    
     // Sales Overview
     public function salesOverviewIndex()
     {
@@ -363,11 +373,13 @@ class DistributorAndSalesManagementController extends Controller
                     // Payment Details
                     'payment_records' => $order->payments->map(function ($p) {
                         return [
+                            'id' => $p->id,
                             'amount' => number_format((float) $p->payment_amount, 2),
                             'method' => ucfirst(str_replace('_', ' ', $p->payment_method)),
                             'reference' => $p->payment_reference ?? '-',
                             'date' => \Carbon\Carbon::parse($p->payment_date)->format('Y-m-d H:i'),
-                            'status' => $p->status == 1 ? 'Active' : 'Cancelled',
+                            'status' => $p->status == 1 ? 'Pending' : ($p->status == 2 ? 'Active' : 'Cancelled'),
+                            'status_raw' => $p->status,
                             'notes' => $p->notes ?? '',
                         ];
                     }),
@@ -784,7 +796,7 @@ class DistributorAndSalesManagementController extends Controller
         try {
             DB::beginTransaction();
 
-            $order = StmOrderRequest::with('orderProducts')->findOrFail($request->order_id);
+            $order = StmOrderRequest::with(['orderProducts', 'agent'])->findOrFail($request->order_id);
 
             if ($order->status != CommonVariables::$orderRequestPendingApproval) {
                 return response()->json(['success' => false, 'message' => 'Order is not in a pending state.'], 400);
@@ -809,6 +821,15 @@ class DistributorAndSalesManagementController extends Controller
             // Update order status to Approved
             $order->status = CommonVariables::$orderRequestApproved;
             $order->save();
+            
+            // Send Push Notification to Agent
+            if ($order->agent && $order->agent->user_id) {
+                $this->notificationService->sendPushNotification(
+                    $order->agent->user_id,
+                    'Order Approved',
+                    "Order #{$order->order_number} has been approved."
+                );
+            }
 
             // Update Stock Transfer records
             StmStockTransfer::where('stm_order_request_id', $order->id)
@@ -819,13 +840,51 @@ class DistributorAndSalesManagementController extends Controller
                 ]);
 
             // Log History
-            StmOrderRequestHistory::create([
-                'order_request_id' => $order->id,
-                'action' => 'Order Approved',
-                'status' => $order->status,
-                'description' => 'Order request approved by ' . auth()->user()->name . '.',
-                'created_by' => auth()->id(),
-            ]);
+            // 4. Update Agent Balance for Credit Agents (agent_type == 3)
+            if ($order->agent && $order->agent->agent_type == 3) {
+                $previousBalance = $order->agent->outstanding_balance;
+                $updateAmount = $order->grand_total;
+                $newBalance = $previousBalance + $updateAmount;
+
+                // Update agent balance
+                $order->agent->outstanding_balance = $newBalance;
+                $order->agent->save();
+
+                // Set order as Credit
+                $order->payment_completed = 3; // Credit
+                $order->save();
+
+                // Log Balance History
+                AdAgentBalanceHistory::create([
+                    'agent_id' => $order->agent_id,
+                    'order_id' => $order->id,
+                    'previous_balance' => $previousBalance,
+                    'amount' => $updateAmount,
+                    'new_balance' => $newBalance,
+                    'type' => 'Order Approved',
+                    'description' => 'Outstanding balance increased due to approved order #' . $order->order_number,
+                    'created_by' => auth()->id(),
+                ]);
+
+                StmOrderRequestHistory::create([
+                    'order_request_id' => $order->id,
+                    'action' => 'Order Approved',
+                    'status' => $order->status,
+                    'description' => 'Order request approved by ' . auth()->user()->name . '.',
+                    'created_by' => auth()->id(),
+                ]);
+
+            } else {
+                StmOrderRequestHistory::create([
+                    'order_request_id' => $order->id,
+                    'action' => 'Order Approved',
+                    'status' => $order->status,
+                    'description' => 'Order request approved by ' . auth()->user()->name . '.',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+
 
             DB::commit();
             return response()->json([
@@ -861,6 +920,95 @@ class DistributorAndSalesManagementController extends Controller
             return response()->json(['success' => true, 'message' => 'Order status updated successfully']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to update status'], 500);
+        }
+    }
+
+    /**
+     * Admin Approve Agent Payment
+     */
+    public function approvePayment(Request $request)
+    {
+        $request->validate([
+            'payment_id' => 'required|exists:stm_order_request_has_payments,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $payment = StmOrderRequestHasPayment::with(['orderRequest.agent'])->findOrFail($request->payment_id);
+
+            if ($payment->status != 1) {
+                return response()->json(['success' => false, 'message' => 'Payment is not in a pending state.'], 400);
+            }
+
+            // 1. Update Payment Status to Approved (2)
+            $payment->status = 2;
+            $payment->save();
+
+            $order = $payment->orderRequest;
+            if (!$order) {
+                throw new \Exception('Associated order not found.');
+            }
+
+            // 2. Update Order's paid_amount
+            $totalPaid = StmOrderRequestHasPayment::where('stm_order_request_id', $order->id)
+                ->where('status', 2) // Only count approved payments
+                ->sum('payment_amount');
+
+            $order->paid_amount = $totalPaid;
+
+            // Update payment_completed status
+            if ($order->paid_amount >= $order->grand_total) {
+                $order->payment_completed = 2; // Fully Paid
+            } else if ($order->paid_amount > 0) {
+                $order->payment_completed = 1; // Partially Paid
+            }
+            $order->save();
+
+            // 3. Update Agent Balance (Decrease outstanding debt)
+            $agent = $order->agent;
+            if ($agent) {
+                $previousBalance = $agent->outstanding_balance;
+                $amount = $payment->payment_amount;
+                $newBalance = $previousBalance - $amount;
+
+                $agent->outstanding_balance = $newBalance;
+                $agent->total_collections = ($agent->total_collections ?? 0) + $amount;
+                $agent->save();
+
+                // 4. Log Balance History
+                AdAgentBalanceHistory::create([
+                    'agent_id' => $agent->id,
+                    'order_id' => $order->id,
+                    'previous_balance' => $previousBalance,
+                    'amount' => -$amount, // Negative because it's a payment reducing balance
+                    'new_balance' => $newBalance,
+                    'type' => 'Payment Approved',
+                    'description' => "Balance decreased due to approved payment ({$payment->payment_method}) for Order #{$order->order_number}",
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            // 5. Log Order History
+            StmOrderRequestHistory::create([
+                'order_request_id' => $order->id,
+                'action' => 'Payment Approved',
+                'status' => $order->status,
+                'description' => "Payment of Rs. " . number_format($payment->payment_amount, 2) . " approved by " . auth()->user()->name,
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment approved and agent balance updated successfully!',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Payment approval failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to approve payment: ' . $e->getMessage()], 500);
         }
     }
 
@@ -913,6 +1061,15 @@ class DistributorAndSalesManagementController extends Controller
             $order->status = 5; // Out for Delivery
             $order->save();
             \Log::info('Order Status Updated to 5');
+            
+            // Send Push Notification to Agent
+            if ($order->agent && $order->agent->user_id) {
+                $this->notificationService->sendPushNotification(
+                    $order->agent->user_id,
+                    'Order Dispatched',
+                    "Order #{$order->order_number} has been dispatched and is out for delivery."
+                );
+            }
 
             // 5. Log History
             StmOrderRequestHistory::create([

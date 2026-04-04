@@ -82,4 +82,36 @@ class ApiUserController extends Controller
             'message' => 'Successfully logged out'
         ]);
     }
+
+    public function updateFcmToken(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'fcm_token' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'FCM Token updated successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('FCM Token update error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during token update'
+            ], 500);
+        }
+    }
 }

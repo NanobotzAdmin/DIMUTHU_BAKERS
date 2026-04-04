@@ -13,25 +13,25 @@ use Illuminate\Support\Facades\Log;
 class ApiInventoryController extends Controller
 {
 
-    private function getAgentId()
-    {
-        $user = auth()->user();
-        if ($user && $user->user_role_id == 8) {
-            $agent = AdAgent::where('user_id', $user->id)->first();
-            return $agent ? $agent->id : null;
-        }
-        return null;
-    }
+    // private function getAgentId()
+    // {
+    //     $user = auth()->user();
+    //     if ($user && $user->user_role_id == 8) {
+    //         $agent = AdAgent::where('user_id', $user->id)->first();
+    //         return $agent ? $agent->id : null;
+    //     }
+    //     return null;
+    // }
 
-    private function getSupervisorId()
-    {
-        $user = auth()->user();
-        if ($user && $user->user_role_id == 10) {
-            $supervisor = SmSuperviser::where('user_id', $user->id)->first();
-            return $supervisor ? $supervisor->id : null;
-        }
-        return null;
-    }
+    // private function getSupervisorId()
+    // {
+    //     $user = auth()->user();
+    //     if ($user && $user->user_role_id == 10) {
+    //         $supervisor = SmSuperviser::where('user_id', $user->id)->first();
+    //         return $supervisor ? $supervisor->id : null;
+    //     }
+    //     return null;
+    // }
     /**
      * Get agent's branch stock inventory
      */
@@ -47,7 +47,7 @@ class ApiInventoryController extends Controller
                 ->where('status', 1)
                 ->with([
                     'productItem' => function ($q) {
-                        $q->select('id', 'product_name', 'selling_price', 'pm_product_id')
+                        $q->select('id', 'product_name', 'selling_price', 'wholesale_percentage', 'pm_product_id')
                             ->with([
                                 'product' => function ($q2) {
                                     $q2->select('id', 'product_name');
@@ -70,6 +70,7 @@ class ApiInventoryController extends Controller
                         'category' => $category,
                         'quantity' => $group->sum('quantity'),
                         'selling_price' => $productItem ? (float) $productItem->selling_price : 0,
+                        'wholesale_price' => $productItem ? (float) $productItem->wholesale_price : 0,
                     ];
                 })
                 ->values();
@@ -110,7 +111,7 @@ class ApiInventoryController extends Controller
             $stockItems = AdDailyLoadItem::whereIn('daily_load_id', $activeLoads)
                 ->with([
                     'product' => function ($q) {
-                        $q->select('id', 'product_name', 'selling_price', 'pm_product_id')
+                        $q->select('id', 'product_name', 'selling_price', 'wholesale_percentage', 'pm_product_id')
                             ->with([
                                 'product' => function ($q2) {
                                     $q2->select('id', 'product_name');
@@ -134,6 +135,7 @@ class ApiInventoryController extends Controller
                         // Sum available_quantity
                         'quantity' => $group->sum('available_quantity'),
                         'selling_price' => $productItem ? (float) $productItem->selling_price : 0,
+                        'wholesale_price' => $productItem ? (float) $productItem->wholesale_price : 0,
                     ];
                 })
                 ->values();

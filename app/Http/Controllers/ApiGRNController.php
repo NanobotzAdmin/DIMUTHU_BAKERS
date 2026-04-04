@@ -20,15 +20,15 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiGRNController extends Controller
 {
-    private function getAgentId()
-    {
-        $user = auth()->user();
-        if ($user && $user->user_role_id == 8) {
-            $agent = AdAgent::where('user_id', $user->id)->first();
-            return $agent ? $agent->id : null;
-        }
-        return null;
-    }
+    // private function getAgentId()
+    // {
+    //     $user = auth()->user();
+    //     if ($user && $user->user_role_id == 8) {
+    //         $agent = AdAgent::where('user_id', $user->id)->first();
+    //         return $agent ? $agent->id : null;
+    //     }
+    //     return null;
+    // }
 
     public function getProducts(Request $request)
     {
@@ -66,6 +66,8 @@ class ApiGRNController extends Controller
                         'product_name' => $product->product_name,
                         'reference_number' => $product->reference_number,
                         'selling_price' => (float) ($product->selling_price ?? 0),
+                        'wholesale_price' => (float) ($product->wholesale_price ?? 0),
+                        'distributor_price' => (float) ($product->distributor_price ?? $product->selling_price),
                         'cost_price' => $latestStock ? $latestStock->costing_price : 0,
                         'available_qty' => $product->stocks->sum('quantity') ?: 0,
                     ];
@@ -159,14 +161,15 @@ class ApiGRNController extends Controller
             // 2. Add Products
             foreach ($request->items as $item) {
                 $product = PmProductItem::find($item['product_id']);
-                $subtotal = $item['quantity'] * $product->selling_price;
+                $priceToUse = $product->distributor_price ?? $product->selling_price;
+                $subtotal = $item['quantity'] * $priceToUse;
                 $grandTotal += $subtotal;
 
                 StmOrderRequestHasProduct::create([
                     'stm_order_request_id' => $orderRequest->id,
                     'pm_product_item_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
-                    'unit_price' => $product->selling_price,
+                    'unit_price' => $priceToUse,
                     'subtotal' => $subtotal,
                 ]);
 
@@ -240,35 +243,12 @@ class ApiGRNController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            // Check if fully paid and update status
-            $totalPaid = StmOrderRequestHasPayment::where('stm_order_request_id', $orderRequest->id)->sum('payment_amount');
+            // Status 1 is already default (Pending Approval)
+            // Description updated to reflect pending status
+            $historyDescription = "Payment of Rs. " . number_format($request->amount, 2) . " recorded via " . $request->method . " (Pending Approval)";
 
-            $historyDescription = "Payment of Rs. " . number_format($request->amount, 2) . " recorded via " . $request->method;
-
-            // Update order request payment info
-            $orderRequest->paid_amount = $totalPaid;
-
-            if ($totalPaid >= $orderRequest->grand_total) {
-                $orderRequest->payment_completed = 2; // Paid
-                $historyDescription .= ". Order marked as fully paid and completed.";
-            } else if ($totalPaid > 0) {
-                $orderRequest->payment_completed = 1; // Partial
-                $historyDescription .= ". Order marked as partially paid.";
-            }
-
-            // Handle "Credit" status if specifically used as a method
-            if (strtolower($request->method) === 'credit') {
-                $orderRequest->payment_completed = 3; // Credit
-                $historyDescription .= " (Recorded as Credit adjustment).";
-            }
-            
-            $orderRequest->save();
-
-            // 5. Update Agent Balance and Total Collections
-            if ($agent = AdAgent::find($orderRequest->agent_id)) {
-                $agent->adjustBalance($request->amount, 'outstanding_balance', true); // Decrease balance
-                $agent->adjustBalance($request->amount, 'total_collections', true); // Increase collections
-            }
+            // Note: We no longer update orderRequest->paid_amount or agent balance here.
+            // These will be updated ONLY when an admin approves the payment.
 
             // Log History
             StmOrderRequestHistory::create([
@@ -293,6 +273,105 @@ class ApiGRNController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to record payment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addBulkPayment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'agent_id' => 'required|exists:ad_agent,id',
+            'amount' => 'required|numeric|min:0.01',
+            'method' => 'required|string',
+            'notes' => 'nullable|string',
+            'is_auto' => 'nullable|boolean',
+            'distributions' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $totalAmount = $request->amount;
+            $isAuto = $request->is_auto ?? false;
+            $distInput = $request->distributions ?? [];
+            $finalDistributions = [];
+
+            if ($isAuto) {
+                // Auto Distribution Logic: Find oldest outstanding orders
+                $outstandingOrders = StmOrderRequest::where('agent_id', $request->agent_id)
+                    ->whereIn('payment_completed', [0, 1, 3]) // 0: Pending, 1: Partial, 3: Credit
+                    ->where('status', '>=', 1) // Approved or further
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                $remainingAmount = $totalAmount;
+                foreach ($outstandingOrders as $order) {
+                    if ($remainingAmount <= 0) break;
+
+                    $orderOutstanding = $order->grand_total - $order->paid_amount;
+                    if ($orderOutstanding <= 0) continue;
+
+                    $paymentToApply = min($remainingAmount, $orderOutstanding);
+                    $finalDistributions[] = [
+                        'order_id' => $order->id,
+                        'amount' => $paymentToApply
+                    ];
+                    $remainingAmount -= $paymentToApply;
+                }
+            } else {
+                $finalDistributions = $distInput;
+            }
+
+            if (empty($finalDistributions)) {
+                 return response()->json([
+                    'status' => false,
+                    'message' => 'No eligible orders found for payment distribution.'
+                ], 400);
+            }
+
+            foreach ($finalDistributions as $dist) {
+                StmOrderRequestHasPayment::create([
+                    'stm_order_request_id' => $dist['order_id'],
+                    'payment_amount' => $dist['amount'],
+                    'payment_method' => $request->method,
+                    'payment_date' => now(),
+                    'created_by' => auth()->id(),
+                    'status' => 1, // Pending Approval
+                    'notes' => ($request->notes ?? '') . " (Bulk Distribution)",
+                ]);
+
+                // Log History for each order
+                StmOrderRequestHistory::create([
+                    'order_request_id' => $dist['order_id'],
+                    'action' => 'Bulk Payment Recorded',
+                    'status' => 1,
+                    'description' => "Bulk Payment of Rs. " . number_format($dist['amount'], 2) . " via " . $request->method . " (Pending Approval)",
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Bulk payment recorded successfully and pending approval.',
+                'distributed_to' => count($finalDistributions) . ' order(s)'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk payment failed: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Payment failed: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -394,8 +473,14 @@ class ApiGRNController extends Controller
 
             // 4. Update Agent Balance and Total Sales
             if ($agent = AdAgent::find($agentId)) {
-                $agent->adjustBalance($orderRequest->grand_total, 'outstanding_balance', true);
-                $agent->adjustBalance($orderRequest->grand_total, 'total_sales', true);
+                // If the order was already recorded as a Credit order (agent_type 3 during approval),
+                // we only update total_sales here, skip outstanding_balance to avoid double-counting.
+                if ($orderRequest->payment_completed == 3) {
+                    $agent->adjustBalance($orderRequest->grand_total, 'total_sales', true);
+                } else {
+                    $agent->adjustBalance($orderRequest->grand_total, 'outstanding_balance', true);
+                    $agent->adjustBalance($orderRequest->grand_total, 'total_sales', true);
+                }
             }
 
             // Log Order Request History

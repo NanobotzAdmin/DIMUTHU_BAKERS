@@ -18,6 +18,7 @@ class AdRoute extends Model
         'target_distance_km',
         'target_duration_hours',
         'agent_id',
+        'sm_superviser_id',
         'status',
         'is_added',
     ];
@@ -96,5 +97,13 @@ class AdRoute extends Model
     public function latestDailyLoad()
     {
         return $this->hasOne(AdDailyLoad::class, 'route_id')->latest('load_date');
+    }
+
+    /**
+     * Get the supervisor who created/manages this route
+     */
+    public function supervisor()
+    {
+        return $this->belongsTo(SmSuperviser::class, 'sm_superviser_id');
     }
 }
