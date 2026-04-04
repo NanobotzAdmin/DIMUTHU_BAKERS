@@ -127,8 +127,8 @@
                                 }
                             @endphp
 
-                            {{-- @if ($interfaceCount === 1) --}}
-                            {{-- @php
+                            @if ($interfaceCount === 1)
+                             @php
                                     $interface = $interfaces->first();
                                 @endphp
                                 <a href="{{ url($interface->path) }}"
@@ -162,35 +162,9 @@
                                                 {{ $interface->interface_name }}
                                             </a>
                                         @endforeach
-                                </a> --}}
-                            {{-- @elseif($interfaceCount > 1) --}}
-                            <div class="relative">
-                                <button type="button"
-                                    class="w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $isActiveTopic ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}"
-                                    onclick="toggleMenu('topic-{{ $topic->id }}')">
-                                    <div class="flex items-center min-w-0">
-                                        <i
-                                            class="{{ $topic->menu_icon ?? 'bi bi-collection' }} w-5 h-5 text-[1rem] min-w-[1.25rem] text-center {{ $isActiveTopic ? 'text-white' : 'text-slate-400 group-hover:text-slate-300' }}"></i>
-                                        <span class="sidebar-text ml-3 truncate">{{ $topic->topic_name }}</span>
                                     </div>
-                                    <i class="bi {{ $isActiveTopic ? 'bi-chevron-up' : 'bi-chevron-down' }} w-4 h-4 transition-transform duration-200 sidebar-text"
-                                        id="topic-{{ $topic->id }}-icon"></i>
-                                </button>
-                                <div class="{{ $isActiveTopic ? '' : 'hidden' }} space-y-1 ml-[22px] border-l-2 border-amber-500/75 pl-4 mt-1"
-                                    id="topic-{{ $topic->id }}">
-                                    @foreach ($interfaces as $interface)
-                                        @php
-                                            $path = ltrim($interface->path, '/');
-                                            $isInterfaceActive = Request::is($path) || Request::is($path . '/*');
-                                        @endphp
-                                        <a href="{{ url($interface->path) }}"
-                                            class="block px-3 py-2 text-sm rounded-md transition-colors {{ $isInterfaceActive ? 'bg-slate-800 text-amber-500 font-medium' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                                            {{ $interface->interface_name }}
-                                        </a>
-                                    @endforeach
                                 </div>
-                            </div>
-                            {{-- @endif --}}
+                            @endif
                         @endforeach
                     @endif
 
