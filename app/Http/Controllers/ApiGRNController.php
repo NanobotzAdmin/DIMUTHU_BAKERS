@@ -13,6 +13,7 @@ use App\Models\StmOrderRequestHasPayment;
 use App\Models\StmOrderRequestHasProduct;
 use App\Models\StmOrderRequestHistory;
 use App\Models\StmStockTransfer;
+use App\Models\AdAgentPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -233,8 +234,29 @@ class ApiGRNController extends Controller
             DB::beginTransaction();
             $orderRequest = StmOrderRequest::findOrFail($id);
 
+            // Validation: Prevent overpayment
+            $remaining = $orderRequest->grand_total - $orderRequest->paid_amount;
+            if ($request->amount > $remaining + 0.01) { // Small epsilon for floating point
+                 return response()->json([
+                    'status' => false,
+                    'message' => 'Payment amount (Rs. ' . number_format($request->amount, 2) . ') exceeds remaining balance (Rs. ' . number_format($remaining, 2) . ')',
+                ], 422);
+            }
+
+            // Create Agent Payment Header
+            $agentPayment = AdAgentPayment::create([
+                'agent_id' => $orderRequest->agent_id,
+                'amount' => $request->amount,
+                'payment_method' => $request->method == 'Cash' ? 1 : ($request->method == 'Card' ? 2 : 3),
+                'payment_date' => now(),
+                'status' => 0, // Pending
+                'notes' => $request->notes,
+                'created_by' => auth()->id(),
+            ]);
+
             $payment = StmOrderRequestHasPayment::create([
                 'stm_order_request_id' => $orderRequest->id,
+                'ad_agent_payment_id' => $agentPayment->id,
                 'payment_amount' => $request->amount,
                 'payment_method' => $request->method,
                 'payment_date' => now(),
@@ -245,7 +267,7 @@ class ApiGRNController extends Controller
 
             // Status 1 is already default (Pending Approval)
             // Description updated to reflect pending status
-            $historyDescription = "Payment of Rs. " . number_format($request->amount, 2) . " recorded via " . $request->method . " (Pending Approval)";
+            $historyDescription = "Payment of Rs. " . number_format($request->amount, 2) . " recorded via " . $request->method . " (Pending Approval). ID: " . $agentPayment->id;
 
             // Note: We no longer update orderRequest->paid_amount or agent balance here.
             // These will be updated ONLY when an admin approves the payment.
@@ -263,8 +285,9 @@ class ApiGRNController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Payment recorded successfully' . ($orderRequest->status == 2 ? ' and order marked as completed' : ''),
-                'data' => $payment
+                'message' => 'Payment recorded successfully and pending approval.',
+                'data' => $payment,
+                'agent_payment_id' => $agentPayment->id
             ], 201);
 
         } catch (\Exception $e) {
@@ -299,6 +322,16 @@ class ApiGRNController extends Controller
         try {
             DB::beginTransaction();
 
+            $agent = AdAgent::findOrFail($request->agent_id);
+
+            // Validation: Prevent overpayment against total outstanding
+            if ($request->amount > $agent->outstanding_balance + 0.01) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Payment amount (Rs. ' . number_format($request->amount, 2) . ') exceeds total outstanding balance (Rs. ' . number_format($agent->outstanding_balance, 2) . ')',
+                ], 422);
+            }
+
             $totalAmount = $request->amount;
             $isAuto = $request->is_auto ?? false;
             $distInput = $request->distributions ?? [];
@@ -314,7 +347,7 @@ class ApiGRNController extends Controller
 
                 $remainingAmount = $totalAmount;
                 foreach ($outstandingOrders as $order) {
-                    if ($remainingAmount <= 0) break;
+                    if ($remainingAmount <= 0.01) break;
 
                     $orderOutstanding = $order->grand_total - $order->paid_amount;
                     if ($orderOutstanding <= 0) continue;
@@ -328,6 +361,7 @@ class ApiGRNController extends Controller
                 }
             } else {
                 $finalDistributions = $distInput;
+                // Optional: Validate distribution sum matches totalAmount
             }
 
             if (empty($finalDistributions)) {
@@ -337,9 +371,21 @@ class ApiGRNController extends Controller
                 ], 400);
             }
 
+            // Create Agent Payment Header
+            $agentPayment = AdAgentPayment::create([
+                'agent_id' => $agent->id,
+                'amount' => $totalAmount,
+                'payment_method' => $request->method == 'Cash' ? 1 : ($request->method == 'Card' ? 2 : 3),
+                'payment_date' => now(),
+                'status' => 0, // Pending
+                'notes' => $request->notes,
+                'created_by' => auth()->id(),
+            ]);
+
             foreach ($finalDistributions as $dist) {
                 StmOrderRequestHasPayment::create([
                     'stm_order_request_id' => $dist['order_id'],
+                    'ad_agent_payment_id' => $agentPayment->id,
                     'payment_amount' => $dist['amount'],
                     'payment_method' => $request->method,
                     'payment_date' => now(),
@@ -353,7 +399,7 @@ class ApiGRNController extends Controller
                     'order_request_id' => $dist['order_id'],
                     'action' => 'Bulk Payment Recorded',
                     'status' => 1,
-                    'description' => "Bulk Payment of Rs. " . number_format($dist['amount'], 2) . " via " . $request->method . " (Pending Approval)",
+                    'description' => "Bulk Payment of Rs. " . number_format($dist['amount'], 2) . " via " . $request->method . " (Pending Approval). ID: " . $agentPayment->id,
                     'created_by' => auth()->id(),
                 ]);
             }
@@ -363,7 +409,8 @@ class ApiGRNController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Bulk payment recorded successfully and pending approval.',
-                'distributed_to' => count($finalDistributions) . ' order(s)'
+                'distributed_to' => count($finalDistributions) . ' order(s)',
+                'agent_payment_id' => $agentPayment->id
             ]);
 
         } catch (\Exception $e) {

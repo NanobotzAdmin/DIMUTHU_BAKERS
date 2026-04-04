@@ -13,6 +13,7 @@ class StmOrderRequestHasPayment extends Model
 
     protected $fillable = [
         'stm_order_request_id',
+        'ad_agent_payment_id',
         'payment_amount',
         'payment_method',
         'payment_reference',
@@ -21,6 +22,11 @@ class StmOrderRequestHasPayment extends Model
         'notes',
         'created_by',
     ];
+
+    public function agentPayment()
+    {
+        return $this->belongsTo(AdAgentPayment::class, 'ad_agent_payment_id');
+    }
 
     protected $casts = [
         'payment_date' => 'datetime',

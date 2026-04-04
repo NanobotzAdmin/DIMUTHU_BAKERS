@@ -374,15 +374,27 @@
                             <div class="space-y-1 mb-4">
                                 <div class="flex gap-2 items-center text-sm">
                                     <span class="text-gray-500">Selling Price:</span>
-                                    <span class="font-bold text-gray-900 border-b-2 border-blue-100">Rs. ${parseFloat(p.sellingPrice || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                                    <span class="font-bold text-gray-900 border-b-2 border-blue-100">Rs. ${Math.round(parseFloat(p.sellingPrice || 0)).toLocaleString()}</span>
                                 </div>
                                 <div class="flex gap-2 items-center text-xs pt-1">
                                     <span class="text-gray-500">Distributor (${p.distributorPercentage || 0}%):</span>
-                                    <span class="text-indigo-600 font-bold">Rs. ${Math.round(parseFloat(p.sellingPrice || 0) * (1 - (p.distributorPercentage || 0) / 100)).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                                    <span class="text-indigo-600 font-bold">Rs. ${(() => {
+                                        const sellPrice = parseFloat(p.sellingPrice || 0);
+                                        const wPercent = parseFloat(p.wholesalePercentage || 0);
+                                        const dPercent = parseFloat(p.distributorPercentage || 0);
+                                        const wPrice = Math.round(sellPrice * (1 - wPercent / 100));
+                                        const dPrice = Math.round(wPrice * (1 - dPercent / 100));
+                                        return dPrice.toLocaleString();
+                                    })()}</span>
                                 </div>
                                 <div class="flex gap-2 items-center text-xs">
                                     <span class="text-gray-500">Wholesale (${p.wholesalePercentage || 0}%):</span>
-                                    <span class="text-purple-600 font-bold">Rs. ${Math.round(parseFloat(p.sellingPrice || 0) * (1 - (p.wholesalePercentage || 0) / 100)).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                                    <span class="text-purple-600 font-bold">Rs. ${(() => {
+                                        const sellPrice = parseFloat(p.sellingPrice || 0);
+                                        const wPercent = parseFloat(p.wholesalePercentage || 0);
+                                        const wPrice = Math.round(sellPrice * (1 - wPercent / 100));
+                                        return wPrice.toLocaleString();
+                                    })()}</span>
                                 </div>
                             </div>
 
@@ -416,10 +428,22 @@
                             </div>
                         </div>
                         <div class="hidden md:flex flex-col items-end gap-1 w-48">
-                            <div class="text-sm font-bold text-gray-900">Rs. ${parseFloat(p.sellingPrice || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                            <div class="text-sm font-bold text-gray-900">Rs. ${Math.round(parseFloat(p.sellingPrice || 0)).toLocaleString()}</div>
                             <div class="flex gap-2">
-                                <span class="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-bold">D: Rs. ${Math.round(parseFloat(p.sellingPrice || 0) * (1 - (p.distributorPercentage || 0) / 100)).toLocaleString()}</span>
-                                <span class="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-bold">W: Rs. ${Math.round(parseFloat(p.sellingPrice || 0) * (1 - (p.wholesalePercentage || 0) / 100)).toLocaleString()}</span>
+                                <span class="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-bold">D: Rs. ${(() => {
+                                    const sellPrice = parseFloat(p.sellingPrice || 0);
+                                    const wPercent = parseFloat(p.wholesalePercentage || 0);
+                                    const dPercent = parseFloat(p.distributorPercentage || 0);
+                                    const wPrice = Math.round(sellPrice * (1 - wPercent / 100));
+                                    const dPrice = Math.round(wPrice * (1 - dPercent / 100));
+                                    return dPrice.toLocaleString();
+                                })()}</span>
+                                <span class="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-bold">W: Rs. ${(() => {
+                                    const sellPrice = parseFloat(p.sellingPrice || 0);
+                                    const wPercent = parseFloat(p.wholesalePercentage || 0);
+                                    const wPrice = Math.round(sellPrice * (1 - wPercent / 100));
+                                    return wPrice.toLocaleString();
+                                })()}</span>
                             </div>
                         </div>
                         <div class="hidden md:block text-gray-700 text-sm">${p.unit}</div>
@@ -581,11 +605,11 @@
             const distributorPercent = parseFloat(document.getElementById('distributor_percentage').value) || 0;
             const wholesalePercent = parseFloat(document.getElementById('wholesale_percentage').value) || 0;
 
-            const distributorPrice = Math.round(sellingPrice * (1 - distributorPercent / 100));
             const wholesalePrice = Math.round(sellingPrice * (1 - wholesalePercent / 100));
+            const distributorPrice = Math.round(wholesalePrice * (1 - distributorPercent / 100));
 
-            document.getElementById('distributor_price_display').textContent = distributorPrice.toLocaleString(undefined, {minimumFractionDigits: 2});
-            document.getElementById('wholesale_price_display').textContent = wholesalePrice.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById('distributor_price_display').textContent = distributorPrice.toLocaleString();
+            document.getElementById('wholesale_price_display').textContent = wholesalePrice.toLocaleString();
         }
 
         function closeTypeModal() {

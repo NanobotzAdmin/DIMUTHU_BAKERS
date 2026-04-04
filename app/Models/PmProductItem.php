@@ -92,13 +92,15 @@ class PmProductItem extends Model
     {
         $sellingPrice = (float)($this->selling_price ?? 0);
         $wholesalePercentage = (float)($this->wholesale_percentage ?? 0);
-        return round($sellingPrice * (1 - $wholesalePercentage / 100), 2);
+        // Round to nearest integer as requested
+        return (int)round($sellingPrice * (1 - $wholesalePercentage / 100));
     }
  
     public function getDistributorPriceAttribute()
     {
         $wholesalePrice = (float)$this->wholesale_price; // Calls the accessor above
         $distributorPercentage = (float)($this->distributor_percentage ?? 0);
-        return round($wholesalePrice * (1 - $distributorPercentage / 100), 2);
+        // Round to nearest integer as requested
+        return (int)round($wholesalePrice * (1 - $distributorPercentage / 100));
     }
 }

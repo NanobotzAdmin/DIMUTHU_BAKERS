@@ -693,8 +693,8 @@
             const distributorPercent = parseFloat(distributorPercentInput.value) || 0;
             const wholesalePercent = parseFloat(wholesalePercentInput.value) || 0;
 
-            const distributorPrice = Math.round(sellingPrice * (1 - distributorPercent / 100));
             const wholesalePrice = Math.round(sellingPrice * (1 - wholesalePercent / 100));
+            const distributorPrice = Math.round(wholesalePrice * (1 - distributorPercent / 100));
 
             if (distributorDisplay) distributorDisplay.textContent = `Price: ${distributorPrice}`;
             if (wholesaleDisplay) wholesaleDisplay.textContent = `Price: ${wholesalePrice}`;

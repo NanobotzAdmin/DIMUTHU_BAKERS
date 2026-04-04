@@ -924,6 +924,24 @@ class DistributorAndSalesManagementController extends Controller
     }
 
     /**
+     * View Payment Approval Page
+     */
+    public function paymentApprovalView($id)
+    {
+        try {
+            $payment = StmOrderRequestHasPayment::with([
+                'orderRequest.agent',
+                'orderRequest.orderProducts.productItem',
+                'agentPayment' // New relationship
+            ])->findOrFail($id);
+
+            return view('DistributorAndSalesManagement.paymentApproval', compact('payment'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Payment record not found.');
+        }
+    }
+
+    /**
      * Admin Approve Agent Payment
      */
     public function approvePayment(Request $request)
@@ -935,15 +953,21 @@ class DistributorAndSalesManagementController extends Controller
         try {
             DB::beginTransaction();
 
-            $payment = StmOrderRequestHasPayment::with(['orderRequest.agent'])->findOrFail($request->payment_id);
+            $payment = StmOrderRequestHasPayment::with(['orderRequest.agent', 'agentPayment'])->findOrFail($request->payment_id);
 
             if ($payment->status != 1) {
-                return response()->json(['success' => false, 'message' => 'Payment is not in a pending state.'], 400);
+                return response()->json(['success' => false, 'message' => 'Payment is already processed.'], 400);
             }
 
             // 1. Update Payment Status to Approved (2)
-            $payment->status = 2;
+            $payment->status = 2; // Active/Approved
             $payment->save();
+
+            // Update the header status as well if it's a single payment link
+            if ($payment->agentPayment) {
+                $payment->agentPayment->status = 1; // Approved
+                $payment->agentPayment->save();
+            }
 
             $order = $payment->orderRequest;
             if (!$order) {
@@ -951,14 +975,16 @@ class DistributorAndSalesManagementController extends Controller
             }
 
             // 2. Update Order's paid_amount
+            // Recalculate based on ALL approved payments for this order
             $totalPaid = StmOrderRequestHasPayment::where('stm_order_request_id', $order->id)
-                ->where('status', 2) // Only count approved payments
+                ->where('status', 2)
                 ->sum('payment_amount');
 
             $order->paid_amount = $totalPaid;
 
             // Update payment_completed status
-            if ($order->paid_amount >= $order->grand_total) {
+            // 0: Unpaid, 1: Partial, 2: Paid, 3: Credit
+            if ($order->paid_amount >= $order->grand_total - 0.01) {
                 $order->payment_completed = 2; // Fully Paid
             } else if ($order->paid_amount > 0) {
                 $order->payment_completed = 1; // Partially Paid
@@ -984,7 +1010,7 @@ class DistributorAndSalesManagementController extends Controller
                     'amount' => -$amount, // Negative because it's a payment reducing balance
                     'new_balance' => $newBalance,
                     'type' => 'Payment Approved',
-                    'description' => "Balance decreased due to approved payment ({$payment->payment_method}) for Order #{$order->order_number}",
+                    'description' => "Balance decreased due to approved payment ({$payment->payment_method}) for Order #{$order->order_number}. Payment ID: {$payment->id}",
                     'created_by' => auth()->id(),
                 ]);
             }

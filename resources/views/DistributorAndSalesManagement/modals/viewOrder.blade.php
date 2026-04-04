@@ -646,10 +646,11 @@
                 // Approve button for pending payments
                 let actionBtn = '';
                 if (payment.status_raw === 1) {
+                    const approvalUrl = `{{ route('orderManagement.paymentApprovalView', ['id' => ':id']) }}`.replace(':id', payment.id);
                     actionBtn = `
-                        <button onclick="approvePaymentDetail(${payment.id}, ${order.id})" class="ml-2 p-1 text-green-600 hover:text-green-800 transition-colors" title="Approve Payment">
-                            <i class="bi bi-check-circle"></i>Approve
-                        </button>
+                        <a href="${approvalUrl}" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                            <i class="bi bi-shield-check mr-1"></i> Review
+                        </a>
                     `;
                 }
 
