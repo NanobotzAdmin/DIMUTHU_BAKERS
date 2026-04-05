@@ -17,18 +17,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\StmOrderRequestHistory;
 use App\Models\StmStockTransfer;
-use App\Services\NotificationService;
+// use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class DistributorAndSalesManagementController extends Controller
 {
-    protected $notificationService;
+    // protected $notificationService;
 
-    public function __construct(NotificationService $notificationService)
-    {
-        $this->notificationService = $notificationService;
-    }
+    // public function __construct(NotificationService $notificationService)
+    // {
+    //     $this->notificationService = $notificationService;
+    // }
     
     // Sales Overview
     public function salesOverviewIndex()
@@ -822,6 +822,7 @@ class DistributorAndSalesManagementController extends Controller
             $order->status = CommonVariables::$orderRequestApproved;
             $order->save();
             
+            /*
             // Send Push Notification to Agent
             if ($order->agent && $order->agent->user_id) {
                 $this->notificationService->sendPushNotification(
@@ -830,6 +831,7 @@ class DistributorAndSalesManagementController extends Controller
                     "Order #{$order->order_number} has been approved."
                 );
             }
+            */
 
             // Update Stock Transfer records
             StmStockTransfer::where('stm_order_request_id', $order->id)
@@ -1088,6 +1090,7 @@ class DistributorAndSalesManagementController extends Controller
             $order->save();
             \Log::info('Order Status Updated to 5');
             
+            /*
             // Send Push Notification to Agent
             if ($order->agent && $order->agent->user_id) {
                 $this->notificationService->sendPushNotification(
@@ -1096,6 +1099,7 @@ class DistributorAndSalesManagementController extends Controller
                     "Order #{$order->order_number} has been dispatched and is out for delivery."
                 );
             }
+            */
 
             // 5. Log History
             StmOrderRequestHistory::create([
