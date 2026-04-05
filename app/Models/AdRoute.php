@@ -18,7 +18,9 @@ class AdRoute extends Model
         'target_distance_km',
         'target_duration_hours',
         'agent_id',
+        'sm_superviser_id',
         'status',
+        'is_added',
     ];
 
     protected $casts = [
@@ -26,6 +28,7 @@ class AdRoute extends Model
         'agent_id' => 'integer',
         'target_distance_km' => 'float',
         'target_duration_hours' => 'float',
+        'is_added' => 'boolean',
     ];
 
     /**
@@ -48,10 +51,10 @@ class AdRoute extends Model
     private static function generateRouteCode()
     {
         $year = date('Y');
-        $prefix = 'RT-'.$year.'-';
+        $prefix = 'RT-' . $year . '-';
 
         // Get the last route code for this year
-        $lastRoute = self::where('route_code', 'like', $prefix.'%')
+        $lastRoute = self::where('route_code', 'like', $prefix . '%')
             ->orderBy('route_code', 'desc')
             ->first();
 
@@ -65,7 +68,7 @@ class AdRoute extends Model
         }
 
         // Format with leading zeros
-        return $prefix.str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -81,8 +84,26 @@ class AdRoute extends Model
      */
     public function customers()
     {
-        return $this->belongsToMany(CmCustomer::class, 'ad_route_has_customers', 'route_id', 'customer_id')
-            ->withPivot('stop_sequence', 'distance_km')
+        return $this->belongsToMany(AdCustomerHasBusiness::class, 'ad_route_has_customers', 'route_id', 'ad_customer_has_business_id')
+            ->withPivot('stop_sequence', 'distance_km', 'duration_minutes')
             ->withTimestamps();
+    }
+
+    public function dailyLoads()
+    {
+        return $this->hasMany(AdDailyLoad::class, 'route_id');
+    }
+
+    public function latestDailyLoad()
+    {
+        return $this->hasOne(AdDailyLoad::class, 'route_id')->latest('load_date');
+    }
+
+    /**
+     * Get the supervisor who created/manages this route
+     */
+    public function supervisor()
+    {
+        return $this->belongsTo(SmSuperviser::class, 'sm_superviser_id');
     }
 }

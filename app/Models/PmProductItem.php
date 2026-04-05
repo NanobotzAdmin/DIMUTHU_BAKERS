@@ -11,14 +11,19 @@ class PmProductItem extends Model
 
     protected $table = 'pm_product_item';
 
+    protected $appends = ['wholesale_price', 'distributor_price'];
+
     protected $fillable = [
         'pm_product_id',
         'pm_brands_id',
+        'pm_product_category_id',
         'pm_variation_id',
         'pm_variation_value_id',
         'product_name',
         'bin_code',
         'selling_price',
+        'distributor_percentage',
+        'wholesale_percentage',
         'ref_number_auto',
         'reference_number',
         'status',
@@ -34,6 +39,11 @@ class PmProductItem extends Model
     public function brand()
     {
         return $this->belongsTo(PmBrand::class, 'pm_brands_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(PmProductCategory::class, 'pm_product_category_id');
     }
 
     public function variation()
@@ -76,5 +86,21 @@ class PmProductItem extends Model
     public function branchStocks()
     {
         return $this->hasMany(StmBranchStock::class, 'pm_product_item_id');
+    }
+
+    public function getWholesalePriceAttribute()
+    {
+        $sellingPrice = (float)($this->selling_price ?? 0);
+        $wholesalePercentage = (float)($this->wholesale_percentage ?? 0);
+        // Round to nearest integer as requested
+        return (int)round($sellingPrice * (1 - $wholesalePercentage / 100));
+    }
+ 
+    public function getDistributorPriceAttribute()
+    {
+        $wholesalePrice = (float)$this->wholesale_price; // Calls the accessor above
+        $distributorPercentage = (float)($this->distributor_percentage ?? 0);
+        // Round to nearest integer as requested
+        return (int)round($wholesalePrice * (1 - $distributorPercentage / 100));
     }
 }

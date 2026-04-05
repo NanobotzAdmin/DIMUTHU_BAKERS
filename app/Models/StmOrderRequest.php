@@ -16,6 +16,7 @@ class StmOrderRequest extends Model
         'branch_id',
         'customer_id',
         'agent_id',
+        'monthly_target_id',
         'quotation_id',
         'order_type',
         'event_type',
@@ -30,6 +31,7 @@ class StmOrderRequest extends Model
         'payment_reference',
         'paid_amount',
         'status',
+        'payment_completed',
         'grand_total',
         'notes',
         'created_by',
@@ -53,6 +55,11 @@ class StmOrderRequest extends Model
         return $this->belongsTo(AdAgent::class, 'agent_id');
     }
 
+    public function monthlyTarget()
+    {
+        return $this->belongsTo(AdAgentMonthlyTarget::class, 'monthly_target_id');
+    }
+
     public function products()
     {
         return $this->belongsToMany(PmProductItem::class, 'stm_order_requests_has_product', 'stm_order_request_id', 'pm_product_item_id')
@@ -64,6 +71,17 @@ class StmOrderRequest extends Model
     {
         return $this->hasMany(StmOrderRequestHasProduct::class, 'stm_order_request_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(StmOrderRequestHasPayment::class, 'stm_order_request_id');
+    }
+
+    public function history()
+    {
+        return $this->hasMany(StmOrderRequestHistory::class, 'order_request_id');
+    }
+
 
     public function creator()
     {

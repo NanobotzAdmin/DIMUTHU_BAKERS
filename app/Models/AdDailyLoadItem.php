@@ -14,13 +14,17 @@ class AdDailyLoadItem extends Model
     protected $fillable = [
         'daily_load_id',
         'product_item_id',
-        'quantity',
+        'stm_branch_stock_id',
+        'loaded_qty',
+        'available_quantity',
+        'unload_qty',
         'price',
         'total_value',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:3',
+        'loaded_qty' => 'decimal:3',
+        'available_quantity' => 'decimal:3',
         'price' => 'decimal:2',
         'total_value' => 'decimal:2',
     ];

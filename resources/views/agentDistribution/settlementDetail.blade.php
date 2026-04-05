@@ -358,50 +358,97 @@
         }
 
         function doAction(action) {
-            if (action === 'dispute') {
+            let status = '';
+            let confirmTitle = '';
+            let confirmText = '';
+            let confirmColor = '#3085d6';
+
+            if (action === 'review') {
+                status = 'reviewed';
+                updateStatus(status);
+                return;
+            } else if (action === 'approve') {
+                status = 'approved';
+                confirmTitle = 'Approve Settlement?';
+                confirmText = 'This will lock the settlement.';
+                confirmColor = '#10b981';
+            } else if (action === 'dispute') {
                 Swal.fire({
                     title: 'Dispute Settlement',
                     input: 'textarea',
-                    inputPlaceholder: 'Reason...',
+                    inputPlaceholder: 'Reason for dispute...',
                     showCancelButton: true,
-                    confirmButtonText: 'Submit',
+                    confirmButtonText: 'Submit Dispute',
                     confirmButtonColor: '#d33'
                 }).then(r => {
                     if (r.isConfirmed && r.value) {
-                        Swal.fire('Disputed', 'Settlement marked as disputed', 'success');
-                        // Update UI mock
-                        settlement.status = 'disputed';
-                        renderStatus();
-                        renderActions();
+                        updateStatus('disputed', r.value);
                     }
                 });
-            } else if (action === 'approve') {
-                Swal.fire({
-                    title: 'Approve?',
-                    text: 'This will lock the settlement.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Approve',
-                    confirmButtonColor: '#10b981'
-                }).then(r => {
-                    if (r.isConfirmed) {
-                        Swal.fire('Approved', 'Settlement approved.', 'success');
-                        settlement.status = 'approved';
-                        renderStatus();
-                        renderActions();
-                    }
-                });
-            } else if (action === 'review') {
-                settlement.status = 'reviewed';
-                renderStatus();
-                renderActions();
-                Swal.fire('Reviewed', 'Marked as reviewed', 'success');
+                return;
             } else if (action === 'resolve') {
-                settlement.status = 'reviewed';
-                renderStatus();
-                renderActions();
-                Swal.fire('Resolved', 'Dispute resolved, moved to reviewed status.', 'success');
+                status = 'reviewed';
+                confirmTitle = 'Resolve Dispute?';
+                confirmText = 'This will move the settlement back to Reviewed status.';
             }
+
+            Swal.fire({
+                title: confirmTitle,
+                text: confirmText,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: confirmColor,
+                confirmButtonText: 'Yes, proceed'
+            }).then(r => {
+                if (r.isConfirmed) {
+                    updateStatus(status);
+                }
+            });
+        }
+
+        function updateStatus(status, notes = '') {
+            Swal.fire({
+                title: 'Processing...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: '/agent-distribution/settlements/update-status',
+                type: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    id: settlement.id,
+                    status: status,
+                    notes: notes
+                },
+                success: function(response) {
+                    if (response.status) {
+                        settlement.status = status;
+                        renderStatus();
+                        renderActions();
+                        
+                        const msgs = {
+                            reviewed: 'Settlement marked as reviewed',
+                            approved: 'Settlement approved successfully',
+                            disputed: 'Settlement marked as disputed'
+                        };
+                        
+                        Swal.fire('Success!', msgs[status] || 'Status updated', 'success');
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let msg = 'Failed to update status';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error!', msg, 'error');
+                }
+            });
         }
     </script>
 @endsection

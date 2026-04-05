@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>BakeryMate ERP</title>
+    <title>Dimuthu Bakers</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/bakery.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -20,7 +20,62 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{{ asset('assets/sweetalert2.all.min.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('assets/sweetalert2.min.css') }}">
+    <link rel="shortcut icon" href="{{ asset($settings->logos->favicon ?? 'favicon.ico') }}" type="image/x-icon">
     <style>
+        :root {
+            --sidebar-bg: {{ $settings->colors->sidebar_bg ?? '#0f172a' }};
+            --sidebar-hover: {{ $settings->colors->sidebar_hover ?? '#1e293b' }};
+            --sidebar-active: {{ $settings->colors->sidebar_active ?? '#4f46e5' }};
+            --sidebar-text: {{ $settings->colors->sidebar_text ?? '#cbd5e1' }};
+            --sidebar-icon: {{ $settings->colors->sidebar_icon ?? '#94a3b8' }};
+            --sidebar-border: {{ $settings->colors->sidebar_border ?? '#334155' }};
+            --sidebar-sub-active-bg: {{ $settings->colors->sidebar_sub_active_bg ?? '#1e293b' }};
+            --sidebar-sub-active-text: {{ $settings->colors->sidebar_sub_active_text ?? '#fcd34d' }};
+            --primary-color: {{ $settings->colors->primary ?? '#D4A017' }};
+        }
+
+        #sidebar {
+            background-color: var(--sidebar-bg) !important;
+        }
+
+        #sidebar-brand {
+            background-color: rgba(0, 0, 0, 0.2) !important;
+            border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .sidebar-link-active {
+            background-color: var(--sidebar-active) !important;
+            color: white !important;
+        }
+
+        .sidebar-link-hover {
+            color: var(--sidebar-text) !important;
+        }
+
+        .sidebar-link-hover:hover {
+            background-color: var(--sidebar-hover) !important;
+            color: white !important;
+        }
+
+        .sidebar-icon {
+            color: var(--sidebar-icon) !important;
+        }
+
+        .sidebar-link-active .sidebar-icon,
+        .sidebar-link-hover:hover .sidebar-icon {
+            color: white !important;
+        }
+
+        .sidebar-submenu {
+            border-left-color: var(--sidebar-border) !important;
+        }
+
+        .sidebar-sub-active {
+            background-color: var(--sidebar-sub-active-bg) !important;
+            color: var(--sidebar-sub-active-text) !important;
+            font-weight: 500;
+        }
+
         .modal {
             transition: opacity 0.3s ease-in-out;
             opacity: 0;
@@ -40,11 +95,11 @@
 
         <!-- Sidebar -->
         <aside id="sidebar"
-            class="flex flex-col w-64 transition-all duration-300 bg-slate-900 text-slate-300 flex-shrink-0 relative z-20 hidden md:flex">
+            class="flex flex-col w-64 transition-all duration-300 text-slate-300 flex-shrink-0 relative z-20 hidden md:flex">
             <!-- Brand -->
-            <div class="flex items-center justify-center h-20 border-b border-slate-800 bg-slate-950 transition-all duration-300"
+            <div class="flex items-center justify-center h-20 border-b transition-all duration-300"
                 id="sidebar-brand">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-16 w-auto transition-all duration-300"
+                <img src="{{ asset($settings->logos->white ?? 'images/logo.png') }}" alt="Logo" class="h-16 w-auto transition-all duration-300"
                     id="sidebar-logo">
             </div>
 
@@ -52,9 +107,9 @@
             <div class="flex-1 overflow-y-auto py-4">
                 <nav class="space-y-1 px-2">
                     <a href="{{ url('/adminDashboard') }}"
-                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ Request::is('adminDashboard') ? 'bg-amber-600 text-white' : 'hover:bg-slate-800 hover:text-white' }}">
+                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ Request::is('adminDashboard') ? 'sidebar-link-active' : 'sidebar-link-hover' }}">
                         <i
-                            class="bi bi-grid-fill w-5 h-5 text-[1rem] min-w-[1.25rem] text-center {{ Request::is('adminDashboard') ? 'text-amber-200' : 'text-slate-400 group-hover:text-slate-300' }}"></i>
+                            class="bi bi-grid-fill w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
                         <span class="sidebar-text ml-3 truncate">Dashboard</span>
                     </a>
 
@@ -72,44 +127,44 @@
                                 }
                             @endphp
 
-                            {{-- @if ($interfaceCount === 1) --}}
-                            {{-- @php
+                            @if ($interfaceCount === 1)
+                             @php
                                     $interface = $interfaces->first();
                                 @endphp
                                 <a href="{{ url($interface->path) }}"
-                                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $isActiveTopic ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $isActiveTopic ? 'sidebar-link-active' : 'sidebar-link-hover' }}">
                                     <i
-                                        class="{{ $topic->menu_icon ?? 'bi bi-collection' }} w-5 h-5 text-[1rem] min-w-[1.25rem] text-center {{ $isActiveTopic ? 'text-white' : 'text-slate-400 group-hover:text-slate-300' }}"></i>
+                                        class="{{ $topic->menu_icon ?? 'bi bi-collection' }} w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
                                     <span class="sidebar-text ml-3 truncate">{{ $topic->topic_name }}</span>
-                                </a> --}}
-                            {{-- @elseif($interfaceCount > 1) --}}
-                            <div class="relative">
-                                <button type="button"
-                                    class="w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $isActiveTopic ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}"
-                                    onclick="toggleMenu('topic-{{ $topic->id }}')">
-                                    <div class="flex items-center min-w-0">
-                                        <i
-                                            class="{{ $topic->menu_icon ?? 'bi bi-collection' }} w-5 h-5 text-[1rem] min-w-[1.25rem] text-center {{ $isActiveTopic ? 'text-white' : 'text-slate-400 group-hover:text-slate-300' }}"></i>
-                                        <span class="sidebar-text ml-3 truncate">{{ $topic->topic_name }}</span>
+                                </a>
+                            @elseif($interfaceCount > 1)
+                                <div class="relative">
+                                    <button type="button"
+                                        class="w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors {{ $isActiveTopic ? 'sidebar-link-active' : 'sidebar-link-hover' }}"
+                                        onclick="toggleMenu('topic-{{ $topic->id }}')">
+                                        <div class="flex items-center min-w-0">
+                                            <i
+                                                class="{{ $topic->menu_icon ?? 'bi bi-collection' }} w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
+                                            <span class="sidebar-text ml-3 truncate">{{ $topic->topic_name }}</span>
+                                        </div>
+                                        <i class="bi {{ $isActiveTopic ? 'bi-chevron-up' : 'bi-chevron-down' }} w-4 h-4 transition-transform duration-200 sidebar-text"
+                                            id="topic-{{ $topic->id }}-icon"></i>
+                                    </button>
+                                    <div class="{{ $isActiveTopic ? '' : 'hidden' }} space-y-1 ml-[22px] border-l-2 sidebar-submenu pl-4 mt-1"
+                                        id="topic-{{ $topic->id }}">
+                                        @foreach($interfaces as $interface)
+                                            @php
+                                                $path = ltrim($interface->path, '/');
+                                                $isInterfaceActive = Request::is($path) || Request::is($path . '/*');
+                                            @endphp
+                                            <a href="{{ url($interface->path) }}"
+                                                class="block px-3 py-2 text-sm rounded-md transition-colors {{ $isInterfaceActive ? 'sidebar-sub-active' : 'sidebar-link-hover hover:bg-slate-800/50' }}">
+                                                {{ $interface->interface_name }}
+                                            </a>
+                                        @endforeach
                                     </div>
-                                    <i class="bi {{ $isActiveTopic ? 'bi-chevron-up' : 'bi-chevron-down' }} w-4 h-4 transition-transform duration-200 sidebar-text"
-                                        id="topic-{{ $topic->id }}-icon"></i>
-                                </button>
-                                <div class="{{ $isActiveTopic ? '' : 'hidden' }} space-y-1 ml-[22px] border-l-2 border-amber-500/75 pl-4 mt-1"
-                                    id="topic-{{ $topic->id }}">
-                                    @foreach ($interfaces as $interface)
-                                        @php
-                                            $path = ltrim($interface->path, '/');
-                                            $isInterfaceActive = Request::is($path) || Request::is($path . '/*');
-                                        @endphp
-                                        <a href="{{ url($interface->path) }}"
-                                            class="block px-3 py-2 text-sm rounded-md transition-colors {{ $isInterfaceActive ? 'bg-slate-800 text-amber-500 font-medium' : 'text-slate-400 hover:text-white hover:bg-slate-800/50' }}">
-                                            {{ $interface->interface_name }}
-                                        </a>
-                                    @endforeach
                                 </div>
-                            </div>
-                            {{-- @endif --}}
+                            @endif
                         @endforeach
                     @endif
 
@@ -142,8 +197,8 @@
 
                 <!-- Desktop Menu Button -->
                 <button type="button" id="desktop-menu-btn"
-                    class="hidden md:inline-flex py-2 px-3 mr-2 rounded-md bg-slate-800 text-amber-600 hover:text-amber-600 hover:bg-slate-950 focus:outline-none"
-                    onclick="toggleSidebar()">
+                    class="hidden md:inline-flex py-2 px-3 mr-2 rounded-md bg-slate-800 text-white hover:bg-slate-950 focus:outline-none"
+                    onclick="toggleSidebar()" style="background-color: var(--sidebar-bg); color: white;">
                     <i class="bi bi-list text-xl"></i>
                 </button>
 
@@ -173,10 +228,12 @@
                     </div>
 
                     <!-- POS View Button -->
+                    @if(Auth::user()->hasPermission('view_pos_system'))
                     <a href="{{ route('pos.index') }}"
                         class="hidden md:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <i class="bi bi-shop mr-2"></i> POS View
                     </a>
+                    @endif
 
                     <!-- Search (Hidden on Mobile) -->
                     <div class="hidden md:flex relative text-gray-400 focus-within:text-gray-600">
@@ -361,6 +418,44 @@
                 originalToggleMenu(menuId);
             }
         };
+    </script>
+
+    {{-- Global Flash Message Handler --}}
+    <script>
+        $(document).ready(function() {
+            @if(session('success'))
+                // Try SweetAlert2 first
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: "{{ session('success') }}",
+                        icon: 'success',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+                
+                // Also use toastr as a secondary fallback or parallel indicator
+                if (typeof toastr !== 'undefined') {
+                    toastr.success("{{ session('success') }}");
+                }
+            @endif
+
+            @if(session('error'))
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: "{{ session('error') }}",
+                        icon: 'error',
+                        confirmButtonColor: '#D4A017'
+                    });
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.error("{{ session('error') }}");
+                }
+            @endif
+        });
     </script>
 </body>
 

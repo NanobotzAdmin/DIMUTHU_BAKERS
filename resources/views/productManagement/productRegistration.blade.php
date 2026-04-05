@@ -26,9 +26,9 @@
                         <h3 class="text-lg font-semibold text-gray-900">Basic Information</h3>
                         <div class="flex items-center gap-4 bg-gray-100 p-1.5 rounded-lg">
                             <label
-                                class="relative flex items-center justify-center px-4 py-2 rounded-md cursor-pointer transition-all">
-                                <input type="radio" name="product_mode" value="standard" checked class="peer sr-only"
-                                    onchange="toggleProductMode('standard')">
+                                class="hidden relative flex items-center justify-center px-4 py-2 rounded-md cursor-pointer transition-all">
+                                <input type="radio" name="product_mode" value="standard" class="peer sr-only"
+                                    onchange="toggleProductMode('standard')" disabled>
                                 <span class="z-10 text-sm font-medium text-gray-600 peer-checked:text-blue-600">Standard
                                     Product</span>
                                 <span
@@ -37,7 +37,7 @@
                             <label
                                 class="relative flex items-center justify-center px-4 py-2 rounded-md cursor-pointer transition-all">
                                 <input type="radio" name="product_mode" value="simple" class="peer sr-only"
-                                    onchange="toggleProductMode('simple')" disabled>
+                                    onchange="toggleProductMode('simple')" checked>
                                 <span class="z-10 text-sm font-medium text-gray-600 peer-checked:text-blue-600">Simple
                                     Product</span>
                                 <span
@@ -66,30 +66,31 @@
 
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                            <textarea name="description" id="productDescription" rows="2" placeholder="Optional product description"
+                            <textarea name="description" id="productDescription" rows="2"
+                                placeholder="Optional product description"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors">{{ old('description') }}</textarea>
                         </div>
 
                         <!-- <div>
-                                                                <label class="block text-sm font-medium text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
-                                                                <input type="text" name="category" id="categoryInput" value="{{ old('category') }}"
-                                                                    placeholder="e.g., flour, dairy, sugar"
-                                                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors">
-                                                                @error('category')
-        <span class="text-red-500 text-sm">{{ $message }}</span>
-    @enderror
-                                                            </div>
+                                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+                                                                    <input type="text" name="category" id="categoryInput" value="{{ old('category') }}"
+                                                                        placeholder="e.g., flour, dairy, sugar"
+                                                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors">
+                                                                    @error('category')
+            <span class="text-red-500 text-sm">{{ $message }}</span>
+        @enderror
+                                                                </div>
 
-                                                            <div>
-                                                                <label class="block text-sm font-medium text-gray-700 mb-2">Unit of Measurement <span class="text-red-500">*</span></label>
-                                                                <select name="brand" id="brandSelect" onchange="checkExistingItems()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white">
-                                                                    </select>
-                                                                @error('unit')
-        <span class="text-red-500 text-sm">{{ $message }}</span>
-    @enderror
-                                                            </div> -->
+                                                                <div>
+                                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Unit of Measurement <span class="text-red-500">*</span></label>
+                                                                    <select name="brand" id="brandSelect" onchange="checkExistingItems()" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white">
+                                                                        </select>
+                                                                    @error('unit')
+            <span class="text-red-500 text-sm">{{ $message }}</span>
+        @enderror
+                                                                </div> -->
 
-                        <div class="md:col-span-2" id="brandField">
+                        <div class="md:col-span-1" id="brandField">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
                             <select name="brand" id="brandSelect"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white select2-enable">
@@ -99,6 +100,21 @@
                                 @endforeach
                             </select>
                             @error('brand')
+                                <span class="text-red-500 text-sm">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="md:col-span-1" id="categoryField">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Product Category <span
+                                    class="text-red-500">*</span></label>
+                            <select name="category" id="categorySelect" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors bg-white select2-enable">
+                                <option value="">Select Category</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category['id'] }}">{{ $category['category_name'] }}</option>
+                                @endforeach
+                            </select>
+                            @error('category')
                                 <span class="text-red-500 text-sm">{{ $message }}</span>
                             @enderror
                         </div>
@@ -193,9 +209,14 @@
                                         </th>
                                         <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Reference Number
                                         </th>
-                                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Product Types
+                                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider product-type-column">
+                                            Product Types
                                         </th>
                                         <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Selling Price
+                                        </th>
+                                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Distributor (%)
+                                        </th>
+                                        <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Wholesale (%)
                                         </th>
                                         <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-right">
                                             Actions</th>
@@ -231,7 +252,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
 
 
 
@@ -241,13 +262,16 @@
             });
 
             // Bind events using jQuery for Select2 compatibility
-            $('#brandSelect').on('change', function() {
+            $('#brandSelect').on('change', function () {
                 checkExistingItems();
             });
 
-            $('#variantSelect').on('change', function() {
+            $('#variantSelect').on('change', function () {
                 loadVariationValues(this.value);
             });
+
+            // Trigger simple mode by default
+            toggleProductMode('simple');
         });
 
 
@@ -263,7 +287,11 @@
 
             if (mode === 'simple') {
                 brandField.classList.add('hidden');
+                document.getElementById('categoryField').classList.remove('hidden');
                 variantSection.classList.add('hidden');
+
+                // Hide product type column header and existing cells
+                document.querySelectorAll('.product-type-column').forEach(el => el.classList.add('hidden'));
 
                 // Clear standard generated items
                 addedVariants = [];
@@ -274,7 +302,11 @@
                 generateSimpleProductItem();
             } else {
                 brandField.classList.remove('hidden');
+                document.getElementById('categoryField').classList.remove('hidden');
                 variantSection.classList.remove('hidden');
+
+                // Show product type column header and existing cells
+                document.querySelectorAll('.product-type-column').forEach(el => el.classList.remove('hidden'));
 
                 // Clear simple item if exists
                 tbody.innerHTML = '';
@@ -294,6 +326,9 @@
                 return;
             }
 
+            const mode = document.querySelector('input[name="product_mode"]:checked').value;
+            const typeColClass = mode === 'simple' ? 'hidden' : '';
+
             const tr = document.createElement('tr');
             tr.className = "hover:bg-gray-50 transition-colors";
 
@@ -306,13 +341,21 @@
                 '<td class="px-6 py-4">' +
                 '<input type="text" name="items[1][reference_number]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="Reference Number">' +
                 '</td>' +
-                '<td class="px-6 py-4">' +
+                '<td class="px-6 py-4 product-type-column ' + typeColClass + '">' +
                 '<select name="items[1][product_types][]" multiple class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 select2-enable">' +
                 productTypesHtml +
                 '</select>' +
                 '</td>' +
                 '<td class="px-6 py-4">' +
-                '<input type="number" step="0.01" name="items[1][selling_price]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="0.00">' +
+                '<input type="number" step="0.01" name="items[1][selling_price]" class="selling-price-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="0.00">' +
+                '</td>' +
+                '<td class="px-6 py-4">' +
+                '<input type="number" step="0.01" name="items[1][distributor_percentage]" class="distributor-percentage-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="0.00">' +
+                '<div class="mt-1 text-xs text-blue-600 font-medium distributor-price-display">Price: 0</div>' +
+                '</td>' +
+                '<td class="px-6 py-4">' +
+                '<input type="number" step="0.01" name="items[1][wholesale_percentage]" class="wholesale-percentage-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="0.00">' +
+                '<div class="mt-1 text-xs text-blue-600 font-medium wholesale-price-display">Price: 0</div>' +
                 '</td>' +
                 '<td class="px-6 py-4 text-right whitespace-nowrap">' +
                 '<!-- Cannot remove the only item in simple mode? Or maybe just clear? -->' +
@@ -329,7 +372,7 @@
         }
 
         // Attach listener to name input to update simple item name live
-        document.getElementById('productNameInput').addEventListener('input', function() {
+        document.getElementById('productNameInput').addEventListener('input', function () {
             const mode = document.querySelector('input[name="product_mode"]:checked').value;
             if (mode === 'simple') {
                 generateSimpleProductItem();
@@ -358,7 +401,7 @@
                             // Map unit ID to name
                             const unitName = (data.unitOfMeasurement && data.unitOfMeasurement[val
                                 .unit_of_measurement_id]) ? data.unitOfMeasurement[val
-                                .unit_of_measurement_id] : '';
+                                    .unit_of_measurement_id] : '';
                             option.text = val.variation_value + (unitName ? ' ' + unitName : '');
 
                             // Store full object in dataset for easier access if needed
@@ -467,15 +510,15 @@
                 ).join(' ');
 
                 tr.innerHTML = `
-                                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${variant.name}</td>
-                                    <td class="px-6 py-4"><div class="flex flex-wrap gap-2">${valuesHtml}</div></td>
-                                    <td class="px-6 py-4 text-right whitespace-nowrap">
-                                        <button type="button" onclick="removeVariant('${variant.id}')" class="group inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition-all hover:bg-red-50 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                                            Remove
-                                        </button>
-                                        <!-- Hidden inputs to submit selected variants structure if needed, but we mostly need items -->
-                                    </td>
-                                `;
+                                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${variant.name}</td>
+                                        <td class="px-6 py-4"><div class="flex flex-wrap gap-2">${valuesHtml}</div></td>
+                                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                                            <button type="button" onclick="removeVariant('${variant.id}')" class="group inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition-all hover:bg-red-50 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                                                Remove
+                                            </button>
+                                            <!-- Hidden inputs to submit selected variants structure if needed, but we mostly need items -->
+                                        </td>
+                                    `;
                 tbody.appendChild(tr);
             });
         }
@@ -520,15 +563,11 @@
 
                     tr.className = "hover:bg-gray-50 transition-colors";
 
-
-
                     const brandSelect = document.getElementById('brandSelect');
 
                     const brandName = brandSelect && brandSelect.value ? brandSelect.options[brandSelect
 
                         .selectedIndex].text : '';
-
-
 
                     // Format: "Brand Name Product Name - Variant Value"
 
@@ -546,15 +585,14 @@
 
                     tr.dataset.variantPart = variantPart;
 
-
-
                     let fullName = `${brandPart}${productName} ${variantPart}`.trim();
 
-
+                    const mode = document.querySelector('input[name="product_mode"]:checked').value;
+                    const typeColClass = mode === 'simple' ? 'hidden' : '';
 
                     tr.innerHTML = '<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">' + (
 
-                            count++) + '</td>' +
+                        count++) + '</td>' +
 
                         '<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">' +
 
@@ -568,13 +606,13 @@
 
                         variant
 
-                        .id + '">' +
+                            .id + '">' +
 
                         '<input type="hidden" name="items[' + count + '][variation_value_id]" value="' +
 
                         val
 
-                        .id + '">' +
+                            .id + '">' +
 
                         '</td>' +
 
@@ -586,7 +624,7 @@
 
                         '</td>' +
 
-                        '<td class="px-6 py-4">' +
+                        '<td class="px-6 py-4 product-type-column ' + typeColClass + '">' +
 
                         '<select name="items[' + count +
 
@@ -599,13 +637,19 @@
                         '</td>' +
 
                         '<td class="px-6 py-4">' +
-
                         '<input type="number" step="0.01" name="items[' + count +
-
-                        '][selling_price]" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="0.00">' +
-
+                        '][selling_price]" class="selling-price-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="0.00">' +
                         '</td>' +
-
+                        '<td class="px-6 py-4">' +
+                        '<input type="number" step="0.01" name="items[' + count +
+                        '][distributor_percentage]" class="distributor-percentage-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="0.00">' +
+                        '<div class="mt-1 text-xs text-blue-600 font-medium distributor-price-display">Price: 0</div>' +
+                        '</td>' +
+                        '<td class="px-6 py-4">' +
+                        '<input type="number" step="0.01" name="items[' + count +
+                        '][wholesale_percentage]" class="wholesale-percentage-input w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" placeholder="0.00">' +
+                        '<div class="mt-1 text-xs text-blue-600 font-medium wholesale-price-display">Price: 0</div>' +
+                        '</td>' +
                         '<td class="px-6 py-4 text-right whitespace-nowrap">' +
 
                         '<button type="button" onclick="this.closest(\'tr\').remove(); checkCreateButton();" class="group inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition-all hover:bg-red-50 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">' +
@@ -637,6 +681,34 @@
             checkCreateButton();
         }
 
+        function calculateRowPrices(row) {
+            const sellingPriceInput = row.querySelector('.selling-price-input');
+            const distributorPercentInput = row.querySelector('.distributor-percentage-input');
+            const wholesalePercentInput = row.querySelector('.wholesale-percentage-input');
+
+            const distributorDisplay = row.querySelector('.distributor-price-display');
+            const wholesaleDisplay = row.querySelector('.wholesale-price-display');
+
+            const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
+            const distributorPercent = parseFloat(distributorPercentInput.value) || 0;
+            const wholesalePercent = parseFloat(wholesalePercentInput.value) || 0;
+
+            const wholesalePrice = Math.round(sellingPrice * (1 - wholesalePercent / 100));
+            const distributorPrice = Math.round(wholesalePrice * (1 - distributorPercent / 100));
+
+            if (distributorDisplay) distributorDisplay.textContent = `Price: ${distributorPrice}`;
+            if (wholesaleDisplay) wholesaleDisplay.textContent = `Price: ${wholesalePrice}`;
+        }
+
+        // Delegate input events for real-time calculations
+        document.getElementById('productItemsBody').addEventListener('input', function (e) {
+            if (e.target.classList.contains('selling-price-input') ||
+                e.target.classList.contains('distributor-percentage-input') ||
+                e.target.classList.contains('wholesale-percentage-input')) {
+                calculateRowPrices(e.target.closest('tr'));
+            }
+        });
+
         function checkCreateButton() {
             const tbody = document.getElementById('productItemsBody');
             const btn = document.getElementById('createProductBtn');
@@ -653,7 +725,7 @@
 
         let debounceTimer;
 
-        nameInput.addEventListener('input', function() {
+        nameInput.addEventListener('input', function () {
             const existingProductId = document.getElementById('existingProductId').value;
             const newProductName = this.value;
             const mode = document.querySelector('input[name="product_mode"]:checked').value;
@@ -722,7 +794,7 @@
         });
 
         // Hide suggestions when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!nameInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
                 suggestionsBox.classList.add('hidden');
             }
@@ -828,7 +900,7 @@
 
                             '<td class="px-6 py-4 font-medium text-gray-500 whitespace-nowrap">' + item
 
-                            .product_name +
+                                .product_name +
 
                             ' <span class="ml-2 text-xs text-blue-500">(Existing)</span></td>' +
 
@@ -841,8 +913,16 @@
                             '<td class="px-6 py-4"><select multiple disabled class="w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-xl cursor-not-allowed select2-enable"><option value="">No types</option></select></td>' +
 
                             '<td class="px-6 py-4"><input type="text" value="' + (item.selling_price ||
-                            '0.00') +
-                            '" disabled class="w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-xl cursor-not-allowed text-right"></td>' +
+                                '0.00') +
+                            '" disabled class="selling-price-input w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-xl cursor-not-allowed text-right"></td>' +
+                            '<td class="px-6 py-4"><input type="text" value="' + (item.distributor_percentage ||
+                                '0.00') +
+                            '" disabled class="distributor-percentage-input w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-xl cursor-not-allowed text-right">' +
+                            '<div class="mt-1 text-xs text-blue-600 font-medium distributor-price-display">Price: ' + Math.round(item.selling_price * (1 - item.distributor_percentage / 100)) + '</div></td>' +
+                            '<td class="px-6 py-4"><input type="text" value="' + (item.wholesale_percentage ||
+                                '0.00') +
+                            '" disabled class="wholesale-percentage-input w-full px-4 py-2 border border-gray-200 bg-gray-100 rounded-xl cursor-not-allowed text-right">' +
+                            '<div class="mt-1 text-xs text-blue-600 font-medium wholesale-price-display">Price: ' + Math.round(item.selling_price * (1 - item.wholesale_percentage / 100)) + '</div></td>' +
 
                             '<td class="px-6 py-4 text-right whitespace-nowrap"><!-- No actions for existing items --></td>';
 
@@ -888,15 +968,15 @@
             });
 
             fetch("{{ route('variations.store') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        variation_name: name
-                    })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    variation_name: name
                 })
+            })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -960,17 +1040,17 @@
             });
 
             fetch("{{ route('variationValues.store') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        variation_id: variantId,
-                        variation_value: value,
-                        unit_of_measurement_id: unitId
-                    })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    variation_id: variantId,
+                    variation_value: value,
+                    unit_of_measurement_id: unitId
                 })
+            })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1010,7 +1090,7 @@
                         url: "{{ route('product.store') }}",
                         type: "POST",
                         data: formData,
-                        success: function(response) {
+                        success: function (response) {
                             if (response.success) {
                                 Swal.fire({
                                     icon: 'success',
@@ -1030,7 +1110,7 @@
                                 });
                             }
                         },
-                        error: function(xhr) {
+                        error: function (xhr) {
                             let message = 'An error occurred';
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 message = xhr.responseJSON.message;
@@ -1049,8 +1129,8 @@
     </script>
 
     <!-- Add Variant Modal -->
-    <div id="addVariantModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
+    <div id="addVariantModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
         <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 transition-opacity bg-gray-900/75 backdrop-blur-sm" aria-hidden="true"
                 onclick="closeAddVariantModal()"></div>

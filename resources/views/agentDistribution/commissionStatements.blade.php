@@ -341,7 +341,26 @@
             const cashSales = matchSettlements.reduce((sum, s) => sum + Number(s.cashSales), 0);
             const creditSales = matchSettlements.reduce((sum, s) => sum + Number(s.creditSales), 0);
             const chequeSales = matchSettlements.reduce((sum, s) => sum + Number(s.chequeSales), 0);
-            const grossCommission = matchSettlements.reduce((sum, s) => sum + Number(s.commissionEarned), 0);
+            
+            // New Calculation Logic
+            const invoicingRate = agent.invoicingCommissionRate || 15.00;
+            const invoicingComm = totalSales * (invoicingRate / 100);
+            
+            const monthlyTarget = agent.monthlySalesTarget || 0;
+            const achievement = monthlyTarget > 0 ? (totalSales / monthlyTarget) * 100 : 0;
+            
+            let targetBonus = 0;
+            const targetRate = agent.targetCommissionRate || 5.00;
+            const threshold = agent.achievementThreshold || 80.00;
+            const reducedRate = agent.reducedTargetCommissionRate || 4.00;
+            
+            if (achievement >= 100) {
+                targetBonus = totalSales * (targetRate / 100);
+            } else if (achievement >= threshold) {
+                targetBonus = totalSales * (reducedRate / 100);
+            }
+            
+            const grossCommission = invoicingComm + targetBonus;
 
             const tax = grossCommission * 0.10;
             const deductions = tax; // Expandable later
@@ -358,7 +377,11 @@
                 totalSales, cashSales, creditSales, chequeSales,
                 daysWorked: matchSettlements.length,
                 settlementCount: matchSettlements.length,
-                commissionRate: agent.commissionRate,
+                invoicingRate: invoicingRate,
+                targetRate: targetRate,
+                achievement: achievement.toFixed(2),
+                invoicingComm: invoicingComm,
+                targetBonus: targetBonus,
                 grossCommission,
                 deductions: { tax, other: 0 },
                 netCommission: net,
@@ -454,8 +477,22 @@
             document.getElementById('view-total-sales').textContent = formatCurrency(stmt.totalSales);
 
             document.getElementById('view-calc-sales').textContent = formatCurrency(stmt.totalSales);
-            document.getElementById('view-rate').textContent = `${stmt.commissionRate}%`;
-            document.getElementById('view-gross').textContent = formatCurrency(stmt.grossCommission);
+            document.getElementById('view-rate').innerHTML = `
+                Invoicing: ${stmt.invoicingRate}%<br>
+                Target Bonus: ${stmt.targetBonus > 0 ? (stmt.achievement >= 100 ? stmt.targetRate : 4.00) : 0}% 
+                <span class="text-[10px] text-gray-500">(${stmt.achievement}% Achieved)</span>
+            `;
+            document.getElementById('view-gross').innerHTML = `
+                <div class="flex justify-between w-full">
+                    <span>Invoicing: ${formatCurrency(stmt.invoicingComm)}</span>
+                </div>
+                <div class="flex justify-between w-full text-xs text-green-600">
+                    <span>Target Bonus: +${formatCurrency(stmt.targetBonus)}</span>
+                </div>
+                <div class="flex justify-between w-full border-t border-gray-200 mt-1 pt-1 font-bold">
+                    <span>Total Gross: ${formatCurrency(stmt.grossCommission)}</span>
+                </div>
+            `;
 
             document.getElementById('view-tax').textContent = `-${formatCurrency(stmt.deductions.tax)}`;
             const totalDed = stmt.deductions.tax + stmt.deductions.other;

@@ -19,6 +19,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Load System Settings from JSON
+        $settingsPath = public_path('system_config.json');
+        $settings = null;
+        if (file_exists($settingsPath)) {
+            $json = file_get_contents($settingsPath);
+            $settings = json_decode($json);
+        }
+
+        // Share settings with all views
+        \Illuminate\Support\Facades\View::share('settings', $settings);
+
         \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
             if (\Illuminate\Support\Facades\Auth::check()) {
                 $user = \Illuminate\Support\Facades\Auth::user();

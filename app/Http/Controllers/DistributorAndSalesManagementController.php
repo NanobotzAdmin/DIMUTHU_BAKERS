@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\CommonVariables;
+use App\Models\AdAgentBalanceHistory;
 use App\Models\CmCustomer;
 use App\Models\PmProductItem;
 use App\Models\StmOrderRequest;
+use App\Models\StmOrderRequestHasPayment;
 use App\Models\StmOrderRequestHasProduct;
 use App\Models\StmQuotation;
 use App\Models\StmQuotationHasProduct;
@@ -13,10 +15,21 @@ use App\Models\StmStock;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\StmOrderRequestHistory;
+use App\Models\StmStockTransfer;
+use App\Services\NotificationService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class DistributorAndSalesManagementController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+    
     // Sales Overview
     public function salesOverviewIndex()
     {
@@ -50,7 +63,7 @@ class DistributorAndSalesManagementController extends Controller
                 case 'value':
                     $query->orderBy('grand_total', 'desc');
                     break;
-                    // case 'customer': $query->orderBy('customer.name'); break; // Needs join for strict sort
+                // case 'customer': $query->orderBy('customer.name'); break; // Needs join for strict sort
                 default:
                     $query->orderBy('created_at', 'desc');
             }
@@ -113,7 +126,7 @@ class DistributorAndSalesManagementController extends Controller
                 $parts = explode('-', $last->quotation_number);
                 $num = intval(end($parts)) + 1;
             }
-            $quotationNumber = "{$prefix}-{$date}-".str_pad($num, 4, '0', STR_PAD_LEFT);
+            $quotationNumber = "{$prefix}-{$date}-" . str_pad($num, 4, '0', STR_PAD_LEFT);
 
             $grandTotal = collect($request->products)->sum(function ($p) {
                 return $p['quantity'] * $p['unit_price'];
@@ -159,19 +172,19 @@ class DistributorAndSalesManagementController extends Controller
             // Handle Logo Upload
             if ($request->hasFile('logo')) {
                 $file = $request->file('logo');
-                $filename = 'company_logo.'.$file->getClientOriginalExtension();
+                $filename = 'company_logo.' . $file->getClientOriginalExtension();
                 // Store in public/settings
                 $file->storeAs('settings', $filename, 'public');
-                $data['logo_path'] = 'storage/settings/'.$filename;
+                $data['logo_path'] = 'storage/settings/' . $filename;
             }
 
             // Define path
             $storagePath = storage_path('app/Settings');
-            if (! file_exists($storagePath)) {
+            if (!file_exists($storagePath)) {
                 mkdir($storagePath, 0755, true);
             }
 
-            $filePath = $storagePath.'/quotation-settings.json';
+            $filePath = $storagePath . '/quotation-settings.json';
 
             $currentSettings = [];
             if (file_exists($filePath)) {
@@ -236,10 +249,10 @@ class DistributorAndSalesManagementController extends Controller
 
             $pdf = Pdf::loadView('DistributorAndSalesManagement.pdf.quotation', compact('quotation', 'settings'));
 
-            return $pdf->download('Quotation-'.$quotation->quotation_number.'.pdf');
+            return $pdf->download('Quotation-' . $quotation->quotation_number . '.pdf');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Error generating PDF: '.$e->getMessage());
+            return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
         }
     }
 
@@ -252,7 +265,7 @@ class DistributorAndSalesManagementController extends Controller
         });
 
         // Fetch all orders with related data
-        $orders = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent'])
+        $orders = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'history.user', 'payments'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($order) use ($branches) {
@@ -317,6 +330,7 @@ class DistributorAndSalesManagementController extends Controller
                             'product_item_id' => $op->pm_product_item_id,
                             'name' => $op->productItem->product_name ?? 'Unknown Product',
                             'quantity' => $op->quantity,
+                            'dispatched_quantity' => $op->dispatched_quantity,
                             'unit_price' => number_format($op->unit_price, 2),
                             'subtotal' => number_format($op->subtotal, 2),
                         ];
@@ -343,9 +357,32 @@ class DistributorAndSalesManagementController extends Controller
                     'deliveryMethod' => $order->delivery_type == CommonVariables::$deliveryTypePickup ? 'pickup' : 'delivery',
                     'pickupDate' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('Y-m-d') : '-',
                     'pickupTime' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('H:i') : '-',
-                    'isRecurring' => ! empty($order->recurrence_pattern),
+                    'isRecurring' => !empty($order->recurrence_pattern),
                     'instanceNumber' => 1, // Placeholder
                     'productionDeadline' => $order->end_date ? \Carbon\Carbon::parse($order->end_date)->format('Y-m-d') : '-',
+                    // Audit Trail (History)
+                    'history' => $order->history->sortBy('created_at')->values()->map(function ($h) {
+                        return [
+                            'action' => $h->action,
+                            'description' => $h->description,
+                            'status' => $h->status,
+                            'user_name' => $h->user ? $h->user->name : 'System',
+                            'created_at' => \Carbon\Carbon::parse($h->created_at)->format('Y-m-d H:i'),
+                        ];
+                    }),
+                    // Payment Details
+                    'payment_records' => $order->payments->map(function ($p) {
+                        return [
+                            'id' => $p->id,
+                            'amount' => number_format((float) $p->payment_amount, 2),
+                            'method' => ucfirst(str_replace('_', ' ', $p->payment_method)),
+                            'reference' => $p->payment_reference ?? '-',
+                            'date' => \Carbon\Carbon::parse($p->payment_date)->format('Y-m-d H:i'),
+                            'status' => $p->status == 1 ? 'Pending' : ($p->status == 2 ? 'Active' : 'Cancelled'),
+                            'status_raw' => $p->status,
+                            'notes' => $p->notes ?? '',
+                        ];
+                    }),
                 ];
             });
 
@@ -390,7 +427,7 @@ class DistributorAndSalesManagementController extends Controller
         return response()->json($products->map(function ($product) {
             return [
                 'id' => $product->id,
-                'text' => $product->product_name.' ('.($product->reference_number ?? $product->bin_code).')',
+                'text' => $product->product_name . ' (' . ($product->reference_number ?? $product->bin_code) . ')',
                 'product_name' => $product->product_name,
                 'reference_number' => $product->reference_number ?? $product->bin_code,
                 'price' => number_format($product->price, 2),
@@ -421,7 +458,7 @@ class DistributorAndSalesManagementController extends Controller
         return response()->json($customers->map(function ($customer) {
             return [
                 'id' => $customer->id,
-                'text' => $customer->name.($customer->phone ? ' - '.$customer->phone : ''),
+                'text' => $customer->name . ($customer->phone ? ' - ' . $customer->phone : ''),
                 'name' => $customer->name,
                 'phone' => $customer->phone,
                 'email' => $customer->email,
@@ -458,7 +495,7 @@ class DistributorAndSalesManagementController extends Controller
         return response()->json($quotations->map(function ($q) {
             return [
                 'id' => $q->id,
-                'text' => $q->quotation_number.' - '.($q->customer->name ?? 'Unknown'),
+                'text' => $q->quotation_number . ' - ' . ($q->customer->name ?? 'Unknown'),
                 'customer' => $q->customer ? [
                     'id' => $q->customer->id,
                     'name' => $q->customer->name,
@@ -466,17 +503,17 @@ class DistributorAndSalesManagementController extends Controller
                     'address' => $q->customer->address,
                     'email' => $q->customer->email,
                     'type' => $q->customer->type,
-                    'text' => $q->customer->name.' - '.$q->customer->phone,
+                    'text' => $q->customer->name . ' - ' . $q->customer->phone,
                 ] : null,
                 'products' => $q->products->map(function ($p) {
                     return [
                         'product_item_id' => $p->pm_product_item_id,
-                        'product_name' => $p->productItem->product->product_name ?? 'Item #'.$p->pm_product_item_id,
+                        'product_name' => $p->productItem->product->product_name ?? 'Item #' . $p->pm_product_item_id,
                         'price' => $p->unit_price,
                         'quantity' => $p->quantity,
                         'unit_price' => $p->unit_price,
                         'id' => $p->pm_product_item_id,
-                        'name' => $p->productItem->product->product_name ?? 'Item #'.$p->pm_product_item_id,
+                        'name' => $p->productItem->product->product_name ?? 'Item #' . $p->pm_product_item_id,
                     ];
                 }),
             ];
@@ -509,7 +546,7 @@ class DistributorAndSalesManagementController extends Controller
                 'success' => true,
                 'customer' => [
                     'id' => $existingCustomer->id,
-                    'text' => $existingCustomer->name.($existingCustomer->phone ? ' - '.$existingCustomer->phone : ''),
+                    'text' => $existingCustomer->name . ($existingCustomer->phone ? ' - ' . $existingCustomer->phone : ''),
                     'name' => $existingCustomer->name,
                     'phone' => $existingCustomer->phone,
                     'email' => $existingCustomer->email,
@@ -530,7 +567,7 @@ class DistributorAndSalesManagementController extends Controller
             'success' => true,
             'customer' => [
                 'id' => $customer->id,
-                'text' => $customer->name.($customer->phone ? ' - '.$customer->phone : ''),
+                'text' => $customer->name . ($customer->phone ? ' - ' . $customer->phone : ''),
                 'name' => $customer->name,
                 'phone' => $customer->phone,
                 'email' => $customer->email,
@@ -548,8 +585,8 @@ class DistributorAndSalesManagementController extends Controller
 
         // Validation rules
         $rules = [
-            'order_type' => 'required|integer|in:'.CommonVariables::$orderTypePosPickup.','.CommonVariables::$orderTypeSpecialOrder.','.CommonVariables::$orderTypeScheduledProduction,
-            'delivery_type' => 'nullable|integer|in:'.CommonVariables::$deliveryTypePickup.','.CommonVariables::$deliveryTypeDelivery,
+            'order_type' => 'required|integer|in:' . CommonVariables::$orderTypePosPickup . ',' . CommonVariables::$orderTypeSpecialOrder . ',' . CommonVariables::$orderTypeScheduledProduction,
+            'delivery_type' => 'nullable|integer|in:' . CommonVariables::$deliveryTypePickup . ',' . CommonVariables::$deliveryTypeDelivery,
             'delivery_date' => 'required|date',
             // Allow integer ID or -1 for Warehouse
             'branch_id' => 'required|integer',
@@ -564,8 +601,8 @@ class DistributorAndSalesManagementController extends Controller
         // Conditional validation based on order type
         if ($request->order_type == CommonVariables::$orderTypeSpecialOrder) {
             $rules['customer_id'] = 'required|exists:cm_customer,id';
-            $rules['payment_details'] = 'nullable|integer|in:'.CommonVariables::$paymentMethodCash.','.CommonVariables::$paymentMethodCard.','.CommonVariables::$paymentMethodBankTransfer;
-            $rules['event_type'] = 'nullable|integer|in:'.CommonVariables::$eventTypeWedding.','.CommonVariables::$eventTypeBirthday.','.CommonVariables::$eventTypeCorporate;
+            $rules['payment_details'] = 'nullable|integer|in:' . CommonVariables::$paymentMethodCash . ',' . CommonVariables::$paymentMethodCard . ',' . CommonVariables::$paymentMethodBankTransfer;
+            $rules['event_type'] = 'nullable|integer|in:' . CommonVariables::$eventTypeWedding . ',' . CommonVariables::$eventTypeBirthday . ',' . CommonVariables::$eventTypeCorporate;
             $rules['guest_count'] = 'nullable|integer|min:1';
             $rules['payment_reference'] = 'nullable|string';
             $rules['paid_amount'] = 'nullable|numeric|min:0';
@@ -574,7 +611,7 @@ class DistributorAndSalesManagementController extends Controller
         if ($request->order_type == CommonVariables::$orderTypeScheduledProduction) {
             // recurrence validation
             if ($request->filled('recurrence_pattern')) {
-                $rules['recurrence_pattern'] = 'nullable|integer|in:'.CommonVariables::$recurrencePatternDaily.','.CommonVariables::$recurrencePatternWeekly.','.CommonVariables::$recurrencePatternMonthly;
+                $rules['recurrence_pattern'] = 'nullable|integer|in:' . CommonVariables::$recurrencePatternDaily . ',' . CommonVariables::$recurrencePatternWeekly . ',' . CommonVariables::$recurrencePatternMonthly;
                 $rules['end_date'] = 'required_with:recurrence_pattern|date|after:delivery_date';
             }
         }
@@ -692,7 +729,7 @@ class DistributorAndSalesManagementController extends Controller
                     'quotation_id' => $request->quotation_id,
                 ]);
 
-                // Attach Products and Process Stock
+                // Attach Products and Create Stock Transfers
                 foreach ($request->products as $product) {
                     $subtotal = $product['quantity'] * $product['unit_price'];
 
@@ -704,161 +741,25 @@ class DistributorAndSalesManagementController extends Controller
                         'subtotal' => $subtotal,
                     ]);
 
-                    // --- STOCK DEDUCTION & BARCODE UPDATE LOGIC ---
-                    $qtyToDeduct = $product['quantity'];
-                    $productId = $product['product_item_id'];
-
-                    if ($isWarehouseInfo) {
-                        // --- WAREHOUSE STOCK (StmStock) ---
-                        // Get batches with available quantity, ordered by expiry (First Expiring First Out)
-                        $stocks = StmStock::where('pm_product_item_id', $productId)
-                            ->where('quantity', '>', 0)
-                            ->orderBy('expiry_date', 'asc') // FIFO by expiry
-                            ->get();
-
-                        foreach ($stocks as $stock) {
-                            if ($qtyToDeduct <= 0) {
-                                break;
-                            }
-
-                            if ($stock->quantity >= $qtyToDeduct) {
-                                // This batch has enough
-                                $deducted = $qtyToDeduct;
-                                $stock->quantity -= $deducted;
-                                $stock->save(); // Triggers Model Event for qty_in_unit
-
-                                // // History
-                                // \App\Models\StmStockOrderRequestHistory::create([
-                                //     'stm_stock_id' => $stock->id,
-                                //     'stm_order_request_id' => $order->id, // If this relationship exists in history table? Or use Description.
-                                //     // Assuming StmStockOrderRequestHistory structure or similar log.
-                                //     // If standard log not present, rely on Barcodes history or create generic log?
-                                //     // Re-checking StmBarcodesHistory for specific item tracing.
-                                // ]);
-
-                                // Update Barcodes
-                                // Get available barcodes for this batch
-                                $barcodes = \App\Models\StmBarcode::where('stm_stock_id', $stock->id)
-                                    ->whereNull('stm_order_requests_id')
-                                    ->where('is_sold', 0)
-                                    ->limit($deducted) // Assuming 1 barcode = 1 qty unit? Or barcodes track packets?
-                                    // Logic: If barcode represents unit 1, then we take $deducted count.
-                                    ->get();
-
-                                foreach ($barcodes as $bc) {
-                                    $bc->stm_order_requests_id = $order->id;
-                                    $bc->save();
-
-                                    \App\Models\StmBarcodesHistory::create([
-                                        'barcode_id' => $bc->id,
-                                        'created_by' => auth()->id(),
-                                        'action' => 'ORDER_ASSIGNED',
-                                        'description' => "Assigned to Order #{$order->order_number} (Warehouse)",
-                                    ]);
-                                }
-
-                                $qtyToDeduct = 0;
-                            } else {
-                                // Partial deduction from this batch
-                                $deducted = $stock->quantity;
-                                $stock->quantity = 0;
-                                $stock->save(); // Triggers event
-
-                                $qtyToDeduct -= $deducted;
-
-                                // Update Barcodes for the deducted amount
-                                $barcodes = \App\Models\StmBarcode::where('stm_stock_id', $stock->id)
-                                    ->whereNull('stm_order_requests_id')
-                                    ->where('is_sold', 0)
-                                    ->limit($deducted)
-                                    ->get();
-
-                                foreach ($barcodes as $bc) {
-                                    $bc->stm_order_requests_id = $order->id;
-                                    $bc->save();
-
-                                    \App\Models\StmBarcodesHistory::create([
-                                        'barcode_id' => $bc->id,
-                                        'created_by' => auth()->id(),
-                                        'action' => 'ORDER_ASSIGNED',
-                                        'description' => "Assigned to Order #{$order->order_number} (Warehouse)",
-                                    ]);
-                                }
-                            }
-                        }
-
-                    } else {
-                        // --- BRANCH STOCK (StmBranchStock) ---
-                        // Get batches for branch
-                        $stocks = \App\Models\StmBranchStock::where('pm_product_item_id', $productId)
-                            ->where('um_branch_id', $sourceBranchId)
-                            ->where('quantity', '>', 0)
-                            ->orderBy('expiry_date', 'asc')
-                            ->get();
-
-                        foreach ($stocks as $stock) {
-                            if ($qtyToDeduct <= 0) {
-                                break;
-                            }
-
-                            if ($stock->quantity >= $qtyToDeduct) {
-                                $deducted = $qtyToDeduct;
-                                $stock->quantity -= $deducted;
-                                $stock->save(); // Triggers qty_in_unit calc
-
-                                // Update Barcodes associated with this Branch & Product
-                                // Note: StmBranchStock might not link directly to StmBarcode via ID, but via BranchID + ProductID + Batch linkage?
-                                // StmBarcode has um_branch_id.
-                                $barcodes = \App\Models\StmBarcode::where('um_branch_id', $sourceBranchId)
-                                    ->where('pm_product_item_id', $productId) // Ensure product match
-                                    // ->where('stm_stock_id', $stock->stm_stock_id) // Optional: specific batch match if barcodes moved?
-                                    ->whereNull('stm_order_requests_id')
-                                    ->where('is_sold', 0)
-                                    ->limit($deducted)
-                                    ->get();
-
-                                foreach ($barcodes as $bc) {
-                                    $bc->stm_order_requests_id = $order->id;
-                                    $bc->save();
-
-                                    \App\Models\StmBarcodesHistory::create([
-                                        'barcode_id' => $bc->id,
-                                        'created_by' => auth()->id(),
-                                        'action' => 'ORDER_ASSIGNED',
-                                        'description' => "Assigned to Order #{$order->order_number} (Branch)",
-                                    ]);
-                                }
-
-                                $qtyToDeduct = 0;
-                            } else {
-                                $deducted = $stock->quantity;
-                                $stock->quantity = 0;
-                                $stock->save();
-
-                                $qtyToDeduct -= $deducted;
-
-                                $barcodes = \App\Models\StmBarcode::where('um_branch_id', $sourceBranchId)
-                                    ->where('pm_product_item_id', $productId)
-                                    ->whereNull('stm_order_requests_id')
-                                    ->where('is_sold', 0)
-                                    ->limit($deducted)
-                                    ->get();
-
-                                foreach ($barcodes as $bc) {
-                                    $bc->stm_order_requests_id = $order->id;
-                                    $bc->save();
-
-                                    \App\Models\StmBarcodesHistory::create([
-                                        'barcode_id' => $bc->id,
-                                        'created_by' => auth()->id(),
-                                        'action' => 'ORDER_ASSIGNED',
-                                        'description' => "Assigned to Order #{$order->order_number} (Branch)",
-                                    ]);
-                                }
-                            }
-                        }
-                    }
+                    // Create Stock Transfer record (Requesting stage)
+                    StmStockTransfer::create([
+                        'stm_order_request_id' => $order->id,
+                        'pm_product_item_id' => $product['product_item_id'],
+                        'requesting_quantity' => $product['quantity'],
+                        'qty_in_unit' => $product['quantity'],
+                        'batch_number' => '',
+                        'stm_stock_id' => 0,
+                    ]);
                 }
+
+                // Log History
+                StmOrderRequestHistory::create([
+                    'order_request_id' => $order->id,
+                    'action' => 'Order Created',
+                    'status' => $order->status,
+                    'description' => 'Order request created and pending approval.',
+                    'created_by' => auth()->id(),
+                ]);
 
                 $createdOrders[] = $order;
             }
@@ -868,17 +769,132 @@ class DistributorAndSalesManagementController extends Controller
             // Return success with the first order loaded
             return response()->json([
                 'success' => true,
-                'message' => count($createdOrders).' Order(s) created successfully',
+                'message' => count($createdOrders) . ' Order(s) created successfully',
                 'order' => $createdOrders[0]->load(['customer', 'orderProducts.productItem']),
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-
+            Log::error('Order creation failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create order: '.$e->getMessage(),
+                'message' => 'Failed to create order: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Approve the order request and transition to Approved status.
+     * This makes it available for production planning.
+     */
+    public function approveOrder(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:stm_order_requests,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $order = StmOrderRequest::with(['orderProducts', 'agent'])->findOrFail($request->order_id);
+
+            if ($order->status != CommonVariables::$orderRequestPendingApproval) {
+                return response()->json(['success' => false, 'message' => 'Order is not in a pending state.'], 400);
+            }
+
+            // Update product quantities if modified during approval
+            if ($request->has('items')) {
+                foreach ($request->items as $item) {
+                    $product = $order->orderProducts
+                        ->where('pm_product_item_id', $item['product_item_id'])
+                        ->first();
+                    if ($product) {
+                        $newQty = floatval($item['quantity']);
+                        $product->quantity = $newQty;
+                        $product->subtotal = $newQty * $product->unit_price;
+                        $product->save();
+                    }
+                }
+                $order->grand_total = $order->orderProducts()->sum('subtotal');
+            }
+
+            // Update order status to Approved
+            $order->status = CommonVariables::$orderRequestApproved;
+            $order->save();
+            
+            // Send Push Notification to Agent
+            if ($order->agent && $order->agent->user_id) {
+                $this->notificationService->sendPushNotification(
+                    $order->agent->user_id,
+                    'Order Approved',
+                    "Order #{$order->order_number} has been approved."
+                );
+            }
+
+            // Update Stock Transfer records
+            StmStockTransfer::where('stm_order_request_id', $order->id)
+                ->update([
+                    'approved_quantity' => DB::raw('requesting_quantity'),
+                    'approved_date' => now(),
+                    'approved_by' => auth()->id(),
+                ]);
+
+            // Log History
+            // 4. Update Agent Balance for Credit Agents (agent_type == 3)
+            if ($order->agent && $order->agent->agent_type == 3) {
+                $previousBalance = $order->agent->outstanding_balance;
+                $updateAmount = $order->grand_total;
+                $newBalance = $previousBalance + $updateAmount;
+
+                // Update agent balance
+                $order->agent->outstanding_balance = $newBalance;
+                $order->agent->save();
+
+                // Set order as Credit
+                $order->payment_completed = 3; // Credit
+                $order->save();
+
+                // Log Balance History
+                AdAgentBalanceHistory::create([
+                    'agent_id' => $order->agent_id,
+                    'order_id' => $order->id,
+                    'previous_balance' => $previousBalance,
+                    'amount' => $updateAmount,
+                    'new_balance' => $newBalance,
+                    'type' => 'Order Approved',
+                    'description' => 'Outstanding balance increased due to approved order #' . $order->order_number,
+                    'created_by' => auth()->id(),
+                ]);
+
+                StmOrderRequestHistory::create([
+                    'order_request_id' => $order->id,
+                    'action' => 'Order Approved',
+                    'status' => $order->status,
+                    'description' => 'Order request approved by ' . auth()->user()->name . '.',
+                    'created_by' => auth()->id(),
+                ]);
+
+            } else {
+                StmOrderRequestHistory::create([
+                    'order_request_id' => $order->id,
+                    'action' => 'Order Approved',
+                    'status' => $order->status,
+                    'description' => 'Order request approved by ' . auth()->user()->name . '.',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Order approved successfully and moved to production planning!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order approval failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to approve order: ' . $e->getMessage()], 500);
         }
     }
 
@@ -908,6 +924,121 @@ class DistributorAndSalesManagementController extends Controller
     }
 
     /**
+     * View Payment Approval Page
+     */
+    public function paymentApprovalView($id)
+    {
+        try {
+            $payment = StmOrderRequestHasPayment::with([
+                'orderRequest.agent',
+                'orderRequest.orderProducts.productItem',
+                'agentPayment' // New relationship
+            ])->findOrFail($id);
+
+            return view('DistributorAndSalesManagement.paymentApproval', compact('payment'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Payment record not found.');
+        }
+    }
+
+    /**
+     * Admin Approve Agent Payment
+     */
+    public function approvePayment(Request $request)
+    {
+        $request->validate([
+            'payment_id' => 'required|exists:stm_order_request_has_payments,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $payment = StmOrderRequestHasPayment::with(['orderRequest.agent', 'agentPayment'])->findOrFail($request->payment_id);
+
+            if ($payment->status != 1) {
+                return response()->json(['success' => false, 'message' => 'Payment is already processed.'], 400);
+            }
+
+            // 1. Update Payment Status to Approved (2)
+            $payment->status = 2; // Active/Approved
+            $payment->save();
+
+            // Update the header status as well if it's a single payment link
+            if ($payment->agentPayment) {
+                $payment->agentPayment->status = 1; // Approved
+                $payment->agentPayment->save();
+            }
+
+            $order = $payment->orderRequest;
+            if (!$order) {
+                throw new \Exception('Associated order not found.');
+            }
+
+            // 2. Update Order's paid_amount
+            // Recalculate based on ALL approved payments for this order
+            $totalPaid = StmOrderRequestHasPayment::where('stm_order_request_id', $order->id)
+                ->where('status', 2)
+                ->sum('payment_amount');
+
+            $order->paid_amount = $totalPaid;
+
+            // Update payment_completed status
+            // 0: Unpaid, 1: Partial, 2: Paid, 3: Credit
+            if ($order->paid_amount >= $order->grand_total - 0.01) {
+                $order->payment_completed = 2; // Fully Paid
+            } else if ($order->paid_amount > 0) {
+                $order->payment_completed = 1; // Partially Paid
+            }
+            $order->save();
+
+            // 3. Update Agent Balance (Decrease outstanding debt)
+            $agent = $order->agent;
+            if ($agent) {
+                $previousBalance = $agent->outstanding_balance;
+                $amount = $payment->payment_amount;
+                $newBalance = $previousBalance - $amount;
+
+                $agent->outstanding_balance = $newBalance;
+                $agent->total_collections = ($agent->total_collections ?? 0) + $amount;
+                $agent->save();
+
+                // 4. Log Balance History
+                AdAgentBalanceHistory::create([
+                    'agent_id' => $agent->id,
+                    'order_id' => $order->id,
+                    'previous_balance' => $previousBalance,
+                    'amount' => -$amount, // Negative because it's a payment reducing balance
+                    'new_balance' => $newBalance,
+                    'type' => 'Payment Approved',
+                    'description' => "Balance decreased due to approved payment ({$payment->payment_method}) for Order #{$order->order_number}. Payment ID: {$payment->id}",
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            // 5. Log Order History
+            StmOrderRequestHistory::create([
+                'order_request_id' => $order->id,
+                'action' => 'Payment Approved',
+                'status' => $order->status,
+                'description' => "Payment of Rs. " . number_format($payment->payment_amount, 2) . " approved by " . auth()->user()->name,
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment approved and agent balance updated successfully!',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Payment approval failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to approve payment: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Dispatch Order - Following GRN Pattern
      */
     public function dispatchOrder(Request $request)
@@ -925,7 +1056,7 @@ class DistributorAndSalesManagementController extends Controller
         if ($validator->fails()) {
             \Log::error('Validation failed', $validator->errors()->toArray());
 
-            return response()->json(['success' => false, 'message' => 'Validation Error: '.implode(', ', $validator->errors()->all())], 422);
+            return response()->json(['success' => false, 'message' => 'Validation Error: ' . implode(', ', $validator->errors()->all())], 422);
         }
 
         try {
@@ -946,11 +1077,34 @@ class DistributorAndSalesManagementController extends Controller
                 $this->processDispatchItem($item, $order, $grn, $currentBatchNum);
             }
 
-            // 4. Update Order Status
+            // 4. Recalculate grand total based on dispatched quantities
+            $order->refresh();
+            $order->grand_total = $order->orderProducts->sum(function ($p) {
+                $qty = $p->dispatched_quantity ?? $p->quantity;
+                return $qty * $p->unit_price;
+            });
+            // Set status AFTER refresh so it doesn't get overwritten
             $order->status = 5; // Out for Delivery
-            $order->grand_total = $order->orderProducts()->sum('subtotal');
             $order->save();
             \Log::info('Order Status Updated to 5');
+            
+            // Send Push Notification to Agent
+            if ($order->agent && $order->agent->user_id) {
+                $this->notificationService->sendPushNotification(
+                    $order->agent->user_id,
+                    'Order Dispatched',
+                    "Order #{$order->order_number} has been dispatched and is out for delivery."
+                );
+            }
+
+            // 5. Log History
+            StmOrderRequestHistory::create([
+                'order_request_id' => $order->id,
+                'action' => 'Order Dispatched',
+                'status' => $order->status,
+                'description' => 'Order dispatched by ' . auth()->user()->name . '.',
+                'created_by' => auth()->id(),
+            ]);
 
             DB::commit();
             \Log::info('Transaction Committed');
@@ -959,16 +1113,16 @@ class DistributorAndSalesManagementController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            \Log::error('Dispatch Order Error: '.$e->getMessage().' Trace: '.$e->getTraceAsString());
+            \Log::error('Dispatch Order Error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
 
-            return response()->json(['success' => false, 'message' => 'Error dispatching order: '.$e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error dispatching order: ' . $e->getMessage()], 500);
         }
     }
 
     /**
      * Approve Dispatch - Update Barcodes Branch ID
      */
-    public function approveDispatch(Request $request)
+    public function confirmDispatch(Request $request)
     {
         $request->validate([
             'order_id' => 'required|exists:stm_order_requests,id',
@@ -1032,17 +1186,63 @@ class DistributorAndSalesManagementController extends Controller
             }
 
             // Update Order Status to 'Dispatch Confirmed' (6)
-            $order->status = 7;
+            $order->status = 6;
             $order->save();
+
+            // History Log for Order
+            StmOrderRequestHistory::create([
+                'order_request_id' => $order->id,
+                'action' => 'Dispatch Confirmed',
+                'status' => $order->status,
+                'description' => 'Order delivery confirmed and barcodes moved to agent/branch.',
+                'created_by' => auth()->id(),
+            ]);
 
             DB::commit();
 
-            return response()->json(['success' => true, 'message' => 'Dispatch approved successfully']);
+            return response()->json(['success' => true, 'message' => 'Dispatch confirmed successfully']);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => 'Error approving dispatch: '.$e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error confirming dispatch: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Complete Order - Final Settlement
+     */
+    public function completeOrder(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:stm_order_requests,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $order = StmOrderRequest::findOrFail($request->order_id);
+
+            // Update Order Status to 'Completed' (7)
+            $order->status = 7;
+            $order->save();
+
+            // History Log
+            StmOrderRequestHistory::create([
+                'order_request_id' => $order->id,
+                'action' => 'Order Completed',
+                'status' => $order->status,
+                'description' => 'Order has been fully completed and settled.',
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Order completed successfully']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Error completing order: ' . $e->getMessage()], 500);
         }
     }
 
@@ -1061,7 +1261,7 @@ class DistributorAndSalesManagementController extends Controller
             $nextNumber = $lastGrn->id + 1;
         }
 
-        return 'GRN-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        return 'GRN-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     private function getInternalSupplierId()
@@ -1124,10 +1324,10 @@ class DistributorAndSalesManagementController extends Controller
         }
 
         $currentBatchNum++;
-        $batchNumber = 'DISP'.str_pad($currentBatchNum, 4, '0', STR_PAD_LEFT);
+        $batchNumber = 'DISP' . str_pad($currentBatchNum, 4, '0', STR_PAD_LEFT);
 
         $product = PmProductItem::find($productId);
-        if (! $product) {
+        if (!$product) {
             \Log::error("Product not found: $productId");
             throw new \Exception("Product ID $productId not found");
         }
@@ -1163,7 +1363,7 @@ class DistributorAndSalesManagementController extends Controller
         ]);
 
         // Generate Barcodes
-        $barcodeValue = $product->ref_number_auto ?? 'NO-REF-'.time();
+        $barcodeValue = $product->ref_number_auto ?? 'NO-REF-' . time();
         for ($i = 0; $i < $qty; $i++) {
             $barcode = \App\Models\StmBarcode::create([
                 'barcode' => $barcodeValue,
@@ -1184,10 +1384,40 @@ class DistributorAndSalesManagementController extends Controller
                 'description' => "Dispatched for Order #{$order->order_number}",
             ]);
         }
-        // Update Order Product
+
+        // Update Stock Transfer
+        $stockTransfer = \App\Models\StmStockTransfer::where('stm_order_request_id', $order->id)
+            ->where('pm_product_item_id', $productId)
+            ->first();
+
+        if ($stockTransfer) {
+            $stockTransfer->update([
+                'dispatched_quantity' => $qty,
+                'dispatched_date' => now(),
+                'dispatched_by' => auth()->id(),
+                'batch_number' => $batchNumber,
+                'stm_stock_id' => $stock->id,
+            ]);
+        }
+
+        // Create Branch Stock Record
+        \App\Models\StmBranchStock::create([
+            'pm_product_item_id' => $productId,
+            'um_branch_id' => $order->branch_id,
+            'stm_stock_id' => $stock->id,
+            'stm_stock_transfer_id' => $stockTransfer ? $stockTransfer->id : null,
+            'stm_order_request_has_product_id' => $orderProduct ? $orderProduct->id : null,
+            'agent_id' => $order->agent_id,
+            'quantity' => $qty,
+            'status' => 0, // In-transit / Pending confirmation
+            'created_by' => auth()->id(),
+            'updated_by' => auth()->id(),
+        ]);
+
+        // Update Order Product – store dispatched qty separately, preserve original quantity
 
         if ($orderProduct) {
-            $orderProduct->quantity = $qty;
+            $orderProduct->dispatched_quantity = $qty;
             $orderProduct->subtotal = $qty * $orderProduct->unit_price;
             $orderProduct->save();
         }

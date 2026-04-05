@@ -9,6 +9,7 @@ use App\Models\UmBranchType;
 use App\Models\PlnDepartment;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 class AdminSettingsController extends Controller
 {
@@ -18,6 +19,70 @@ class AdminSettingsController extends Controller
         $roles = \App\Models\PmUserRole::all();
 
         return view('adminSettings.index', compact('users', 'roles'));
+    }
+
+    public function saveSettings(Request $request)
+    {
+        try {
+            $settingsPath = public_path('system_config.json');
+            $currentSettings = [];
+            if (File::exists($settingsPath)) {
+                $currentSettings = json_decode(File::get($settingsPath), true) ?? [];
+            }
+
+            $imageFields = [
+                'logos.primary' => 'primary_logo',
+                'logos.white' => 'white_logo',
+                'logos.login' => 'login_logo',
+                'logos.favicon' => 'favicon'
+            ];
+
+            // Exclude image fields from the data that will be merged into JSON
+            $excludeFields = array_merge(['_token', '_method'], array_values($imageFields));
+            $data = $request->except($excludeFields);
+
+            // Clean up any previously corrupted flat keys in current settings
+            foreach (array_values($imageFields) as $corruptKey) {
+                if (isset($currentSettings[$corruptKey])) {
+                    unset($currentSettings[$corruptKey]);
+                }
+            }
+
+            foreach ($imageFields as $jsonKey => $requestKey) {
+                if ($request->hasFile($requestKey)) {
+                    $file = $request->file($requestKey);
+                    $filename = $requestKey . '_' . time() . '.' . $file->getClientOriginalExtension();
+                    $destinationPath = public_path('images/systemImage');
+                    
+                    if (!File::exists($destinationPath)) {
+                        File::makeDirectory($destinationPath, 0755, true);
+                    }
+                    
+                    $file->move($destinationPath, $filename);
+                    
+                    // Update the data array for deep nested key
+                    $keys = explode('.', $jsonKey);
+                    $temp = &$data;
+                    foreach ($keys as $key) {
+                        if (!isset($temp[$key])) {
+                            $temp[$key] = [];
+                        }
+                        $temp = &$temp[$key];
+                    }
+                    $data['logos'][explode('.', $jsonKey)[1]] = 'images/systemImage/' . $filename;
+                }
+            }
+
+            // Merge data into current settings
+            // We'll use a recursive merge to preserve structure
+            $updatedSettings = array_replace_recursive($currentSettings, $data);
+
+            File::put($settingsPath, json_encode($updatedSettings, JSON_PRETTY_PRINT));
+
+            return back()->with('success', 'Settings updated successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to update settings: ' . $e->getMessage());
+        }
     }
 
     public function fetchBranchTypes()

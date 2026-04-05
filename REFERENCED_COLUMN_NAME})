@@ -1,0 +1,22 @@
+
+   Psy\Exception\ParseErrorException 
+
+  PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR on line 1
+
+  at vendor\psy\psysh\src\Exception\ParseErrorException.php:44
+     40▕      * @param \PhpParser\Error $e
+     41▕      */
+     42▕     public static function fromParseError(\PhpParser\Error $e): self
+     43▕     {
+  ➜  44▕         return new self($e->getRawMessage(), $e->getAttributes());
+     45▕     }
+     46▕ }
+     47▕
+
+  1   vendor\psy\psysh\src\CodeCleaner.php:488
+      Psy\Exception\ParseErrorException::fromParseError(Object(PhpParser\Error))
+
+  2   vendor\psy\psysh\src\CodeCleaner.php:269
+      Psy\CodeCleaner::parse("<?php \$fks = DB::select("SELECT tc.TABLE_NAME, tc.CONSTRAINT_NAME, kcu.COLUMN_NAME, kcu.REFERENCED_TABLE_NAME, kcu.REFERENCED_COLUMN_NAME FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kcu ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA JOIN information_schema.REFERENTIAL_CONSTRAINTS rc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME AND tc.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA WHERE tc.TABLE_SCHEMA = DATABASE() AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' AND rc.DELETE_RULE = 'CASCADE'"); \$sql = ''; foreach (\$fks as \$fk) { \$sql .= "-- 1. Remove the existing cascading constraint\nALTER TABLE {\$fk- \nDROP FOREIGN KEY {\$fk-;\n\n-- 2. Add the new restrictive constraint\nALTER TABLE {\$fk- \nADD CONSTRAINT {\$fk- \nFOREIGN KEY ({\$fk- REFERENCES {\$fk- \nON DELETE RESTRICT;\n\n"; } file_put_contents('fk_restrict_queries.sql', \$sql); echo 'DDL saved to fk_restrict_queries.sql';
+")
+

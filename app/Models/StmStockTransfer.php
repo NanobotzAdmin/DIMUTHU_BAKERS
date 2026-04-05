@@ -30,11 +30,17 @@ class StmStockTransfer extends Model
         'received_by',
         'received_by',
         'branch_stock_id',
+        'stm_order_request_id',
     ];
 
     public function orderRequest()
     {
         return $this->belongsTo(StmStockOrderRequest::class, 'stm_stock_order_request_id');
+    }
+
+    public function orderRequestCustomer()
+    {
+        return $this->belongsTo(StmOrderRequest::class, 'stm_order_request_id');
     }
 
     public function productItem()
