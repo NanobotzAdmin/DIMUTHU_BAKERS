@@ -40,6 +40,8 @@ class NotificationService
      */
     public function sendToToken($token, $title, $body, $data = [])
     {
+        return false; // Temporarily disabled
+
         // For Expo Push Notifications (recommended for Expo apps)
         // URL: https://exp.host/--/api/v2/push/send
         
