@@ -1759,6 +1759,22 @@ class ApiManagementController extends Controller
             $totalInvoices = AdCubusinessHasInvoice::where('ad_customer_has_business_id', $business->id)->count();
             $avgInvoiceValue = AdCubusinessHasInvoice::where('ad_customer_has_business_id', $business->id)->avg('net_price') ?? 0;
 
+            // Check if assigned to active daily load for supervisor
+            $supervisorId = $this->getSupervisorId();
+            $isAssignedToLoad = false;
+            if ($supervisorId) {
+                // Find active daily load for this supervisor
+                $activeLoad = AdDailyLoad::where('supervisor_id', $supervisorId)
+                    ->where('status', 1) // Active
+                    ->where('load_status', 3) // start
+                    ->first();
+                if ($activeLoad) {
+                    $isAssignedToLoad = AdDailyLoadHasCustomer::where('daily_load_id', $activeLoad->id)
+                        ->where('ad_customer_has_business_id', $business->id)
+                        ->exists();
+                }
+            }
+
             return response()->json([
                 'status' => true,
                 'data' => [
@@ -1772,6 +1788,7 @@ class ApiManagementController extends Controller
                     'since' => $business->created_at->format('Y'),
                     'outstanding' => (float) $outstanding,
                     'creditLimit' => (float) $business->credit_limit,
+                    'is_assigned_to_active_load' => $isAssignedToLoad,
                     'stats' => [
                         'totalOrders' => $totalInvoices,
                         'avgOrderValue' => (float) $avgInvoiceValue,
