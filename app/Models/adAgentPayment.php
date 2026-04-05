@@ -51,4 +51,5 @@ class AdAgentPayment extends Model
     {
         return $this->belongsTo(UmUser::class, 'created_by');
     }
+    
 }
