@@ -13,8 +13,7 @@
                     <div>
                         <h1 class="text-xl font-bold text-gray-800 tracking-tight leading-none mb-1">Agent Overview</h1>
                         <div id="headerSubtitle" class="flex items-center gap-2">
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Command
-                                Center</span>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Command Center</span>
                         </div>
                     </div>
                 </div>
@@ -32,6 +31,10 @@
                             <i class="bi bi-search"></i>
                         </div>
                     </div>
+
+                    <button onclick="openProfileModal()" id="profileBtn" class="hidden h-12 w-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm">
+                        <i class="bi bi-person-circle text-xl"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -111,9 +114,17 @@
                             class="tab-btn active px-6 py-2.5 rounded-2xl text-sm font-bold transition-all flex items-center gap-2">
                             <i class="bi bi-truck"></i> Daily Operations
                         </button>
+                        <button onclick="switchTab('analytics')" id="tab-analytics"
+                            class="tab-btn px-6 py-2.5 rounded-2xl text-sm font-bold transition-all flex items-center gap-2">
+                            <i class="bi bi-bar-chart-line"></i> Sales Performance
+                        </button>
                         <button onclick="switchTab('fleet')" id="tab-fleet"
                             class="tab-btn px-6 py-2.5 rounded-2xl text-sm font-bold transition-all flex items-center gap-2">
-                            <i class="bi bi-people"></i> Vehicles & Team
+                            <i class="bi bi-people"></i> Team & Fleet
+                        </button>
+                         <button onclick="switchTab('portfolio')" id="tab-portfolio"
+                            class="tab-btn px-6 py-2.5 rounded-2xl text-sm font-bold transition-all flex items-center gap-2">
+                            <i class="bi bi-wallet2"></i> Customer Portfolio
                         </button>
                         <button onclick="switchTab('requests')" id="tab-requests"
                             class="tab-btn px-6 py-2.5 rounded-2xl text-sm font-bold transition-all flex items-center gap-2">
@@ -158,10 +169,79 @@
                             </div>
                         </div>
 
-                        <!-- Tab Pane: Fleet & Team -->
+                        <!-- Tab Pane: Analytics -->
+                        <div id="pane-analytics" class="tab-pane hidden animate-fadeIn">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div class="bg-gray-50/50 p-8 rounded-[2.5rem] border border-gray-100">
+                                    <div class="flex items-center justify-between mb-8">
+                                        <h4 class="text-sm font-bold text-gray-800 uppercase tracking-widest flex items-center gap-2">
+                                            <i class="bi bi-graph-up text-indigo-600"></i> Monthly Sales Trend
+                                        </h4>
+                                    </div>
+                                    <canvas id="salesTrendChart" height="280"></canvas>
+                                </div>
+                                <div class="bg-gray-50/50 p-8 rounded-[2.5rem] border border-gray-100">
+                                    <h4 class="text-sm font-bold text-gray-800 uppercase tracking-widest mb-8 flex items-center gap-2">
+                                        <i class="bi bi-star text-amber-500"></i> Top Performer Products
+                                    </h4>
+                                    <div class="space-y-4" id="topProductsList">
+                                        <!-- Dynamic Products -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Pane: Fleet & Team (Redesigned) -->
                         <div id="pane-fleet" class="tab-pane hidden animate-fadeIn">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="fleetGrid">
-                                <!-- Dynamic Content -->
+                            <div class="space-y-12">
+                                <!-- Section: Drivers -->
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-3">
+                                        <span class="w-8 h-[2px] bg-indigo-500 rounded-full"></span> 
+                                        Lead Drivers
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="driversGrid"></div>
+                                </div>
+
+                                <!-- Section: Supervisors -->
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-3">
+                                        <span class="w-8 h-[2px] bg-emerald-500 rounded-full"></span> 
+                                        Field Supervisors
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="supervisorsGrid"></div>
+                                </div>
+
+                                <!-- Section: Vehicles -->
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-3">
+                                        <span class="w-8 h-[2px] bg-amber-500 rounded-full"></span> 
+                                        Assigned Vehicles
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="vehiclesGrid"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Pane: Customer Portfolio (NEW) -->
+                        <div id="pane-portfolio" class="tab-pane hidden animate-fadeIn">
+                             <div class="mb-6 flex justify-between items-center">
+                                <h3 class="text-lg font-bold text-gray-800 tracking-tight">Financial Portfolio by Customer</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="border-b border-gray-300">
+                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest pl-4">Customer Entity</th>
+                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Total Business</th>
+                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Outstanding</th>
+                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-center pr-4">Activity Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="portfolioTableBody" class="divide-y divide-gray-50">
+                                        <!-- Dynamic Content -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -283,78 +363,58 @@
             </div>
         </div>
 
-        <!-- MODAL: ORDER REQUEST DETAILS -->
-        <div id="orderRequestModal"
+        <!-- MODAL: AGENT PROFILE DETAILS (NEW) -->
+        <div id="agentProfileModal"
             class="hidden fixed inset-0 z-50 overflow-y-auto px-4 py-6 sm:px-0 bg-gray-900/75 backdrop-blur-sm animate-fadeIn">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true" onclick="closeOrderModal()"></div>
-
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                <div
-                    class="inline-block align-bottom bg-white rounded-[2.5rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border-0 animate-fadeIn">
-                    <div class="bg-gray-50 px-8 py-6 flex items-center justify-between border-b border-gray-100">
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-500 shadow-sm">
-                                <i class="bi bi-box-seam text-2xl"></i>
+            <div class="flex items-center justify-center min-h-screen">
+                <div class="fixed inset-0 transition-opacity" onclick="closeProfileModal()"></div>
+                <div class="inline-block align-bottom bg-white rounded-[3rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border-0">
+                    <div class="bg-indigo-600 px-10 py-10 text-white relative">
+                         <div class="flex items-center gap-6 relative z-10">
+                            <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center text-3xl border border-white/30">
+                                <i class="bi bi-person-vcard"></i>
                             </div>
                             <div>
-                                <h5 class="font-bold text-gray-800 mb-0" id="modalOrderTitle">ORDER #0000</h5>
-                                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest"
-                                    id="modalOrderSubtitle">Stock Request Analysis</p>
+                                <h3 class="text-2xl font-bold mb-1" id="profileAgentName">Agent Name</h3>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs font-bold bg-white/20 px-3 py-1 rounded-full uppercase tracking-widest border border-white/20" id="profileAgentCode">AGT-000</span>
+                                    <span class="text-xs font-bold text-indigo-100" id="profileAgentType">Credit Based Distribution</span>
+                                </div>
                             </div>
-                        </div>
-                        <button type="button" onclick="closeOrderModal()"
-                            class="bg-white rounded-full p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 shadow-sm transition-all">
-                            <i class="bi bi-x-lg text-lg"></i>
-                        </button>
+                         </div>
+                         <button onclick="closeProfileModal()" class="absolute top-8 right-8 text-white/50 hover:text-white transition-all">
+                            <i class="bi bi-x-circle text-2xl"></i>
+                         </button>
                     </div>
-                    <div class="modal-body p-8 max-h-[80vh] overflow-y-auto no-scrollbar">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                            <div class="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100/50">
-                                <h6 class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">Request Info
-                                </h6>
-                                <div class="space-y-2">
-                                    <div
-                                        class="flex justify-between items-center bg-white/60 p-2 rounded-xl border border-blue-50">
-                                        <span class="text-xs font-bold text-gray-500 uppercase">Date</span>
-                                        <span id="modalOrderDate" class="text-xs font-bold text-gray-700">2026-03-31</span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between items-center bg-white/60 p-2 rounded-xl border border-blue-50">
-                                        <span class="text-xs font-bold text-gray-500 uppercase">Status</span>
-                                        <span id="modalOrderStatusText"
-                                            class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 uppercase uppercase">Approved</span>
-                                    </div>
-                                </div>
+                    <div class="p-10 space-y-10">
+                        <div class="grid grid-cols-2 gap-8">
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Phone Number</p>
+                                <p class="text-sm font-bold text-gray-800" id="profilePhone">+94 77 000 0000</p>
                             </div>
-                            <div class="bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100/50">
-                                <h6 class="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-3">Customer
-                                    Entity</h6>
-                                <div class="p-3 bg-white/60 rounded-2xl border border-indigo-50">
-                                    <p class="text-sm font-bold text-gray-800 mb-0.5" id="modalOrderCustomer">Customer Name
-                                    </p>
-                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Distribution
-                                        Network Partner</p>
-                                </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email Address</p>
+                                <p class="text-sm font-bold text-gray-800" id="profileEmail">agent@bakery.com</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">NIC Number</p>
+                                <p class="text-sm font-bold text-gray-800" id="profileNIC">990000000V</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Distribution Address</p>
+                                <p class="text-sm font-bold text-gray-800" id="profileAddress">123, Main Street, Colombo</p>
                             </div>
                         </div>
 
-                        <div class="space-y-6">
-                            <h6
-                                class="text-xs font-bold text-gray-500 uppercase tracking-widest px-2 flex items-center gap-2">
-                                <i class="bi bi-list-check text-indigo-500"></i> Requested SKU Breakdown
-                            </h6>
-                            <div id="modalOrderItems" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Dynamic Items -->
-                            </div>
+                        <div class="pt-8 border-t border-gray-100">
+                             <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6"><i class="bi bi-bank me-2"></i> Verified Bank Accounts</h4>
+                             <div id="profileBankAccounts" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Dynamic Banks -->
+                             </div>
                         </div>
                     </div>
-                    <div class="border-t border-gray-100 p-8 bg-gray-50/50 flex justify-end items-center">
-                        <button type="button" onclick="closeOrderModal()"
-                            class="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-xs shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">Close
-                            Request</button>
+                    <div class="bg-gray-50 px-10 py-6 flex justify-end">
+                        <button onclick="closeProfileModal()" class="px-8 py-3 bg-gray-900 text-white rounded-2xl font-bold text-xs shadow-lg hover:bg-black transition-all">Close Profile</button>
                     </div>
                 </div>
             </div>
@@ -362,6 +422,8 @@
 
 
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         @font-face {
@@ -415,11 +477,13 @@
 
     <script>
         let dashboardData = null;
+        let salesChart = null;
 
         function loadAgentOverview(agentId) {
             if (!agentId) {
                 document.getElementById('mainDashboard').classList.add('hidden');
                 document.getElementById('dashboardEmpty').classList.remove('hidden');
+                document.getElementById('profileBtn').classList.add('hidden');
                 return;
             }
 
@@ -431,6 +495,7 @@
                     if (res.status) {
                         dashboardData = res.data;
                         renderDashboard(res.data);
+                        document.getElementById('profileBtn').classList.remove('hidden');
                     } else Swal.fire('Data Sync Pending', res.message, 'warning');
                 })
                 .catch(err => Swal.fire('Network Delay', 'Field data currently unreachable', 'error'))
@@ -455,13 +520,58 @@
             setTimeout(() => { dash.classList.remove('opacity-0', 'translate-y-4'); dash.classList.add('opacity-100', 'translate-y-0'); }, 100);
 
             // -- KPIS --
-            const recoveryRate = Math.round(Math.random() * 10 + 90);
             document.getElementById('statTotalSales').innerText = `Rs. ${parseFloat(data.stats.total_sales).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
             document.getElementById('statOutstanding').innerText = `Rs. ${parseFloat(data.stats.outstanding_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
             document.getElementById('statCollections').innerText = `Rs. ${parseFloat(data.stats.total_collections).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
             document.getElementById('statCreditLimit').innerText = `Limit: Rs. ${parseFloat(data.stats.credit_limit).toLocaleString()}`;
-            document.getElementById('statRoutesCount').innerText = `${data.routes.length} Routes`;
+            document.getElementById('statRoutesCount').innerText = `${data.routes.length} Active Routes`;
+            const recoveryRate = data.stats.total_sales > 0 ? Math.min(100, Math.round((data.stats.total_collections / data.stats.total_sales) * 100)) : 100;
             document.getElementById('statRecovery').innerText = `${recoveryRate}%`;
+
+            // -- Portfolio --
+            const portfolioBody = document.getElementById('portfolioTableBody');
+            portfolioBody.innerHTML = data.customers.map(c => `
+                <tr class="hover:bg-gray-100/50 transition-all border-b border-gray-100">
+                    <td class="py-5 pl-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 border border-indigo-100">
+                                <i class="bi bi-shop text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800 mb-0.5">${c.business_name || c.customer?.name}</p>
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">${c.customer_id ? 'CUST-'+c.customer_id : 'Field Map'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        <p class="text-sm font-bold text-gray-800">Rs. ${parseFloat(c.total_sales).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                    </td>
+                    <td class="text-right">
+                        <p class="text-sm font-bold ${c.outstanding > 0 ? 'text-rose-600' : 'text-emerald-600'}">Rs. ${parseFloat(c.outstanding).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                    </td>
+                    <td class="text-center pr-4">
+                        <p class="text-xs font-bold text-gray-500 italic">${c.last_invoice ? new Date(c.last_invoice).toLocaleDateString() : 'No Activity'}</p>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="4" class="py-12 text-center text-xs text-gray-400 italic">No customer financial activity found</td></tr>';
+
+            // -- Analytics --
+            renderSalesChart(data.salesTrend);
+            const topProdGrid = document.getElementById('topProductsList');
+            topProdGrid.innerHTML = data.topProducts.map((p, idx) => `
+                <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:shadow-md transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">#${idx+1}</div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">${p.product_name}</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${parseInt(p.total_qty)} Units Sold</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-indigo-600">Rs. ${parseFloat(p.total_value).toLocaleString()}</p>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-center py-6 text-xs text-gray-400 italic">No sales data recorded</p>';
 
             // -- Operations Table --
             const tableBody = document.getElementById('opsTableBody');
@@ -488,24 +598,45 @@
                         </tr>
                     `).join('') || '<tr><td colspan="4" class="py-12 text-center text-xs text-gray-400 italic">No operational history logged</td></tr>';
 
-                    // -- Fleet Grid --
-                    const fleetGrid = document.getElementById('fleetGrid');
-                    const team = [
-                        ...data.drivers.map(d => ({ icon: 'bi-person-badge', title: d.driver_name, label: 'Lead Driver', color: 'indigo' })),
-                        ...data.supervisors.map(s => ({ icon: 'bi-person-gear', title: s.superviser_name, label: 'Field Supervisor', color: 'green' })),
-                        ...data.vehicles.map(v => ({ icon: 'bi-truck', title: v.vehicle_number, label: v.vehicle_category || 'Logistics', color: 'amber' }))
-                    ];
-                    fleetGrid.innerHTML = team.map(t => `
-                        <div class="bg-gray-50/50 p-6 rounded-[2rem] border border-${t.color}-500 flex items-center gap-5 group hover:bg-white hover:shadow-lg transition-all">
-                            <div class="w-14 h-14 rounded-2xl bg-white text-${t.color}-500 shadow-sm flex items-center justify-center text-2xl group-hover:bg-${t.color}-500 group-hover:text-white transition-all">
-                                <i class="bi ${t.icon}"></i>
+                    // -- Team Sections --
+                    const driversGrid = document.getElementById('driversGrid');
+                    driversGrid.innerHTML = data.drivers.map(d => `
+                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 flex items-center gap-5 hover:shadow-xl hover:border-indigo-100 transition-all">
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl">
+                                <i class="bi bi-person-badge"></i>
                             </div>
                             <div>
-                                <h5 class="text-sm font-bold text-gray-800 mb-0.5">${t.title}</h5>
-                                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">${t.label}</p>
+                                <h5 class="text-sm font-bold text-gray-800 mb-0.5">${d.driver_name}</h5>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Primary Logistics Operative</p>
                             </div>
                         </div>
-                    `).join('') || '<div class="col-span-3 text-center py-12 text-xs text-gray-400 italic">No fleet assets assigned</div>';
+                    `).join('') || '<div class="col-span-3 text-center py-6 text-xs text-gray-400 italic">No drivers assigned</div>';
+
+                    const supervisorsGrid = document.getElementById('supervisorsGrid');
+                    supervisorsGrid.innerHTML = data.supervisors.map(s => `
+                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 flex items-center gap-5 hover:shadow-xl hover:border-emerald-100 transition-all">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl">
+                                <i class="bi bi-person-gear"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-bold text-gray-800 mb-0.5">${s.superviser_name}</h5>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Field Strategy Supervisor</p>
+                            </div>
+                        </div>
+                    `).join('') || '<div class="col-span-3 text-center py-6 text-xs text-gray-400 italic">No supervisors assigned</div>';
+
+                    const vehiclesGrid = document.getElementById('vehiclesGrid');
+                    vehiclesGrid.innerHTML = data.vehicles.map(v => `
+                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 flex items-center gap-5 hover:shadow-xl hover:border-amber-100 transition-all">
+                            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-bold text-gray-800 mb-0.5">${v.vehicle_number}</h5>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${v.vehicle_category || 'Logistics Asset'}</p>
+                            </div>
+                        </div>
+                    `).join('') || '<div class="col-span-3 text-center py-6 text-xs text-gray-400 italic">No vehicles assigned</div>';
 
                     // -- Requests Grid --
                     const reqGrid = document.getElementById('requestsGrid');
@@ -549,6 +680,74 @@
                             </div>
                         </div>
                     `).join('') || '<p class="col-span-5 text-center py-12 text-xs text-gray-400 italic">No network clients mapped</p>';
+                }
+
+                function openProfileModal() {
+                    if(!dashboardData) return;
+                    const a = dashboardData.agent;
+                    document.getElementById('profileAgentName').innerText = a.agent_name;
+                    document.getElementById('profileAgentCode').innerText = a.agent_code;
+                    document.getElementById('profileAgentType').innerText = a.agent_type == 1 ? 'Direct Agent' : (a.agent_type == 2 ? 'Invoicing Base' : 'Credit Based Distribution');
+                    document.getElementById('profilePhone').innerText = a.phone || 'N/A';
+                    document.getElementById('profileEmail').innerText = a.email || 'N/A';
+                    document.getElementById('profileNIC').innerText = a.nic_number || 'N/A';
+                    document.getElementById('profileAddress').innerText = a.address || 'N/A';
+
+                    const banks = document.getElementById('profileBankAccounts');
+                    banks.innerHTML = a.bank_accounts.map(b => `
+                        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">${b.bank_name}</p>
+                            <p class="text-sm font-bold text-gray-800 mb-0.5">${b.account_number}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] text-gray-500 font-semibold">${b.branch || 'Main'} Branch</span>
+                                ${b.is_primary ? '<span class="text-[9px] bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">Primary</span>' : ''}
+                            </div>
+                        </div>
+                    `).join('') || '<p class="text-xs text-gray-400 italic">No bank accounts linked</p>';
+
+                    document.getElementById('agentProfileModal').classList.remove('hidden');
+                }
+
+                function closeProfileModal() {
+                    document.getElementById('agentProfileModal').classList.add('hidden');
+                }
+
+                function renderSalesChart(trend) {
+                    const ctx = document.getElementById('salesTrendChart').getContext('2d');
+                    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    const data = new Array(12).fill(0);
+                    
+                    trend.forEach(t => {
+                        data[t.month - 1] = t.sales;
+                    });
+
+                    if (salesChart) salesChart.destroy();
+
+                    salesChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: months,
+                            datasets: [{
+                                label: 'Monthly Sales (Rs.)',
+                                data: data,
+                                borderColor: '#4338ca',
+                                backgroundColor: 'rgba(67, 56, 202, 0.1)',
+                                borderWidth: 4,
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 5,
+                                pointBackgroundColor: '#4338ca'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { display: false } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
                 }
 
                 function openLoadModal(loadId) {

@@ -228,7 +228,7 @@
                                     <input type="number" id="monthly-sales-target" class="w-full h-14 pl-14 pr-4 rounded-xl border-gray-100 bg-gray-50 text-2xl font-bold text-indigo-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="0.00">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="grid grid-cols-2 gap-4 mb-6 hidden">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Base Salary</label>
                                     <input type="number" id="base-salary" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="0.00">
@@ -248,7 +248,7 @@
                                     <input type="number" id="target-commission-rate" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="5.00">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="grid grid-cols-2 gap-4 mb-6 hidden">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Threshold (%)</label>
                                     <input type="number" id="achievement-threshold" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="80.00">
@@ -258,7 +258,7 @@
                                     <input type="number" id="reduced-target-commission-rate" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="4.00">
                                 </div>
                             </div>
-                            <div class="mb-6">
+                            <div class="mb-6 hidden">
                                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Planning Status</label>
                                 <select id="target-status" class="w-full h-12 rounded-xl border-gray-100 bg-gray-50 font-bold transition-all px-4 text-gray-700">
                                     <option value="1" class="text-green-600 font-bold font-sans">Active</option>
@@ -597,7 +597,7 @@
             document.getElementById('invoicing-commission-rate').value = '15.00';
             document.getElementById('target-commission-rate').value = '5.00';
             document.getElementById('achievement-threshold').value = '80.00';
-            document.getElementById('reduced-target-commission-rate').value = '4.00';
+            document.getElementById('reduced-target-commission-rate').value = '5.00';
             document.getElementById('target-status').value = '1';
             addRow('category-targets-table');
             addRow('sku-targets-table');

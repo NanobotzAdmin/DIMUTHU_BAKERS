@@ -860,7 +860,7 @@ class AgentDistributionManagementController extends Controller
                     'achievement_msg' => $achievementMsg
                 ];
 
-                $tempCommission = $baseComm + $bonusComm;
+                $tempCommission = $bonusComm;
             }
 
             // 3. Prepare Chart Data (Trends - 6 Months ending at selected month)
@@ -965,7 +965,7 @@ class AgentDistributionManagementController extends Controller
                     'gettingAmount' => (double)$gettingAmount,
                     'targetAmount' => $target ? (double)$target->monthly_sales_target : 0,
                     'baseSalary' => $target ? (double)$target->base_salary : 0,
-                    'commission' => $target ? (double)($target->monthly_commission > 0 ? $target->monthly_commission : $tempCommission) : 0,
+                    'commission' => (double)$tempCommission,
                     'tempCommission' => (double)$tempCommission,
                     'commissionBreakdown' => $commBreakdown,
                     'paymentStatus' => $target ? $target->payment_status : 0,
@@ -2569,7 +2569,7 @@ class AgentDistributionManagementController extends Controller
     public function getAgentOverviewData($id)
     {
         try {
-            $agent = AdAgent::findOrFail($id);
+            $agent = AdAgent::with('bankAccounts')->findOrFail($id);
             
             // 1. Basic Stats
             $stats = [
@@ -2607,16 +2607,62 @@ class AgentDistributionManagementController extends Controller
             // 5. Vehicles
             $vehicles = VmVehicle::where('agent_id', $id)->get();
 
-            // 6. Customers
+            // 6. Customers (Enhanced with Sales & Outstanding)
             $customers = AdCustomerHasBusiness::where('agent_id', $id)
-                ->with('customer')
-                ->get();
+                ->with(['customer'])
+                ->get()
+                ->map(function($c) {
+                    $invoiceStats = DB::table('ad_cubusiness_has_invoice')
+                        ->where('ad_customer_has_business_id', $c->id)
+                        ->where('status', 1)
+                        ->select(
+                            DB::raw('SUM(net_price) as total_sales'),
+                            DB::raw('SUM(net_price - total_amount_paid) as outstanding'),
+                            DB::raw('MAX(created_at) as last_invoice')
+                        )->first();
+
+                    $c->total_sales = (double) ($invoiceStats->total_sales ?? 0);
+                    $c->outstanding = (double) ($invoiceStats->outstanding ?? 0);
+                    $c->last_invoice = $invoiceStats->last_invoice;
+                    return $c;
+                });
 
             // 7. Order Requests (Enhanced)
             $orders = StmOrderRequest::where('agent_id', $id)
                 ->with(['customer', 'orderProducts.productItem'])
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
+                ->get();
+
+            // 8. Monthly Sales Trend (Current Year)
+            $salesTrend = DB::table('ad_cubusiness_has_invoice as i')
+                ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+                ->where('l.agent_id', $id)
+                ->where('i.status', 1)
+                ->whereYear('i.created_at', date('Y'))
+                ->select(
+                    DB::raw('MONTH(i.created_at) as month'),
+                    DB::raw('SUM(i.net_price) as sales')
+                )
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+
+            // 9. Top Products
+            $topProducts = DB::table('ad_cubusiness_has_product_item as pi')
+                ->join('ad_cubusiness_has_invoice as i', 'pi.ad_cubusiness_has_invoice_id', '=', 'i.id')
+                ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
+                ->join('pm_product_item as p', 'pi.pm_product_item_id', '=', 'p.id')
+                ->where('l.agent_id', $id)
+                ->where('i.status', 1)
+                ->select(
+                    'p.product_name',
+                    DB::raw('SUM(pi.quantity) as total_qty'),
+                    DB::raw('SUM(pi.total_price) as total_value')
+                )
+                ->groupBy('p.id', 'p.product_name')
+                ->orderBy('total_value', 'desc')
+                ->limit(5)
                 ->get();
 
             return response()->json([
@@ -2631,6 +2677,8 @@ class AgentDistributionManagementController extends Controller
                     'vehicles' => $vehicles,
                     'customers' => $customers,
                     'orders' => $orders,
+                    'salesTrend' => $salesTrend,
+                    'topProducts' => $topProducts,
                 ]
             ]);
         } catch (\Exception $e) {

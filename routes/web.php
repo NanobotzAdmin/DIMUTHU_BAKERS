@@ -108,6 +108,9 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     Route::post('/api/order-management/approve-payment', [DistributorAndSalesManagementController::class, 'approvePayment'])->name('orderManagement.approvePayment');
     Route::post('/api/order-management/approve-payment', [DistributorAndSalesManagementController::class, 'approvePayment'])->name('orderManagement.approvePayment');
     Route::get('/order-management/payment-approval/{id}', [DistributorAndSalesManagementController::class, 'paymentApprovalView'])->name('orderManagement.paymentApprovalView');
+    Route::get('/agent-payments', [DistributorAndSalesManagementController::class, 'agentPaymentIndex'])->name('agent-payments.index');
+    Route::get('/api/agent-payments/orders/{id}', [DistributorAndSalesManagementController::class, 'getAgentPaymentOrders'])->name('agent-payments.orders');
+    Route::post('/api/agent-payments/approve-bulk', [DistributorAndSalesManagementController::class, 'approveBulkAgentPayments'])->name('agent-payments.approve-bulk');
 
     Route::get('/invoice-management', [DistributorAndSalesManagementController::class, 'invoiceManageIndex'])->name('invoice-management.index');
     Route::get('/payment-tracking', [DistributorAndSalesManagementController::class, 'paymentTrackingIndex'])->name('payment-tracking.index');

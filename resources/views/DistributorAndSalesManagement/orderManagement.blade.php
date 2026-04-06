@@ -125,7 +125,7 @@
                     </div>
                 </div>
 
-                <div class="flex gap-3">
+                <div class="flex gap-3 hidden">
                     <button onclick="openCreateOrderModal('pos-pickup')"
                         class="hidden h-12 px-5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl flex items-center gap-2 shadow-lg transition-all duration-300">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -293,7 +293,7 @@
                     <span>POS Pickup</span>
                 </button>
                 <button onclick="filterData('channel', 'agent-order', this)"
-                    class="filter-btn flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    class="filter-btn  flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -303,7 +303,7 @@
                     <span>Agent Orders</span>
                 </button>
                 <button onclick="filterData('channel', 'special-order', this)"
-                    class="filter-btn flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    class="filter-btn hidden flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="8" width="18" height="4" rx="1" />
@@ -314,7 +314,7 @@
                     <span>Special Orders</span>
                 </button>
                 <button onclick="filterData('channel', 'scheduled-production', this)"
-                    class="filter-btn flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    class="filter-btn hidden flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-gray-600 hover:bg-gray-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m17 2 4 4-4 4" />
@@ -474,7 +474,7 @@
                                     </div>
 
                                     <div class="flex flex-wrap items-center gap-4 mb-3 text-gray-600 text-sm">
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex items-center text-blue-800 justify-center gap-2 bg-blue-100 px-2 py-1 rounded-lg border border-blue-800">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                                 stroke-linejoin="round">
@@ -484,7 +484,7 @@
                                             <span class="font-medium">{{ $order['customer_name'] }}</span>
                                         </div>
                                         @if ($order['customer_phone'] !== '-')
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex items-center gap-2 text-purple-800 justify-center bg-purple-200 px-2 py-1 rounded-lg border border-purple-800">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                                     stroke-linejoin="round">
@@ -542,7 +542,7 @@
                                             </svg>
                                             <span>{{ count($order['products']) }} items</span>
                                         </div>
-                                        <div class="flex items-center gap-2" title="Requesting Branch">
+                                        <div class="flex items-center gap-2 hidden" title="Requesting Branch">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                                 stroke-linejoin="round">
@@ -556,7 +556,7 @@
                                             <span><span class="font-medium">Req:</span>
                                                 {{ $order['request_branch_name'] }}</span>
                                         </div>
-                                        <div class="flex items-center gap-2" title="Source Branch">
+                                        <div class="flex items-center gap-2 hidden" title="Source Branch">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                                 stroke-linejoin="round">
@@ -712,7 +712,7 @@
                 status: orderData.status,
                 priority: 'normal', // Default priority since we don't have this field
                 outletId: 'loc1',
-                outletCode: 'Main', // We don't have this in new schema
+                outletCode: orderData.outletCode,
                 customerName: orderData.customer_name,
                 customerPhone: orderData.customer_phone,
                 eventType: orderData.event_type_text,
@@ -737,6 +737,7 @@
                 products: orderData.products, // Pass products array
                 history: orderData.history || [], // Audit trail
                 payment_records: orderData.payment_records || [], // Payment records
+                agent_info: orderData.agent_info || null, // New agent details
             };
 
             // Create a temporary button element to pass the data

@@ -12,6 +12,8 @@ use App\Models\StmOrderRequestHasProduct;
 use App\Models\StmQuotation;
 use App\Models\StmQuotationHasProduct;
 use App\Models\StmStock;
+use App\Models\AdAgent;
+use App\Models\AdAgentPayment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -292,8 +294,23 @@ class DistributorAndSalesManagementController extends Controller
                         CommonVariables::$orderTypeScheduledProduction => 'Scheduled Production',
                         default => CommonVariables::$orderTypeAgentOrder == $order->order_type ? 'Agent Order' : 'Unknown'
                     },
-                    'customer_name' => $order->customer ? $order->customer->name : 'Walk-in Customer',
-                    'customer_phone' => $order->customer ? $order->customer->phone : '-',
+                    'customer_name' => $order->agent ? $order->agent->agent_name : 'Walk-in Customer',
+                    'customer_phone' => $order->agent ? $order->agent->phone : '-',
+                    'agent_info' => $order->agent ? [
+                        'name' => $order->agent->agent_name,
+                        'phone' => $order->agent->phone,
+                        'code' => $order->agent->agent_code,
+                        'email' => $order->agent->email,
+                        'nic' => $order->agent->nic_number,
+                        'address' => $order->agent->address,
+                        'balance' => number_format($order->agent->outstanding_balance, 2),
+                        'type' => match ($order->agent->agent_type) {
+                            1 => 'Salaried',
+                            2 => 'Commission Only',
+                            3 => 'Credit Based',
+                            default => 'General'
+                        }
+                    ] : null,
                     'delivery_type' => $order->delivery_type,
                     'delivery_type_text' => $order->delivery_type == CommonVariables::$deliveryTypePickup ? 'Pickup' : 'Delivery',
                     'delivery_date' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('Y-m-d H:i') : '-',
@@ -352,7 +369,7 @@ class DistributorAndSalesManagementController extends Controller
                     'req_from_branch_name' => $order->req_from_branch_id ? ($branches->firstWhere('id', $order->req_from_branch_id)['name'] ?? 'Unknown Branch') : 'Warehouse',
                     'um_branch_id' => $order->branch_id,
                     'req_from_branch_id' => $order->req_from_branch_id,
-                    'outletCode' => $branches->firstWhere('id', $order->req_from_branch_id)['code'] ?? '-',
+                    'outletCode' => $order->agent ? $order->agent->agent_code : '',
                     'priority' => 'normal', // TODO: Add priority to DB if needed
                     'deliveryMethod' => $order->delivery_type == CommonVariables::$deliveryTypePickup ? 'pickup' : 'delivery',
                     'pickupDate' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('Y-m-d') : '-',
@@ -1426,6 +1443,148 @@ class DistributorAndSalesManagementController extends Controller
             $orderProduct->save();
         }
 
+    }
+
+    /**
+     * Agent Payment Management Index
+     */
+    public function agentPaymentIndex(Request $request)
+    {
+        $agents = AdAgent::where('status', 1)->get();
+        
+        $query = AdAgentPayment::with(['agent', 'distributions.orderRequest']);
+
+        // Filter by Agent
+        if ($request->filled('agent_id')) {
+            $query->where('agent_id', $request->agent_id);
+        }
+
+        // Filter by Date Range
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('payment_date', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+        }
+
+        // Filter by Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by Payment Method
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        $payments = $query->orderBy('payment_date', 'desc')->paginate(15);
+
+        return view('DistributorAndSalesManagement.agentPaymentManagement', compact('payments', 'agents'));
+    }
+
+    /**
+     * Get Order Details for an Agent Payment
+     */
+    public function getAgentPaymentOrders($id)
+    {
+        try {
+            $payment = AdAgentPayment::with(['agent', 'distributions.orderRequest.orderProducts.productItem'])->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $payment
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment record not found.'
+            ], 404);
+        }
+    }
+
+    /**
+     * Bulk Approve Agent Payments
+     */
+    public function approveBulkAgentPayments(Request $request)
+    {
+        $request->validate([
+            'agent_payment_id' => 'required|exists:ad_agent_payments,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $agentPayment = AdAgentPayment::with(['distributions', 'agent'])->findOrFail($request->agent_payment_id);
+
+            if ($agentPayment->status != 0) {
+                return response()->json(['success' => false, 'message' => 'This payment group is already processed or rejected.'], 400);
+            }
+
+            foreach ($agentPayment->distributions as $distribution) {
+                if ($distribution->status == 1) { // If pending
+                    // 1. Update Distribution Status to Approved (2)
+                    $distribution->status = 2; // Active/Approved
+                    $distribution->save();
+
+                    $order = StmOrderRequest::find($distribution->stm_order_request_id);
+                    if ($order) {
+                        // 2. Update Order's paid_amount
+                        $totalPaid = StmOrderRequestHasPayment::where('stm_order_request_id', $order->id)
+                            ->where('status', 2)
+                            ->sum('payment_amount');
+
+                        $order->paid_amount = $totalPaid;
+
+                        // Update payment_completed status
+                        if ($order->paid_amount >= $order->grand_total - 0.01) {
+                            $order->payment_completed = 2; // Fully Paid
+                        } else if ($order->paid_amount > 0) {
+                            $order->payment_completed = 1; // Partially Paid
+                        }
+                        $order->save();
+                        
+                        // 3. Update Agent Balance (Decrease outstanding debt)
+                        $agent = $agentPayment->agent;
+                        if ($agent) {
+                            $agent->outstanding_balance -= $distribution->payment_amount;
+                            $agent->total_collections += $distribution->payment_amount;
+                            $agent->save();
+
+                            // 4. Log Balance History
+                            AdAgentBalanceHistory::create([
+                                'agent_id' => $agent->id,
+                                'type' => 2, // Collection
+                                'amount' => $distribution->payment_amount,
+                                'previous_balance' => $agent->outstanding_balance + $distribution->payment_amount,
+                                'new_balance' => $agent->outstanding_balance,
+                                'reference_id' => $distribution->id,
+                                'reference_type' => 'ad_agent_payment_distribution',
+                                'notes' => 'Bulk approval for distribution from Agent Payment #' . $agentPayment->id,
+                                'created_by' => auth()->id()
+                            ]);
+
+                            // 5. Log Order Request History
+                            StmOrderRequestHistory::create([
+                                'order_request_id' => $order->id,
+                                'created_by' => auth()->id(),
+                                'action' => 'Payment Approved',
+                                'status' => $order->status,
+                                'description' => "Payment of Rs. " . number_format($distribution->payment_amount, 2) . " approved via Bulk Agent Payment #" . $agentPayment->id,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Mark master payment as Approved (1)
+            $agentPayment->status = 1;
+            $agentPayment->save();
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'All distributions in this payment group have been approved.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk payment approval failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
     }
 
     /**

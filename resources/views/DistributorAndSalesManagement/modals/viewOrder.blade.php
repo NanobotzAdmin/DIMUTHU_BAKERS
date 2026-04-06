@@ -24,7 +24,7 @@
                             <span id="modal-priority-badge"
                                 class="border px-3 py-1 rounded-lg text-sm font-medium hidden"></span>
                         </div>
-                        <div class="flex items-center gap-3 text-purple-100 text-sm">
+                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-purple-100 text-sm">
                             <div class="flex items-center gap-1.5">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -34,9 +34,8 @@
                                     <line x1="8" x2="8" y1="2" y2="6" />
                                     <line x1="3" x2="21" y1="10" y2="10" />
                                 </svg>
-                                <span id="modal-created-at"></span>
+                                <span id="modal-header-created-at"></span>
                             </div>
-                            <span>•</span>
                             <div class="flex items-center gap-1.5">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -44,7 +43,15 @@
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                                     <circle cx="12" cy="10" r="3" />
                                 </svg>
-                                <span id="modal-outlet-code"></span>
+                                <span id="modal-header-outlet-code"></span>
+                            </div>
+                            <div class="flex items-center gap-1.5 border-l border-white/20 pl-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <span id="modal-header-agent-name" class="font-bold"></span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                <span id="modal-header-agent-phone"></span>
                             </div>
                         </div>
                     </div>
@@ -125,30 +132,50 @@
                             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
-                        Customer Information
+                        Agent Information
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <p class="text-sm text-gray-500 mb-1">Customer Name</p>
-                            <p id="modal-cust-name" class="text-gray-900 font-medium"></p>
+                            <p class="text-sm text-gray-500 mb-1">Agent Name</p>
+                            <p id="modal-cust-name" class="text-gray-900 font-bold text-lg"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 mb-1">Phone</p>
+                            <p class="text-sm text-gray-500 mb-1">Phone Number</p>
                             <p id="modal-cust-phone" class="text-gray-900 font-medium"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 mb-1">Outlet Code</p>
+                            <p class="text-sm text-gray-500 mb-1">Agent Code</p>
                             <p id="modal-outlet-code" class="text-gray-900 font-medium"></p>
                         </div>
                         <div>
+                            <p class="text-sm text-gray-500 mb-1">Agent Type</p>
+                            <p id="modal-agent-type" class="text-gray-900 font-medium"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">NIC Number</p>
+                            <p id="modal-agent-nic" class="text-gray-900 font-medium"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Outstanding Balance</p>
+                            <p id="modal-agent-balance" class="text-red-600 font-bold"></p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <p class="text-sm text-gray-500 mb-1">Address</p>
+                            <p id="modal-agent-address" class="text-gray-900 font-medium"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Email Address</p>
+                            <p id="modal-agent-email" class="text-gray-900 font-medium"></p>
+                        </div>
+                        <div class="hidden">
                             <p class="text-sm text-gray-500 mb-1">Created At</p>
                             <p id="modal-created-at" class="text-gray-900 font-medium"></p>
                         </div>
-                        <div>
+                        <div class="hidden">
                             <p class="text-sm text-gray-500 mb-1">Destination Branch</p>
                             <p id="modal-req-branch" class="text-gray-900 font-medium"></p>
                         </div>
-                        <div>
+                        <div class="hidden">
                             <p class="text-sm text-gray-500 mb-1">Source Branch</p>
                             <p id="modal-req-from-branch" class="text-gray-900 font-medium"></p>
                         </div>
@@ -209,7 +236,7 @@
                 </div>
 
                 {{-- Actions --}}
-                <div class="bg-gray-50 rounded-2xl p-6">
+                <div class="bg-gray-50 rounded-2xl p-6 hidden">
                     <h3 class="text-lg text-gray-900 mb-4 font-semibold">Actions</h3>
                     <div class="space-y-2" id="modal-actions-container">
                         {{-- Buttons injected via JS --}}
@@ -306,7 +333,7 @@
             'agent-order': {
                 color: 'bg-green-100 text-green-700 border-green-300',
                 label: 'Agent Order',
-                icon: modalIcons.user
+                icon: modalIcons.truck
             }
         };
         return configs[channel] || configs['pos-pickup'];
@@ -397,10 +424,34 @@
         }
 
         // Details
-        document.getElementById('modal-created-at').innerText = new Date().toLocaleDateString();
-        document.getElementById('modal-outlet-code').innerText = order.outletCode;
+        const createdAt = order.created_at || new Date().toLocaleDateString();
+        document.getElementById('modal-header-created-at').innerText = createdAt;
+        document.getElementById('modal-created-at').innerText = createdAt;
+
+        document.getElementById('modal-header-outlet-code').innerText = order.outletCode || 'N/A';
+        document.getElementById('modal-outlet-code').innerText = order.outletCode || 'N/A';
+
+        document.getElementById('modal-header-agent-name').innerText = order.customerName;
+        document.getElementById('modal-header-agent-phone').innerText = order.customerPhone || 'N/A';
+
         document.getElementById('modal-cust-name').innerText = order.customerName;
-        document.getElementById('modal-cust-phone').innerHTML = order.customerPhone || 'N/A';
+        document.getElementById('modal-cust-phone').innerText = order.customerPhone || 'N/A';
+
+        // Agent detailed info
+        if (order.agent_info) {
+            document.getElementById('modal-agent-type').innerText = order.agent_info.type || 'N/A';
+            document.getElementById('modal-agent-nic').innerText = order.agent_info.nic || 'N/A';
+            document.getElementById('modal-agent-balance').innerText = 'Rs ' + (order.agent_info.balance || '0.00');
+            document.getElementById('modal-agent-address').innerText = order.agent_info.address || 'N/A';
+            document.getElementById('modal-agent-email').innerText = order.agent_info.email || 'N/A';
+        } else {
+            document.getElementById('modal-agent-type').innerText = 'N/A';
+            document.getElementById('modal-agent-nic').innerText = 'N/A';
+            document.getElementById('modal-agent-balance').innerText = 'N/A';
+            document.getElementById('modal-agent-address').innerText = 'N/A';
+            document.getElementById('modal-agent-email').innerText = 'N/A';
+        }
+
         document.getElementById('modal-req-branch').innerText = order.requestBranchName || 'N/A';
         document.getElementById('modal-req-from-branch').innerText = order.reqFromBranchName || 'N/A';
 
@@ -630,7 +681,7 @@
                                 <th class="text-right py-3 px-2 text-sm font-semibold text-gray-700">Amount</th>
                                 <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Reference</th>
                                 <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700">Status</th>
-                                <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700">Action</th>
+                                <th class="text-center py-3 px-2 text-sm font-semibold text-gray-700 hidden">Action</th>
                                 <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Notes</th>
                             </tr>
                         </thead>
@@ -666,7 +717,7 @@
                         <td class="py-3 px-2 text-center">
                                 <span class="px-2 py-1 rounded-lg text-xs font-medium ${statusClass}">${payment.status}</span>
                                 </td>
-                                <td>${actionBtn}</td>
+                                <td class="hidden">${actionBtn}</td>
                         <td class="py-3 px-2 text-sm text-gray-500">${payment.notes}</td>
                     </tr>
                 `;
@@ -675,7 +726,7 @@
                         </tbody>
                         <tfoot>
                             <tr class="border-t-2 border-gray-300 bg-gray-100">
-                                <td colspan="3" class="py-3 px-2 text-right font-bold text-gray-700">Total Paid</td>
+                                <td colspan="2" class="py-3 px-2 text-right font-bold text-gray-700">Total Paid</td>
                                 <td class="py-3 px-2 text-right font-black text-emerald-700">Rs ${totalPaid.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</td>
                                 <td colspan="4"></td>
                             </tr>
