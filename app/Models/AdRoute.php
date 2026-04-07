@@ -96,7 +96,8 @@ class AdRoute extends Model
 
     public function latestDailyLoad()
     {
-        return $this->hasOne(AdDailyLoad::class, 'route_id')->latest('load_date');
+        return $this->hasOne(AdDailyLoad::class, 'route_id')->where('status', 1)
+                ->whereIn('load_status', [2, 3]);
     }
 
     /**

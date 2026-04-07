@@ -329,7 +329,7 @@
             summary.innerHTML = `
                 <div class="space-y-4">
                     <div class="p-3 bg-gray-50 rounded-lg space-y-2 border border-gray-100">
-                        <div class="flex justify-between text-sm">
+                        <div class="flex justify-between text-sm hidden">
                             <span class="text-gray-500">Invoicing Comm. (${cb.invoicing_rate}%)</span>
                             <span class="font-medium">${formatCurrency(cb.base_commission)}</span>
                         </div>
@@ -338,8 +338,8 @@
                             <span class="font-medium ${cb.bonus_commission > 0 ? 'text-green-600' : ''}">${formatCurrency(cb.bonus_commission)}</span>
                         </div>
                         <div class="pt-1 mt-1 border-t border-gray-200 flex justify-between font-bold">
-                            <span class="text-gray-700">Total Monthly Comm.</span>
-                            <span class="text-amber-600">${formatCurrency(metrics.commission)}</span>
+                            <span class="text-gray-700">Total Bonus Commission (Earnings)</span>
+                            <span class="text-amber-600">${formatCurrency(cb.bonus_commission)}</span>
                         </div>
                         <p class="text-[10px] text-gray-400 italic mt-1 text-right">* Calculated based on ${metrics.achievement.toFixed(1)}% achievement</p>
                     </div>
@@ -352,7 +352,7 @@
                     <div class="flex justify-between bg-purple-50 p-4 rounded-xl border border-purple-100">
                         <div class="flex flex-col">
                             <span class="text-purple-700 font-bold uppercase tracking-wider text-[10px]">Net Earnings (EST)</span>
-                            <span class="text-[10px] text-purple-400">Commission Only</span>
+                            <span class="text-[10px] text-purple-400">Bonus Commission Only</span>
                         </div>
                         <span class="font-bold text-purple-900 text-xl">${formatCurrency(metrics.commission)}</span>
                     </div>

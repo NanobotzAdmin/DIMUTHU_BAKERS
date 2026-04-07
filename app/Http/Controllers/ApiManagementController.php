@@ -572,7 +572,7 @@ class ApiManagementController extends Controller
             });
 
             // Load latest daily load with assignment details
-            $latestLoad = $route->latestDailyLoad()->where('load_date', date('Y-m-d'))
+            $latestLoad = $route->latestDailyLoad()
                 ->with(['supervisor', 'driver', 'vehicle'])
                 ->first();
 
@@ -798,12 +798,12 @@ class ApiManagementController extends Controller
 
             // Calculate return_qty for each item
             $invoiceIds = AdCubusinessHasInvoice::where('ad_daily_load_id', $load->id)->pluck('id');
-            
+
             foreach ($load->items as $item) {
                 $returnQty = AdCubusinessHasReturnProductItem::whereIn('ad_new_invoice_id', $invoiceIds)
                     ->where('pm_product_item_id', $item->product_item_id)
                     ->sum('return_quantity');
-                
+
                 $item->return_qty = (float) $returnQty;
             }
 
@@ -811,7 +811,7 @@ class ApiManagementController extends Controller
             $returns = AdCubusinessHasReturnProductItem::whereIn('ad_new_invoice_id', $invoiceIds)
                 ->with(['product', 'invoice.business.customer'])
                 ->get();
-            
+
             $load->returns = $returns;
 
             return response()->json([
@@ -1188,7 +1188,7 @@ class ApiManagementController extends Controller
         try {
             $agentId = $this->getAgentId();
             // Get products that have stock for this agent
-            $products = PmProductItem::whereIn('id', function($query) use ($agentId) {
+            $products = PmProductItem::whereIn('id', function ($query) use ($agentId) {
                 $query->select('pm_product_item_id')
                     ->from('stm_branch_stock')
                     ->where('agent_id', $agentId)
@@ -1449,8 +1449,8 @@ class ApiManagementController extends Controller
                 ->where('target_month', $month)
                 ->first();
 
-            $targetAmount = $monthlyTarget ? (float)$monthlyTarget->monthly_sales_target : 0;
-            $commissionAmount = $monthlyTarget ? (float)$monthlyTarget->monthly_commission : 0;
+            $targetAmount = $monthlyTarget ? (float) $monthlyTarget->monthly_sales_target : 0;
+            $commissionAmount = $monthlyTarget ? (float) $monthlyTarget->monthly_commission : 0;
 
             // Calculate achieved sales for this month
             $monthStart = date('Y-m-01');
@@ -1464,40 +1464,40 @@ class ApiManagementController extends Controller
             $recentVisits = AdCubusinessHasInvoice::whereHas('business', function ($q) use ($agentId) {
                 $q->where('agent_id', $agentId);
             })
-            ->with('business.customer')
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($invoice) {
-                return [
-                    'id' => $invoice->id,
-                    'customer_name' => $invoice->business->business_name ?: ($invoice->business->customer->name ?? 'N/A'),
-                    'amount' => (float)$invoice->net_price,
-                    'time' => $invoice->created_at->format('h:i A'),
-                    'date' => $invoice->created_at->format('Y-m-d'),
-                    'status' => 'Order placed'
-                ];
-            });
+                ->with('business.customer')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(function ($invoice) {
+                    return [
+                        'id' => $invoice->id,
+                        'customer_name' => $invoice->business->business_name ?: ($invoice->business->customer->name ?? 'N/A'),
+                        'amount' => (float) $invoice->net_price,
+                        'time' => $invoice->created_at->format('h:i A'),
+                        'date' => $invoice->created_at->format('Y-m-d'),
+                        'status' => 'Order placed'
+                    ];
+                });
 
             return response()->json([
                 'status' => true,
                 'data' => [
-                    'agent_id' => (int)$agentId,
+                    'agent_id' => (int) $agentId,
                     'stats' => [
-                        'today_sales' => (float)$todaySales,
+                        'today_sales' => (float) $todaySales,
                         'total_customers' => $totalCustomers,
-                        'commission' => (float)$commissionAmount,
+                        'commission' => (float) $commissionAmount,
                     ],
                     'target' => [
                         'monthly_target' => $targetAmount,
-                        'achieved_sales' => (float)$achievedSales,
+                        'achieved_sales' => (float) $achievedSales,
                         'progress_percentage' => $targetAmount > 0 ? min(100, round(($achievedSales / $targetAmount) * 100)) : 0,
                     ],
                     'credit' => [
-                        'credit_limit' => $agent ? (float)$agent->credit_limit : 0,
-                        'outstanding_balance' => $agent ? (float)$agent->outstanding_balance : 0,
-                        'credit_period_days' => $agent ? (int)$agent->credit_period_days : 0,
-                        'agent_type' => $agent ? (int)$agent->agent_type : 0,
+                        'credit_limit' => $agent ? (float) $agent->credit_limit : 0,
+                        'outstanding_balance' => $agent ? (float) $agent->outstanding_balance : 0,
+                        'credit_period_days' => $agent ? (int) $agent->credit_period_days : 0,
+                        'agent_type' => $agent ? (int) $agent->agent_type : 0,
                     ],
                     'recent_visits' => $recentVisits
                 ]
@@ -1520,6 +1520,7 @@ class ApiManagementController extends Controller
             // Get active load for supervisor
             $activeLoad = AdDailyLoad::where('supervisor_id', $supervisorId)
                 ->where('status', 1)
+                ->whereIn('load_status', [2, 3])
                 ->with(['route'])
                 ->first();
 
@@ -1622,6 +1623,7 @@ class ApiManagementController extends Controller
             // Get active load for supervisor
             $activeLoad = AdDailyLoad::where('supervisor_id', $supervisorId)
                 ->where('status', 1)
+                ->whereIn('load_status', [2, 3])
                 ->with(['route'])
                 ->first();
 
@@ -2296,7 +2298,8 @@ class ApiManagementController extends Controller
             $paymentType = $paymentTypeMap[$request->payment_type] ?? 1;
 
             foreach ($invoices as $invoice) {
-                if ($remainingAmount <= 0) break;
+                if ($remainingAmount <= 0)
+                    break;
 
                 $dueAmount = $invoice->net_price - $invoice->total_amount_paid;
                 $paymentForThisInvoice = min($remainingAmount, $dueAmount);
@@ -2318,14 +2321,14 @@ class ApiManagementController extends Controller
                     ]);
 
                     $invoice->total_amount_paid += $paymentForThisInvoice;
-                    
+
                     // Update payment status
                     if ($invoice->total_amount_paid >= $invoice->net_price) {
                         $invoice->payment_status = AdCubusinessHasInvoice::PAYMENT_STATUS_COMPLETE;
                     } else {
                         $invoice->payment_status = AdCubusinessHasInvoice::PAYMENT_STATUS_PARTIAL;
                     }
-                    
+
                     $invoice->save();
 
                     $remainingAmount -= $paymentForThisInvoice;
@@ -2367,6 +2370,7 @@ class ApiManagementController extends Controller
 
             $activeLoad = AdDailyLoad::where('supervisor_id', $supervisorId)
                 ->where('status', 1) // Active
+                ->whereIn('load_status', [2, 3])
                 ->with(['route.customers.customer', 'vehicle', 'driver', 'items.product'])
                 ->first();
 
@@ -2468,7 +2472,7 @@ class ApiManagementController extends Controller
 
                         foreach ($barcodesToRelease as $barcode) {
                             $barcode->update(['ad_daily_load_id' => null]);
-                            
+
                             StmBarcodesHistory::create([
                                 'barcode_id' => $barcode->id,
                                 'created_by' => auth()->id(),
