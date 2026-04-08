@@ -62,6 +62,7 @@ class UmUser extends Authenticatable
         'updated_by',
         'current_branch_id',
         'fcm_token',
+        'is_password_change',
     ];
 
     // 4. Hide password from array output

@@ -114,4 +114,40 @@ class ApiUserController extends Controller
             ], 500);
         }
     }
+
+    public function forcePasswordChange(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            $user->user_password = Hash::make($request->password);
+            $user->is_password_change = 1;
+            $user->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Password updated successfully',
+                'data' => [
+                    'user' => $user
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Force password change error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during password update'
+            ], 500);
+        }
+    }
 }

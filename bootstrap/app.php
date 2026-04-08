@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckInterfacePermission::class,
             'ensure.branch' => \App\Http\Middleware\EnsureBranchSelected::class,
+            'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
         ]);
         $middleware->redirectUsersTo(function () {
             // If referer exists and is not the login page itself, go back there

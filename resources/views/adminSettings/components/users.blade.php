@@ -89,6 +89,9 @@ $roles - Collection of Role models (or array with permissions)
                     <select name="user_role_id" id="user_role_id"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                         @foreach($roles as $role)
+                            @if($role->id == 1 && Auth::user()->user_role_id != 1)
+                                @continue
+                            @endif
                             <option value="{{ $role->id }}">{{ $role->user_role_name }}</option>
                         @endforeach
                     </select>
@@ -137,6 +140,9 @@ $roles - Collection of Role models (or array with permissions)
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($users as $user)
+                        @if($user->user_role_id == 1 && Auth::user()->user_role_id != 1)
+                            @continue
+                        @endif
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
@@ -156,7 +162,7 @@ $roles - Collection of Role models (or array with permissions)
                                     <div class="text-gray-500">{{ $user->contact_no }}</div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-6 py-3">
                                 @php
                                     // Find role name from the passed query collection
                                     $userRole = $roles->firstWhere('id', $user->user_role_id);
@@ -164,14 +170,15 @@ $roles - Collection of Role models (or array with permissions)
 
                                     // Simple color logic based on role name content
                                     $badgeColor = match (true) {
+                                        Str::contains(Str::lower($roleName), 'super admin') => 'bg-red-100 text-red-800',
                                         Str::contains(Str::lower($roleName), 'admin') => 'bg-purple-100 text-purple-800',
-                                        Str::contains(Str::lower($roleName), 'manager') => 'bg-blue-100 text-blue-800',
-                                        Str::contains(Str::lower($roleName), 'store') => 'bg-green-100 text-green-800',
-                                        Str::contains(Str::lower($roleName), 'production') => 'bg-orange-100 text-orange-800',
+                                        Str::contains(Str::lower($roleName), 'agent') => 'bg-blue-100 text-blue-800',
+                                        Str::contains(Str::lower($roleName), 'driver') => 'bg-green-100 text-green-800',
+                                        Str::contains(Str::lower($roleName), 'supervisor') => 'bg-orange-100 text-orange-800',
                                         default => 'bg-gray-100 text-gray-800'
                                     };
                                 @endphp
-                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {{ $badgeColor }}">
+                                <span class="inline-flex px-4 py-1 text-xs font-medium rounded-full {{ $badgeColor }}">
                                     {{ $roleName }}
                                 </span>
                             </td>
@@ -224,6 +231,16 @@ $roles - Collection of Role models (or array with permissions)
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                            </path>
+                                        </svg>
+                                    </button>
+
+                                    {{-- Reset Password Button --}}
+                                    <button type="button" onclick="confirmResetPassword({{ $user->id }}, '{{ $user->first_name }}')"
+                                        class="p-1 rounded-md hover:bg-gray-100 text-orange-600" title="Reset Password">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
                                             </path>
                                         </svg>
                                     </button>
@@ -318,6 +335,9 @@ $roles - Collection of Role models (or array with permissions)
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @foreach($roles as $role)
+                @if($role->id == 1 && Auth::user()->user_role_id != 1)
+                    @continue
+                @endif
                 <div class="border border-gray-200 rounded-lg p-4">
                     <div class="flex items-center gap-2 mb-2">
                         <svg class="w-5 h-5 {{ $role->id === 'super_admin' ? 'text-purple-600' : 'text-gray-600' }}"
@@ -800,6 +820,48 @@ $roles - Collection of Role models (or array with permissions)
                 console.error('Error:', error);
                 Swal.fire('Error!', 'Something went wrong', 'error');
             });
+    }
+
+    function confirmResetPassword(userId, userName) {
+        Swal.fire({
+            title: `Reset password for ${userName}?`,
+            text: "This will set the password to '12345678' and require the user to change it upon next login.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#D4A017',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Yes, reset it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("{{ route('userManagement.resetPassword') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        id: userId
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Reset Successful!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonColor: '#D4A017'
+                            });
+                        } else {
+                            Swal.fire('Error!', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error!', 'Something went wrong.', 'error');
+                    });
+            }
+        });
     }
 
 </script>

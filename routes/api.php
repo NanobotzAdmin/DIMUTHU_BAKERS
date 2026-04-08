@@ -23,6 +23,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [ApiUserController::class , 'logout']);
     Route::post('/user/update-fcm-token', [ApiUserController::class, 'updateFcmToken']);
+    Route::post('/user/force-password-change', [ApiUserController::class, 'forcePasswordChange']);
 
     Route::post('/create-customer', [ApiCustomerController::class , 'createCustomer']);
     Route::post('/update-customer/{id}', [ApiCustomerController::class, 'updateCustomer']);

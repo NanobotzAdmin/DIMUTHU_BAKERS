@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use App\CommonVariables;
 use App\Models\UmBranch;
 use App\Models\PlnDepartment;
+use App\Models\SmSessionActivity;
 
 class UserManagementController extends Controller
 {
@@ -316,6 +317,39 @@ class UserManagementController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Error updating assignments: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:um_user,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Invalid user ID.'], 422);
+        }
+
+        try {
+            $user = UmUser::find($request->id);
+            $user->user_password = Hash::make('12345678');
+            $user->is_password_change = 0;
+            $user->updated_by = session('user_id');
+            $user->save();
+
+            // Log activity in SmSessionActivity
+            SmSessionActivity::create([
+                'session_id' => session('session_id'),
+                'user_id' => session('user_id'),
+                'activity_type' => 'PASSWORD_RESET',
+                'description' => 'Admin reset password for user: ' . $user->user_name,
+                'created_by' => session('user_id'),
+                'updated_by' => session('user_id'),
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Password reset to 12345678. User must change it upon next login.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error resetting password: ' . $e->getMessage()], 500);
         }
     }
 }

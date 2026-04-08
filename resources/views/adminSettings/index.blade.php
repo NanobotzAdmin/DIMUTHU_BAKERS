@@ -12,13 +12,14 @@
         </div>
 
         <nav class="p-4 space-y-1 overflow-y-auto flex-1 custom-scrollbar">
-            
+            @if(Auth::user()->hasPermission('company_settings') || Auth::user()->hasPermission('finance_settings') || Auth::user()->hasPermission('pos_settings') || Auth::user()->hasPermission('users_settings'))
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-2">
                 Core
             </div>
+            @endif
             
             @if(Auth::user()->hasPermission('company_settings'))
-            <button onclick="switchTab('company', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#D4A017]/10 text-[#D4A017] font-medium" data-target="company">
+            <button onclick="switchTab('company', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100" data-target="company">
                 <i class="bi bi-building w-5 h-5"></i>
                 <span>Company</span>
             </button>
@@ -39,15 +40,17 @@
             @endif
 
             @if(Auth::user()->hasPermission('users_settings'))
-            <button onclick="switchTab('users', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100" data-target="users">
+            <button onclick="switchTab('users', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#D4A017]/10 text-[#D4A017] font-medium" data-target="users">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 <span>Users</span>
             </button>
             @endif
 
+            @if(Auth::user()->hasPermission('branch_settings') || Auth::user()->hasPermission('production_settings') || Auth::user()->hasPermission('inventory_settings') || Auth::user()->hasPermission('dayend_settings'))
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-2 mt-4">
                Operational
             </div>
+            @endif
 
             @if(Auth::user()->hasPermission('branch_settings'))
             <button onclick="switchTab('locations', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100" data-target="locations">
@@ -77,9 +80,11 @@
             </button>
             @endif
 
+            @if(Auth::user()->hasPermission('ai_settings') || Auth::user()->hasPermission('notifications_settings') || Auth::user()->hasPermission('integrations_settings') || Auth::user()->hasPermission('branding_settings') || Auth::user()->hasPermission('system_settings'))
             <div class="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-2 mt-4">
                 Advanced ⭐
             </div>
+            @endif
 
             @if(Auth::user()->hasPermission('ai_settings'))
             <button onclick="switchTab('ai', this)" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 hover:bg-gray-100" data-target="ai">
@@ -119,64 +124,90 @@
     </div>
 
     <div class="flex-1 overflow-y-auto bg-gray-50">
-        <div class="max-w-6xl mx-auto p-8">
+        <div class="max-w-full mx-auto p-8">
             
             {{-- 
                 Recommendation: Create separate blade files for each setting component 
                 in resources/views/settings/ folder for better organization.
             --}}
 
-            <div id="company" class="tab-content block">
+            @if(Auth::user()->hasPermission('company_settings'))
+            <div id="company" class="tab-content hidden">
                 @includeIf('adminSettings.components.company')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('finance_settings'))
             <div id="finance" class="tab-content hidden">
                 @includeIf('adminSettings.components.finance')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('pos_settings'))
             <div id="pos" class="tab-content hidden">
                 @includeIf('adminSettings.components.pos')
             </div>
+            @endif
 
-            <div id="users" class="tab-content hidden">
+            @if(Auth::user()->hasPermission('users_settings'))
+            <div id="users" class="tab-content block">
                 @includeIf('adminSettings.components.users')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('branch_settings'))
             <div id="locations" class="tab-content hidden">
                 @includeIf('adminSettings.components.locations')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('production_settings'))
             <div id="production" class="tab-content hidden">
                 @includeIf('adminSettings.components.production')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('inventory_settings'))
             <div id="inventory" class="tab-content hidden">
                 @includeIf('adminSettings.components.inventory')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('dayend_settings'))
             <div id="dayend" class="tab-content hidden">
                 @includeIf('adminSettings.components.dayend')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('ai_settings'))
             <div id="ai" class="tab-content hidden">
                 @includeIf('adminSettings.components.ai')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('notifications_settings'))
             <div id="notifications" class="tab-content hidden">
                 @includeIf('adminSettings.components.notifications')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('integrations_settings'))
             <div id="integrations" class="tab-content hidden">
                 @includeIf('adminSettings.components.integrations')
             </div>
+            @endif
 
+            @if(Auth::user()->hasPermission('branding_settings'))
             <div id="branding" class="tab-content hidden">
                 @includeIf('adminSettings.components.branding')
             </div>
+            @endif
 
-             <div id="system" class="tab-content hidden">
+            @if(Auth::user()->hasPermission('system_settings'))
+            <div id="system" class="tab-content hidden">
                 @includeIf('adminSettings.components.system')
             </div>
+            @endif
 
         </div>
     </div>

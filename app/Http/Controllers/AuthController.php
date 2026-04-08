@@ -127,6 +127,10 @@ class AuthController extends Controller
                 }
             }
 
+            if ($user->is_password_change == 0) {
+                $redirectUrl = route('password.force_change');
+            }
+
             return response()->json([
                 'success' => true,
                 'redirect' => $redirectUrl,
@@ -273,5 +277,38 @@ class AuthController extends Controller
         }
 
         return redirect($redirectUrl);
+    }
+    public function forcePasswordChangeIndex()
+    {
+        return view('auth.force-password-change');
+    }
+
+    public function forcePasswordChangeStore(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ], [
+            'password.required' => 'Please enter a new password.',
+            'password.min' => 'The password must be at least 8 characters long.',
+            'password.confirmed' => 'The password confirmation does not match.',
+        ]);
+
+        $user = Auth::user();
+
+        try {
+            // Use find to get a fresh instance if needed, but Auth::user() should be fine if it's the model
+            $user->user_password = Hash::make($request->password);
+            $user->is_password_change = 1;
+            $user->save();
+
+            // Log activity
+            $userActivity = new UserActivityManagementController();
+            $userActivity->saveActivity(\App\CommonVariables::$logIn, "Password Reset Success, User Id - " . $user->id);
+
+            return redirect()->route('adminDashboard')->with('success', 'Password updated successfully. Welcome!');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error updating password: ' . $e->getMessage());
+        }
     }
 }
