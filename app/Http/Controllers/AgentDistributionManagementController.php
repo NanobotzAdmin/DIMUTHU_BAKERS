@@ -2404,6 +2404,7 @@ class AgentDistributionManagementController extends Controller
                         'pm_product_item_id' => $it->pm_product_item_id,
                         'product_name' => $it->item->product_name ?? 'Unknown',
                         'target_amount' => $it->target_amount,
+                        'target_qty' => $it->target_qty,
                         'target_percentage' => $it->target_percentage,
                     ];
                 }),
@@ -2482,6 +2483,7 @@ class AgentDistributionManagementController extends Controller
                             'monthly_target_id' => $monthlyTarget->id,
                             'pm_product_item_id' => $it['pm_product_item_id'],
                             'target_amount' => $it['target_amount'] ?? null,
+                            'target_qty' => $it['target_qty'] ?? null,
                             'target_percentage' => $it['target_percentage'] ?? null,
                             'is_active' => true,
                             'created_by' => Auth::id(),

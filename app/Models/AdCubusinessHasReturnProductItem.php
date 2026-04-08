@@ -19,6 +19,7 @@ class AdCubusinessHasReturnProductItem extends Model
         'return_quantity',
         'unit_price',
         'total_price',
+        'reason',
         'status',
         'created_by',
         'updated_by',

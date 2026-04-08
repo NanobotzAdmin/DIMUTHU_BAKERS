@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AdCubusinessInvoicePayments extends Model
+class AdCubusinessPayment extends Model
 {
     use HasFactory;
 
-    protected $table = 'ad_cubusiness_invoice_payments';
+    protected $table = 'ad_cubusiness_payments';
 
     protected $fillable = [
         'receipt_number',
         'payment_type',
         'ad_customer_has_business_id',
-        'ad_cubusiness_has_invoice_id',
         'payment_date',
         'cheque_date',
         'cheque_number',
@@ -25,11 +24,6 @@ class AdCubusinessInvoicePayments extends Model
         'updated_by',
     ];
 
-    public function invoice()
-    {
-        return $this->belongsTo(AdCubusinessHasInvoice::class, 'ad_cubusiness_has_invoice_id');
-    }
-
     public function business()
     {
         return $this->belongsTo(AdCustomerHasBusiness::class, 'ad_customer_has_business_id');
@@ -37,6 +31,6 @@ class AdCubusinessInvoicePayments extends Model
 
     public function items()
     {
-        return $this->hasMany(AdCubusinessInvoicePaymentsHasInvoice::class, 'ad_cubusiness_invoice_payments_id');
+        return $this->hasMany(AdCubusinessPaymentHasInvoice::class, 'ad_cubusiness_payment_id');
     }
 }

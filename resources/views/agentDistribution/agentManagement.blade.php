@@ -241,8 +241,9 @@
 
                         <div id="field-creditLimit">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Credit Limit (Rs)</label>
-                            <input type="number" id="creditLimit"
-                                class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
+                            <input type="text" id="creditLimit"
+                                class="block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm"
+                                placeholder="0.00">
                         </div>
                         <div id="field-creditDays">
                             <label class="block text-xs font-medium text-gray-700 mb-1">Credit Period (Days)</label>
@@ -457,6 +458,36 @@
     </div>
 
     <script>
+        // Number Formatting Helpers
+        function formatNumberWithCommas(value) {
+            if (value === undefined || value === null || value === '') return '';
+            let valStr = value.toString().replace(/[^\d.]/g, '');
+            const parts = valStr.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join('.');
+        }
+
+        function stripCommas(value) {
+            if (!value) return '';
+            return value.toString().replace(/,/g, '');
+        }
+
+        // Add event listener for credit limit formatting
+        document.addEventListener('DOMContentLoaded', function() {
+            const creditLimitInput = document.getElementById('creditLimit');
+            if (creditLimitInput) {
+                creditLimitInput.addEventListener('input', function(e) {
+                    let cursorPosition = this.selectionStart;
+                    let oldLength = this.value.length;
+                    
+                    this.value = formatNumberWithCommas(this.value);
+                    
+                    let newLength = this.value.length;
+                    this.setSelectionRange(cursorPosition + (newLength - oldLength), cursorPosition + (newLength - oldLength));
+                });
+            }
+        });
+
         // Modal Logic
         const modal = document.getElementById('agent-modal');
         const backdrop = document.getElementById('agent-backdrop');
@@ -683,7 +714,7 @@
             document.getElementById('employmentStatus').value = agent.employmentStatus || '1';
             document.getElementById('address').value = agent.address || '';
             document.getElementById('vehicleCategory').value = agent.vehicleCategory || '';
-            document.getElementById('creditLimit').value = agent.creditLimit || '';
+            document.getElementById('creditLimit').value = formatNumberWithCommas(agent.creditLimit) || '';
             document.getElementById('creditPeriodDays').value = agent.creditPeriodDays || '';
 
             // Load bank cards from agent data
@@ -749,7 +780,7 @@
                 nic_number: document.getElementById('nicNumber').value,
                 address: document.getElementById('address').value,
                 vehicle_category: document.getElementById('vehicleCategory').value,
-                credit_limit: document.getElementById('creditLimit').value || null,
+                credit_limit: stripCommas(document.getElementById('creditLimit').value) || null,
                 credit_period_days: document.getElementById('creditPeriodDays').value || null,
                 bank_accounts: bankAccounts
             };
