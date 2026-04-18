@@ -1787,8 +1787,11 @@ class ApiManagementController extends Controller
                     'type' => $business->b2b_customer_type == 1 ? 'Retailer' : 'Wholesaler', // Example mapping
                     'image' => $business->customer_image ? asset($business->customer_image) : 'https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?w=400&h=400&fit=crop',
                     'address' => $business->address ?: ($business->customer->address ?? 'N/A'),
+                    'contact_person_name' => $business->contact_person_name ?: ($business->customer->contact_person_name ?? 'N/A'),
                     'phone' => $business->contact_person_phone ?: ($business->customer->phone ?? 'N/A'),
                     'rating' => 4.8, // Mocked rating
+                    'latitude' => $business->latitude,
+                    'longitude' => $business->longitude,
                     'since' => $business->created_at->format('Y'),
                     'outstanding' => (float) $outstanding,
                     'creditLimit' => (float) $business->credit_limit,
