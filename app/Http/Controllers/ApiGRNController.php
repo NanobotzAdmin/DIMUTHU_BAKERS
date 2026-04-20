@@ -486,31 +486,41 @@ class ApiGRNController extends Controller
 
             $agentId = $orderRequest->agent_id;
 
-            // Update each product's confirmed quantity
+            // Update confirmed quantities and link barcodes to branch stock
             foreach ($request->products as $item) {
-                StmOrderRequestHasProduct::where('id', $item['id'])
-                    ->where('stm_order_request_id', $orderRequest->id)
-                    ->update(['confirmed_quantity' => $item['confirmed_quantity']]);
+                $orderProduct = StmOrderRequestHasProduct::find($item['id']);
+                if (!$orderProduct) continue;
 
-                // Update stm_branch_stock status for this order product
-                StmBranchStock::where('stm_order_request_has_product_id', $item['id'])
-                    ->update([
+                $orderProduct->update(['confirmed_quantity' => $item['confirmed_quantity']]);
+
+                // Find branch stock record for this order product
+                $branchStock = StmBranchStock::where('stm_order_request_has_product_id', $item['id'])->first();
+                
+                if ($branchStock) {
+                    $branchStock->update([
                         'status' => 1,
                         'updated_by' => auth()->id(),
                     ]);
-            }
 
-            // Update stm_barcodes agent_id and create history for each barcode
-            $barcodes = StmBarcode::where('stm_order_requests_id', $orderRequest->id)->get();
-            foreach ($barcodes as $barcode) {
-                $barcode->update(['agent_id' => $agentId]);
+                    // Update barcodes for this specific product in this order
+                    $barcodes = StmBarcode::where('stm_order_requests_id', $orderRequest->id)
+                        ->where('pm_product_item_id', $orderProduct->pm_product_item_id)
+                        ->get();
+                    
+                    foreach ($barcodes as $barcode) {
+                        $barcode->update([
+                            'agent_id' => $agentId,
+                            'stm_branch_stock_id' => $branchStock->id
+                        ]);
 
-                StmBarcodesHistory::create([
-                    'barcode_id' => $barcode->id,
-                    'action' => 'Order Confirmed',
-                    'description' => 'Agent confirmed order #' . $orderRequest->order_number . ' via Mobile App.',
-                    'created_by' => auth()->id(),
-                ]);
+                        StmBarcodesHistory::create([
+                            'barcode_id' => $barcode->id,
+                            'action' => 'Order Confirmed',
+                            'description' => 'Agent confirmed order #' . $orderRequest->order_number . ' via Mobile App. Linked to branch stock ID: ' . $branchStock->id,
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+                }
             }
 
             // Update order status to Confirmed (7)

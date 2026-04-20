@@ -225,7 +225,7 @@
                                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Monthly Sales Target (LKR)</label>
                                 <div class="relative">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">LKR</span>
-                                    <input type="number" id="monthly-sales-target" class="w-full h-14 pl-14 pr-4 rounded-xl border-gray-100 bg-gray-50 text-2xl font-bold text-indigo-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="0.00">
+                                    <input type="text" id="monthly-sales-target" class="w-full h-14 pl-14 pr-4 rounded-xl border-gray-100 bg-gray-50 text-2xl font-bold text-indigo-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all amount-input" placeholder="0.00">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4 mb-6 hidden">
@@ -320,7 +320,7 @@
                                 <thead class="bg-gray-50/80 border-b border-gray-100 font-sans">
                                     <tr>
                                         <th class="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest w-2/5 font-sans">Product / SKU</th>
-                                        <th class="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center font-sans">Amount (LKR)</th>
+                                        <th class="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center font-sans">Quantity</th>
                                         <th class="px-6 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest text-center font-sans">Weight (%)</th>
                                         <th class="px-6 py-3 w-16"></th>
                                     </tr>
@@ -364,7 +364,7 @@
         <td class="px-6 py-3 border-0">
             <div class="relative max-w-[180px] mx-auto">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold font-sans">LKR</span>
-                <input type="number" class="w-full h-11 pl-12 pr-4 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-gray-700 target-amount font-sans" placeholder="0.00">
+                <input type="text" class="w-full h-11 pl-12 pr-4 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-gray-700 target-amount amount-input font-sans" placeholder="0.00">
             </div>
         </td>
         <td class="px-6 py-3 border-0">
@@ -396,8 +396,7 @@
         </td>
         <td class="px-6 py-3 border-0">
             <div class="relative max-w-[180px] mx-auto">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold font-sans">LKR</span>
-                <input type="number" class="w-full h-11 pl-12 pr-4 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-gray-700 target-amount font-sans" placeholder="0.00">
+                <input type="number" class="w-full h-11 px-4 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-gray-700 target-qty font-sans" placeholder="0">
             </div>
         </td>
         <td class="px-6 py-3 border-0">
@@ -446,6 +445,28 @@
 
 <!-- JavaScript Logic Moved Inside Content Section -->
 <script>
+    // Number Formatting Helpers
+    function formatNumberWithCommas(value) {
+        if (value === undefined || value === null || value === '') return '';
+        let valStr = value.toString().replace(/[^\d.]/g, '');
+        const parts = valStr.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join('.');
+    }
+
+    function stripCommas(value) {
+        if (value === undefined || value === null || value === '') return '';
+        return value.toString().replace(/,/g, '');
+    }
+
+    function applyFormattingToInput(input) {
+        let cursorPosition = input.selectionStart;
+        let oldLength = input.value.length;
+        input.value = formatNumberWithCommas(input.value);
+        let newLength = input.value.length;
+        input.setSelectionRange(cursorPosition + (newLength - oldLength), cursorPosition + (newLength - oldLength));
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const saveBtn = document.getElementById('save-targets');
 
@@ -476,7 +497,13 @@
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('target-percentage') || 
                 e.target.classList.contains('target-amount') || 
+                e.target.classList.contains('target-qty') || 
                 e.target.id === 'monthly-sales-target') {
+                
+                if (e.target.classList.contains('amount-input') || e.target.id === 'monthly-sales-target') {
+                    applyFormattingToInput(e.target);
+                }
+                
                 updateCalculatedWeights();
             }
         });
@@ -604,7 +631,7 @@
             return;
         }
 
-        document.getElementById('monthly-sales-target').value = data.monthly_sales_target;
+        document.getElementById('monthly-sales-target').value = formatNumberWithCommas(data.monthly_sales_target);
         document.getElementById('base-salary').value = data.base_salary;
         document.getElementById('commission-rate').value = data.commission_rate;
         document.getElementById('invoicing-commission-rate').value = data.invoicing_commission_rate;
@@ -617,7 +644,7 @@
             data.category_targets.forEach(ct => {
                 const row = addRow('category-targets-table');
                 row.querySelector('.select-category').value = ct.pm_product_category_id;
-                row.querySelector('.target-amount').value = ct.target_amount;
+                row.querySelector('.target-amount').value = formatNumberWithCommas(ct.target_amount);
                 row.querySelector('.target-percentage').value = ct.target_percentage;
             });
         } else { addRow('category-targets-table'); }
@@ -626,7 +653,7 @@
             data.item_targets.forEach(it => {
                 const row = addRow('sku-targets-table');
                 row.querySelector('.select-sku').value = it.pm_product_item_id;
-                row.querySelector('.target-amount').value = it.target_amount;
+                row.querySelector('.target-qty').value = it.target_qty;
                 row.querySelector('.target-percentage').value = it.target_percentage;
             });
         } else { addRow('sku-targets-table'); }
@@ -648,10 +675,11 @@
         let totalWeight = 0;
         let totalAmount = 0;
         document.querySelectorAll('#category-targets-table .target-percentage').forEach(input => totalWeight += parseFloat(input.value) || 0);
-        document.querySelectorAll('#category-targets-table .target-amount').forEach(input => totalAmount += parseFloat(input.value) || 0);
+        document.querySelectorAll('#category-targets-table .target-amount').forEach(input => totalAmount += parseFloat(stripCommas(input.value)) || 0);
         
         const badge = document.getElementById('total-weight-percentage');
-        const mainTarget = parseFloat(document.getElementById('monthly-sales-target').value) || 0;
+        const mainTargetInput = document.getElementById('monthly-sales-target');
+        const mainTarget = parseFloat(stripCommas(mainTargetInput.value)) || 0;
         
         let diffText = '';
         if (mainTarget > 0) {
@@ -674,7 +702,7 @@
             if (row.querySelector('.select-category').value) {
                 categoryTargets.push({
                     pm_product_category_id: row.querySelector('.select-category').value,
-                    target_amount: row.querySelector('.target-amount').value,
+                    target_amount: stripCommas(row.querySelector('.target-amount').value),
                     target_percentage: row.querySelector('.target-percentage').value,
                 });
             }
@@ -687,7 +715,7 @@
                 const selectedOption = skuSelect.options[skuSelect.selectedIndex];
                 itemTargets.push({
                     pm_product_item_id: skuSelect.value,
-                    target_amount: row.querySelector('.target-amount').value,
+                    target_qty: row.querySelector('.target-qty').value,
                     target_percentage: row.querySelector('.target-percentage').value,
                     category_id: selectedOption.dataset.categoryId,
                     category_name: selectedOption.dataset.categoryName
@@ -696,7 +724,7 @@
         });
 
         // Validation: Category sum must match Monthly Sales Target
-        const monthlySalesTarget = parseFloat(document.getElementById('monthly-sales-target').value) || 0;
+        const monthlySalesTarget = parseFloat(stripCommas(document.getElementById('monthly-sales-target').value)) || 0;
         let categoryTotal = 0;
         categoryTargets.forEach(t => categoryTotal += parseFloat(t.target_amount) || 0);
 
@@ -746,7 +774,7 @@
                     agent_id: document.getElementById('agent-selector').value,
                     year: document.getElementById('year-selector').value,
                     month: document.getElementById('month-selector').value,
-                    monthly_sales_target: document.getElementById('monthly-sales-target').value,
+                    monthly_sales_target: stripCommas(document.getElementById('monthly-sales-target').value),
                     base_salary: document.getElementById('base-salary').value,
                     commission_rate: document.getElementById('commission-rate').value,
                     invoicing_commission_rate: document.getElementById('invoicing-commission-rate').value,

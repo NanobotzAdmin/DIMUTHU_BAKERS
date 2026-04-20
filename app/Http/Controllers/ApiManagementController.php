@@ -24,6 +24,7 @@ use App\Models\AdCustomerHasBusiness;
 use App\Models\AdCubusinessHasProductItem;
 use App\Models\AdDailyLoadHasCustomer;
 use App\Models\AdCubusinessHasReturnProductItem;
+use App\Models\AdCubusinessInvoicePaymentsHasInvoice;
 use App\Models\AdAgentMonthlyTarget;
 use App\Models\UmUser;
 use Illuminate\Support\Facades\Hash;
@@ -1750,9 +1751,10 @@ class ApiManagementController extends Controller
                 ->selectRaw('SUM(net_price - total_amount_paid) as balance')
                 ->first()->balance ?? 0;
 
-            // Fetch recent invoices with items count
+            // Fetch recent invoices with items count and returns
             $recentInvoices = AdCubusinessHasInvoice::where('ad_customer_has_business_id', $business->id)
                 ->withCount('items')
+                ->with(['newReturnItems.product', 'newReturnItems.invoice'])
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
@@ -1785,8 +1787,11 @@ class ApiManagementController extends Controller
                     'type' => $business->b2b_customer_type == 1 ? 'Retailer' : 'Wholesaler', // Example mapping
                     'image' => $business->customer_image ? asset($business->customer_image) : 'https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?w=400&h=400&fit=crop',
                     'address' => $business->address ?: ($business->customer->address ?? 'N/A'),
+                    'contact_person_name' => $business->contact_person_name ?: ($business->customer->contact_person_name ?? 'N/A'),
                     'phone' => $business->contact_person_phone ?: ($business->customer->phone ?? 'N/A'),
                     'rating' => 4.8, // Mocked rating
+                    'latitude' => $business->latitude,
+                    'longitude' => $business->longitude,
                     'since' => $business->created_at->format('Y'),
                     'outstanding' => (float) $outstanding,
                     'creditLimit' => (float) $business->credit_limit,
@@ -1803,14 +1808,44 @@ class ApiManagementController extends Controller
                             'invoice_number' => $invoice->invoice_number,
                             'date' => $invoice->created_at->format('M d, Y'),
                             'items' => $invoice->items_count ?? 0,
-                            'total' => (float) $invoice->net_price,
+                            'total' => (float) $invoice->invoice_price,
                             'status' => $invoice->status ?? 'completed',
                             'created_at' => $invoice->created_at,
                             'payment_status' => $invoice->payment_status,
+                            'invoice_price' => (float) $invoice->invoice_price,
+                            'return_price' => (float) $invoice->return_price,
                             'net_price' => (float) $invoice->net_price,
                             'total_amount_paid' => (float) $invoice->total_amount_paid,
+                            'return_items' => $invoice->newReturnItems->map(function ($rItem) {
+                                return [
+                                    'id' => $rItem->id,
+                                    'product_name' => $rItem->product->product_name ?? 'N/A',
+                                    'quantity' => (float) $rItem->return_quantity,
+                                    'old_invoice_number' => $rItem->invoice->invoice_number ?? 'N/A',
+                                ];
+                            }),
                         ];
                     }),
+                    'recentPayments' => AdCubusinessInvoicePayments::where('ad_customer_has_business_id', $business->id)
+                        ->with('items.invoice')
+                        ->latest()
+                        ->take(10)
+                        ->get()
+                        ->map(function ($payment) {
+                            return [
+                                'id' => $payment->id,
+                                'receipt_number' => $payment->receipt_number,
+                                'date' => $payment->payment_date,
+                                'amount' => (float) $payment->amount,
+                                'type' => $payment->payment_type == 1 ? 'Cash' : ($payment->payment_type == 2 ? 'Cheque' : 'Bank'),
+                                'details' => $payment->items->map(function ($item) {
+                                    return [
+                                        'invoice_number' => $item->invoice->invoice_number ?? 'N/A',
+                                        'applied_amount' => (float) $item->amount,
+                                    ];
+                                }),
+                            ];
+                        }),
                 ]
             ]);
         } catch (\Exception $e) {
@@ -1874,14 +1909,24 @@ class ApiManagementController extends Controller
                 ->where('ad_cubusiness_has_invoice_id', $invoiceId)
                 ->get();
 
-            $returnItems = AdCubusinessHasReturnProductItem::with('product')
-                ->where('ad_cubusiness_has_invoice_id', $invoiceId)
+            $returnItems = AdCubusinessHasReturnProductItem::with(['product', 'invoice'])
+                ->where('ad_new_invoice_id', $invoiceId)
                 ->get();
 
             return response()->json([
                 'status' => true,
-                'data' => $items,
-                'return_items' => $returnItems
+                'items' => $items,
+                'return_items' => $returnItems->map(function ($rItem) {
+                    return [
+                        'id' => $rItem->id,
+                        'product' => $rItem->product,
+                        'return_quantity' => (float) $rItem->return_quantity,
+                        'unit_price' => (float) $rItem->unit_price,
+                        'total_price' => (float) $rItem->total_price,
+                        'reason' => $rItem->reason,
+                        'old_invoice_number' => $rItem->invoice->invoice_number ?? 'N/A',
+                    ];
+                })
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -1912,6 +1957,7 @@ class ApiManagementController extends Controller
             'returns.*.quantity' => 'required|numeric|min:0.001',
             'returns.*.unit_price' => 'required|numeric',
             'returns.*.stm_branch_stock_id' => 'required',
+            'returns.*.reason' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -2006,11 +2052,13 @@ class ApiManagementController extends Controller
                 $barcodes = StmBarcode::where('ad_daily_load_id', $dailyLoad->id)
                     ->where('pm_product_item_id', $itemData['product_item_id'])
                     ->where('is_sold', 0)
+                    ->where('is_return', 0)
                     ->limit((int) $itemData['quantity'])
                     ->get();
 
                 foreach ($barcodes as $barcode) {
                     $barcode->is_sold = 1;
+                    $barcode->cubusiness_has_invoice_id = $invoice->id;
                     $barcode->save();
 
                     StmBarcodesHistory::create([
@@ -2038,10 +2086,30 @@ class ApiManagementController extends Controller
                         'return_quantity' => $returnItem['quantity'],
                         'unit_price' => $returnItem['unit_price'],
                         'total_price' => $returnItem['quantity'] * $returnItem['unit_price'],
+                        'reason' => $returnItem['reason'] ?? null,
                         'status' => 1,
                         'created_by' => auth()->id(),
                         'updated_by' => auth()->id(),
                     ]);
+
+                    // Update barcodes: mark as returned
+                    $returnedBarcodes = StmBarcode::where('cubusiness_has_invoice_id', $returnItem['previous_invoice_id'])
+                        ->where('pm_product_item_id', $returnItem['product_item_id'])
+                        ->where('is_return', 0)
+                        ->limit((int) $returnItem['quantity'])
+                        ->get();
+
+                    foreach ($returnedBarcodes as $barcode) {
+                        $barcode->is_return = 1;
+                        $barcode->save();
+
+                        StmBarcodesHistory::create([
+                            'barcode_id' => $barcode->id,
+                            'created_by' => auth()->id(),
+                            'action' => 'Returned',
+                            'description' => 'Returned from Invoice: ' . $returnItem['previous_invoice_id'] . '. Reason: ' . ($returnItem['reason'] ?? 'N/A'),
+                        ]);
+                    }
 
                     // FIXED: Update stock for returned items
                     if (isset($returnItem['stm_branch_stock_id'])) {
@@ -2057,18 +2125,6 @@ class ApiManagementController extends Controller
                         }
                     }
 
-                    // Update the original invoice return total and net price
-                    $originalInvoice = AdCubusinessHasInvoice::find($returnItem['previous_invoice_id']);
-                    if ($originalInvoice) {
-                        $originalInvoice->return_price += $returnItem['quantity'] * $returnItem['unit_price'];
-                        $originalInvoice->net_price -= $returnItem['quantity'] * $returnItem['unit_price'];
-
-                        // If net price becomes negative or zero relative to paid amount, update status
-                        if ($originalInvoice->total_amount_paid >= $originalInvoice->net_price) {
-                            $originalInvoice->payment_status = AdCubusinessHasInvoice::PAYMENT_STATUS_COMPLETE;
-                        }
-                        $originalInvoice->save();
-                    }
                 }
             }
 
@@ -2077,17 +2133,17 @@ class ApiManagementController extends Controller
             if ($request->has('payments') && is_array($request->payments)) {
                 foreach ($request->payments as $paymentData) {
                     $paymentType = 1; // Default Cash
-                    if ($paymentData['type'] == 'cheque')
-                        $paymentType = 2;
-                    if ($paymentData['type'] == 'bank_transfer')
-                        $paymentType = 3;
+                    if ($paymentData['type'] == 'cheque') $paymentType = 2;
+                    if ($paymentData['type'] == 'bank_transfer') $paymentType = 3;
 
                     $receiptNumber = 'REC-' . date('Ymd') . '-' . str_pad(AdCubusinessInvoicePayments::count() + 1, 4, '0', STR_PAD_LEFT);
 
-                    AdCubusinessInvoicePayments::create([
+                    // Create Master Payment Record
+                    $masterPayment = AdCubusinessInvoicePayments::create([
                         'receipt_number' => $receiptNumber,
                         'payment_type' => $paymentType,
-                        'ad_cubusiness_has_invoice_id' => $invoice->id,
+                        'ad_customer_has_business_id' => $request->ad_customer_has_business_id,
+                        'ad_cubusiness_has_invoice_id' => $invoice->id, // Single association for compatibility
                         'payment_date' => date('Y-m-d'),
                         'cheque_date' => $paymentData['cheque_date'] ?? null,
                         'cheque_number' => $paymentData['cheque_number'] ?? null,
@@ -2096,6 +2152,17 @@ class ApiManagementController extends Controller
                         'created_by' => auth()->id(),
                         'updated_by' => auth()->id(),
                     ]);
+
+                    // Create Pivot Record
+                    AdCubusinessInvoicePaymentsHasInvoice::create([
+                        'ad_cubusiness_invoice_payments_id' => $masterPayment->id,
+                        'ad_cubusiness_has_invoice_id' => $invoice->id,
+                        'amount' => $paymentData['amount'],
+                        'status' => 1,
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
+                    ]);
+
                     $totalAmountPaid += $paymentData['amount'];
                 }
             }
@@ -2283,19 +2350,30 @@ class ApiManagementController extends Controller
             $totalAmount = floatval($request->amount);
             $remainingAmount = $totalAmount;
 
+            $paymentType = $paymentTypeMap[$request->payment_type] ?? 1;
+
+            // NEW STRUCTURE: Create 1 Master Payment for the entire collection in the existing table
+            $masterReceiptNumber = 'COLL-' . date('Ymd') . '-' . str_pad(AdCubusinessInvoicePayments::count() + 1, 4, '0', STR_PAD_LEFT);
+            $masterPayment = AdCubusinessInvoicePayments::create([
+                'receipt_number' => $masterReceiptNumber,
+                'payment_type' => $paymentType,
+                'ad_customer_has_business_id' => $request->ad_customer_has_business_id,
+                'ad_cubusiness_has_invoice_id' => null, // Master collection not tied to single invoice at top level
+                'payment_date' => $request->payment_date,
+                'cheque_date' => $request->cheque_date ?? null,
+                'cheque_number' => $request->cheque_number ?? null,
+                'amount' => $totalAmount,
+                'status' => 1,
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
             // Fetch unpaid or partially paid invoices for this customer
             $invoices = AdCubusinessHasInvoice::where('ad_customer_has_business_id', $request->ad_customer_has_business_id)
                 ->where('status', 1)
                 ->whereRaw('net_price > total_amount_paid')
                 ->orderBy('created_at', 'asc')
                 ->get();
-
-            $paymentTypeMap = [
-                'cash' => 1,
-                'cheque' => 2,
-                'bank_transfer' => 3
-            ];
-            $paymentType = $paymentTypeMap[$request->payment_type] ?? 1;
 
             foreach ($invoices as $invoice) {
                 if ($remainingAmount <= 0)
@@ -2305,15 +2383,10 @@ class ApiManagementController extends Controller
                 $paymentForThisInvoice = min($remainingAmount, $dueAmount);
 
                 if ($paymentForThisInvoice > 0) {
-                    $receiptNumber = 'REC-' . date('Ymd') . '-' . str_pad(AdCubusinessInvoicePayments::count() + 1, 4, '0', STR_PAD_LEFT);
-
-                    AdCubusinessInvoicePayments::create([
-                        'receipt_number' => $receiptNumber,
-                        'payment_type' => $paymentType,
+                    // Create Pivot Record linking to the master collection
+                    AdCubusinessInvoicePaymentsHasInvoice::create([
+                        'ad_cubusiness_invoice_payments_id' => $masterPayment->id,
                         'ad_cubusiness_has_invoice_id' => $invoice->id,
-                        'payment_date' => $request->payment_date,
-                        'cheque_date' => $request->cheque_date ?? null,
-                        'cheque_number' => $request->cheque_number ?? null,
                         'amount' => $paymentForThisInvoice,
                         'status' => 1,
                         'created_by' => auth()->id(),

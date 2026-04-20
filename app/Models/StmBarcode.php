@@ -26,6 +26,7 @@ class StmBarcode extends Model
         'pln_department_id',
         'agent_id',
         'ad_daily_load_id',
+        'stm_branch_stock_id',
     ];
 
     public function stock()

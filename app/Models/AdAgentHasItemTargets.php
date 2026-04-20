@@ -11,6 +11,7 @@ class AdAgentHasItemTargets extends Model
         'monthly_target_id',
         'pm_product_item_id',
         'target_amount',
+        'target_qty',
         'target_percentage',
         'is_active',
         'created_by',

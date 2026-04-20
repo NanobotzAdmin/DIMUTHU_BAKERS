@@ -114,4 +114,123 @@ class ApiUserController extends Controller
             ], 500);
         }
     }
+
+    public function forcePasswordChange(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            $user->user_password = Hash::make($request->password);
+            $user->is_password_change = 1;
+            $user->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Password updated successfully',
+                'data' => [
+                    'user' => $user
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Force password change error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during password update'
+            ], 500);
+        }
+    }
+    public function updateProfile(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'contact_no' => 'nullable|string|max:20',
+            'role_specific_name' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            $user = $request->user();
+            
+            if ($request->has('first_name')) $user->first_name = $request->first_name;
+            if ($request->has('last_name')) $user->last_name = $request->last_name;
+            if ($request->has('contact_no')) $user->contact_no = $request->contact_no;
+            $user->save();
+
+            $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+
+            $profile = null;
+            if ($user->user_role_id == 10) {
+                $profileModel = DB::table('sm_superviser')->where('user_id', $user->id)->first();
+                if ($profileModel) {
+                    $updateData = ['superviser_name' => $fullName];
+                    if ($request->has('contact_no')) $updateData['contact_number'] = $request->contact_no;
+                    if ($request->has('address')) $updateData['address'] = $request->address;
+                    
+                    DB::table('sm_superviser')->where('user_id', $user->id)->update($updateData);
+                    $profile = DB::table('sm_superviser')->where('user_id', $user->id)->first();
+                }
+            } elseif ($user->user_role_id == 8) {
+                $profileModel = DB::table('ad_agent')->where('user_id', $user->id)->first();
+                if ($profileModel) {
+                    $updateData = ['agent_name' => $fullName];
+                    if ($request->has('contact_no')) $updateData['phone'] = $request->contact_no;
+                    if ($request->has('address')) $updateData['address'] = $request->address;
+                    
+                    DB::table('ad_agent')->where('user_id', $user->id)->update($updateData);
+                    $profile = DB::table('ad_agent')->where('user_id', $user->id)->first();
+                }
+            } elseif ($user->user_role_id == 9) {
+                $profileModel = DB::table('dm_driver')->where('user_id', $user->id)->first();
+                if ($profileModel) {
+                    $updateData = ['driver_name' => $fullName];
+                    if ($request->has('contact_no')) $updateData['contact_number'] = $request->contact_no;
+                    if ($request->has('address')) $updateData['address'] = $request->address;
+                    
+                    DB::table('dm_driver')->where('user_id', $user->id)->update($updateData);
+                    $profile = DB::table('dm_driver')->where('user_id', $user->id)->first();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'user' => $user,
+                    'profile' => $profile
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Profile update error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during profile update',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

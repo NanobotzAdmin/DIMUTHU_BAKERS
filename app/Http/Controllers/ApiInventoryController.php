@@ -104,7 +104,7 @@ class ApiInventoryController extends Controller
                 ->where('status', 1)
                 ->where('load_status', 3)
                 ->where('is_mark_as_loaded', 1)
-                ->where('load_date', date('Y-m-d'))
+                // ->where('load_date', date('Y-m-d'))
                 ->pluck('id');
 
             // Get stock from items belonging to these active loads

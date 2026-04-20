@@ -26,7 +26,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WasteRecoveryManagementController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function () {
+Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.branch'*/])->group(function () {
     Route::get('/adminDashboard', [DashboardController::class, 'adminDashboard'])->name('adminDashboard');
 
     // User Management
@@ -38,6 +38,7 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     Route::get('/user-configuration', [UserManagementController::class, 'configurationIndex'])->name('userConfiguration.index');
     Route::get('/user-management/{id}/assignments', [UserManagementController::class, 'getAssignments'])->name('userManagement.assignments.get');
     Route::post('/user-management/{id}/assignments', [UserManagementController::class, 'updateAssignments'])->name('userManagement.assignments.update');
+    Route::post('/user-management/reset-password', [UserManagementController::class, 'resetPassword'])->name('userManagement.resetPassword');
     Route::get('/user-roles/fetch', [UserManagementController::class, 'fetchUserRoles'])->name('userRoles.fetch');
     Route::post('/user-roles/store', [UserManagementController::class, 'storeUserRole'])->name('userRoles.store');
     Route::post('/user-roles/update', [UserManagementController::class, 'updateUserRole'])->name('userRoles.update');
@@ -345,10 +346,13 @@ Route::middleware(['auth', 'permission', /*'ensure.branch'*/])->group(function (
     Route::post('/production/complete-batch', [ProductionManagementController::class, 'completeBatch'])->name('production.completeBatch');
 });
 
-// Branch Selection
+// Branch Selection, Password Force Change
 Route::middleware(['auth'])->group(function () {
     Route::get('/select-branch', [AuthController::class, 'selectBranchIndex'])->name('selectBranch.index');
     Route::post('/select-branch', [AuthController::class, 'selectBranchStore'])->name('selectBranch.store');
+
+    Route::get('/force-password-change', [AuthController::class, 'forcePasswordChangeIndex'])->name('password.force_change');
+    Route::post('/force-password-change', [AuthController::class, 'forcePasswordChangeStore'])->name('password.force_change.submit');
 });
 
 Route::middleware('guest')->group(function () {
