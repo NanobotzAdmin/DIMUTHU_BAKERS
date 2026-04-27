@@ -69,4 +69,8 @@ class AdDailyLoad extends Model
     {
         return $this->hasMany(AdCubusinessHasInvoice::class, 'ad_daily_load_id');
     }
+    public function returns()
+    {
+        return $this->hasMany(AdReturnProductStock::class, 'ad_daily_load_id');
+    }
 }

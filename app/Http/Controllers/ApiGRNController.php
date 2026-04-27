@@ -37,35 +37,24 @@ class ApiGRNController extends Controller
             $search = $request->query('search');
 
             // Get products with product_type_id = 3 (Bakery Staff) that have stock
-            // joining with pm_product_item_has_product_types
-            $query = PmProductItem::with(['stocks']);
+            $query = PmProductItem::with(['stocks', 'category']);
 
             if (!empty($search)) {
                 $query->where(function($q) use ($search) {
                     $q->where('product_name', 'like', "%{$search}%")
                       ->orWhere('reference_number', 'like', "%{$search}%");
                 });
-            } else {
-                // If no search query, return empty or a small set?
-                // User wants "only load if I search", so if search is empty, maybe return empty list?
-                // Or if it's explicitly called without search, maybe they want all?
-                // Re-reading: "here products only want to load if i search product"
-                // So if no search query is provided, we should return an empty list OR handle it in frontend.
-                // Let's return empty list if search is empty to be safe and clear.
-                return response()->json([
-                    'status' => true,
-                    'data' => []
-                ]);
             }
 
             $products = $query->get()
                 ->map(function ($product) {
-                    // Get the earliest expiring stock or just the first available for price
                     $latestStock = $product->stocks->first();
                     return [
                         'id' => $product->id,
                         'product_name' => $product->product_name,
                         'reference_number' => $product->reference_number,
+                        'category' => $product->category->category_name ?? 'Uncategorized',
+                        'pm_product_category_id' => $product->pm_product_category_id,
                         'selling_price' => (float) ($product->selling_price ?? 0),
                         'wholesale_price' => (float) ($product->wholesale_price ?? 0),
                         'distributor_price' => (float) ($product->distributor_price ?? $product->selling_price),
@@ -74,9 +63,22 @@ class ApiGRNController extends Controller
                     ];
                 });
 
+            // Fetch all active categories to return to frontend
+            $categories = \App\Models\PmProductCategory::where('is_active', 1)
+                ->select('id', 'category_name')
+                ->get()
+                ->map(function($cat) {
+                    return [
+                        'id' => (string)$cat->id,
+                        'label' => $cat->category_name,
+                        'emoji' => '📦' // Default emoji as backend doesn't store emojis
+                    ];
+                });
+
             return response()->json([
                 'status' => true,
-                'data' => $products
+                'data' => $products,
+                'categories' => $categories
             ]);
         } catch (\Exception $e) {
             Log::error('Fetch Order Request Products Failed: ' . $e->getMessage());

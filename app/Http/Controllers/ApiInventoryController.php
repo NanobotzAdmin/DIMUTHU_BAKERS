@@ -47,10 +47,13 @@ class ApiInventoryController extends Controller
                 ->where('status', 1)
                 ->with([
                     'productItem' => function ($q) {
-                        $q->select('id', 'product_name', 'selling_price', 'wholesale_percentage', 'pm_product_id')
+                        $q->select('id', 'product_name', 'selling_price', 'wholesale_percentage', 'pm_product_id', 'pm_product_category_id')
                             ->with([
                                 'product' => function ($q2) {
                                     $q2->select('id', 'product_name');
+                                },
+                                'category' => function ($q3) {
+                                    $q3->select('id', 'category_name');
                                 }
                             ]);
                     }
@@ -60,8 +63,8 @@ class ApiInventoryController extends Controller
                 ->map(function ($group) {
                     $first = $group->first();
                     $productItem = $first->productItem;
-                    $category = $productItem && $productItem->product
-                        ? ($productItem->product->product_name ?? 'Uncategorized')
+                    $category = $productItem && $productItem->category
+                        ? ($productItem->category->category_name ?? 'Uncategorized')
                         : 'Uncategorized';
 
                     return [
@@ -111,10 +114,13 @@ class ApiInventoryController extends Controller
             $stockItems = AdDailyLoadItem::whereIn('daily_load_id', $activeLoads)
                 ->with([
                     'product' => function ($q) {
-                        $q->select('id', 'product_name', 'selling_price', 'wholesale_percentage', 'pm_product_id')
+                        $q->select('id', 'product_name', 'selling_price', 'wholesale_percentage', 'pm_product_id', 'pm_product_category_id')
                             ->with([
                                 'product' => function ($q2) {
                                     $q2->select('id', 'product_name');
+                                },
+                                'category' => function ($q3) {
+                                    $q3->select('id', 'category_name');
                                 }
                             ]);
                     }
@@ -124,8 +130,8 @@ class ApiInventoryController extends Controller
                 ->map(function ($group) {
                     $first = $group->first();
                     $productItem = $first->product;
-                    $category = $productItem && $productItem->product
-                        ? ($productItem->product->product_name ?? 'Uncategorized')
+                    $category = $productItem && $productItem->category
+                        ? ($productItem->category->category_name ?? 'Uncategorized')
                         : 'Uncategorized';
 
                     return [
