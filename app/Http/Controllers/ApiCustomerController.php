@@ -116,6 +116,41 @@ class ApiCustomerController extends Controller
                 'customer_image' => $imagePath, // Store the public path
             ]);
 
+            // Attach to route pivot table and handle active trip
+            if ($request->route_id) {
+                $route = \App\Models\AdRoute::find($request->route_id);
+                if ($route) {
+                    // Calculate next stop sequence for the route
+                    $maxRouteSequence = DB::table('ad_route_has_customers')
+                        ->where('route_id', $route->id)
+                        ->max('stop_sequence') ?? 0;
+                    $nextRouteSequence = $maxRouteSequence + 1;
+
+                    // Save in ad_route_has_customers
+                    $route->customers()->attach($business->id, [
+                        'stop_sequence' => $nextRouteSequence
+                    ]);
+
+                    // If route is active (is_added = 1), add to active daily load
+                    if ($route->is_added == 1) {
+                        $dailyLoad = $route->latestDailyLoad;
+                        if ($dailyLoad) {
+                            // Calculate next stop sequence for the daily load
+                            $maxDailySequence = \App\Models\AdDailyLoadHasCustomer::where('daily_load_id', $dailyLoad->id)
+                                ->max('stop_sequence') ?? 0;
+                            $nextDailySequence = $maxDailySequence + 1;
+
+                            \App\Models\AdDailyLoadHasCustomer::create([
+                                'daily_load_id' => $dailyLoad->id,
+                                'ad_customer_has_business_id' => $business->id,
+                                'stop_sequence' => $nextDailySequence,
+                                'status' => 0,
+                            ]);
+                        }
+                    }
+                }
+            }
+
             DB::commit();
 
             return response()->json([

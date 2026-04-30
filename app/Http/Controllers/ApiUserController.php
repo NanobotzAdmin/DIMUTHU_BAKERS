@@ -15,7 +15,7 @@ class ApiUserController extends Controller
 {
     public function login(Request $request)
     {
-        Log::info($request);
+        // Log::info($request);
         $validator = Validator::make($request->all(), [
             'email' => 'required',
             'password' => 'required',

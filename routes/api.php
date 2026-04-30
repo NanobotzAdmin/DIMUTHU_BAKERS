@@ -97,4 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/create-b2b-invoice', [ApiManagementController::class , 'createB2BInvoice']);
     Route::post('/process-standalone-return', [ApiManagementController::class , 'processStandaloneReturn']);
     Route::post('/collect-payment', [ApiManagementController::class , 'collectPayment']);
+    Route::get('/returns', [ApiManagementController::class, 'getReturns']);
+    Route::get('/daily-load/{id}/returns', [ApiManagementController::class, 'getDailyLoadReturns']);
+    Route::get('/daily-sales-summary', [ApiManagementController::class, 'getDailySalesSummary']);
 });
