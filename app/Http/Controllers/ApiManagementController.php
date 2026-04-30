@@ -600,8 +600,8 @@ class ApiManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'route_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'target_distance_km' => 'nullable|numeric',
             'target_duration_hours' => 'nullable|numeric',
+            'sm_superviser_id' => 'nullable|integer|exists:sm_superviser,id',
         ]);
 
         if ($validator->fails()) {
@@ -614,7 +614,7 @@ class ApiManagementController extends Controller
 
         try {
             $agentId = $this->getAgentId();
-            $supervisorId = $this->getSupervisorId();
+            $supervisorId = $request->sm_superviser_id ?? $this->getSupervisorId();
             $route = AdRoute::create([
                 'agent_id' => $agentId,
                 'sm_superviser_id' => $supervisorId,
@@ -722,6 +722,39 @@ class ApiManagementController extends Controller
                 $customerData[$customerId] = ['stop_sequence' => $index + 1];
             }
             $route->customers()->sync($customerData);
+
+            // Add to active daily load if route is_added is 1
+            if ($route->is_added == 1) {
+                $dailyLoad = $route->latestDailyLoad;
+                if ($dailyLoad) {
+                    foreach ($request->customer_ids as $index => $customerId) {
+                        AdDailyLoadHasCustomer::updateOrCreate(
+                            [
+                                'daily_load_id' => $dailyLoad->id,
+                                'ad_customer_has_business_id' => $customerId,
+                            ],
+                            [
+                                'stop_sequence' => $index + 1,
+                                'status' => 0,
+                            ]
+                        );
+                    }
+                    
+                    // Remove customers from daily load that are no longer in the route
+                    AdDailyLoadHasCustomer::where('daily_load_id', $dailyLoad->id)
+                        ->whereNotIn('ad_customer_has_business_id', $request->customer_ids)
+                        ->delete();
+                }
+            }
+
+            // Update route_id and stop_sequence in ad_customer_has_business for assigned customers
+            foreach ($request->customer_ids as $index => $customerId) {
+                \App\Models\AdCustomerHasBusiness::where('id', $customerId)
+                    ->update([
+                        'route_id' => $id,
+                        'stop_sequence' => $index + 1,
+                    ]);
+            }
 
             // Reload with relationships
             $route->load('customers');
@@ -1310,6 +1343,32 @@ class ApiManagementController extends Controller
 
                 $changes = $route->customers()->sync($syncData);
 
+                // Add to active daily load if route is_added is 1
+                if ($route->is_added == 1) {
+                    $dailyLoad = $route->latestDailyLoad;
+                    if ($dailyLoad) {
+                        $customerIds = array_keys($syncData);
+                        foreach ($request->customers as $item) {
+                            AdDailyLoadHasCustomer::updateOrCreate(
+                                [
+                                    'daily_load_id' => $dailyLoad->id,
+                                    'ad_customer_has_business_id' => $item['customer_id'],
+                                ],
+                                [
+                                    'stop_sequence' => $item['stop_sequence'] ?? 1,
+                                    'status' => 0,
+                                    'distance_km' => $item['distance_km'] ?? null,
+                                ]
+                            );
+                        }
+                        
+                        // Remove customers from daily load that are no longer in the route
+                        AdDailyLoadHasCustomer::where('daily_load_id', $dailyLoad->id)
+                            ->whereNotIn('ad_customer_has_business_id', $customerIds)
+                            ->delete();
+                    }
+                }
+
                 // Update route_id and stop_sequence in ad_customer_has_business for assigned customers
                 foreach ($request->customers as $item) {
                     AdCustomerHasBusiness::where('id', $item['customer_id'])
@@ -1594,6 +1653,13 @@ class ApiManagementController extends Controller
                 'returns' => 0 // Mocked for now
             ];
 
+            // Total unique customers assigned to all routes of this supervisor
+            $allRouteIds = AdRoute::where('sm_superviser_id', $supervisorId)->pluck('id');
+            $totalCustomerCount = DB::table('ad_route_has_customers')
+                ->whereIn('route_id', $allRouteIds)
+                ->distinct('ad_customer_has_business_id')
+                ->count();
+
             return response()->json([
                 'status' => true,
                 'data' => [
@@ -1603,7 +1669,8 @@ class ApiManagementController extends Controller
                     'nextCustomers' => array_slice($nextCustomers, 0, 5),
                     'quickActions' => [
                         'load_count' => (int) $loadCount,
-                        'route_count' => $activeLoad ? 1 : 0
+                        'route_count' => $activeLoad ? 1 : 0,
+                        'customer_count' => $totalCustomerCount
                     ]
                 ]
             ]);
@@ -2111,7 +2178,21 @@ class ApiManagementController extends Controller
                         ]);
                     }
 
-                    // FIXED: Update stock for returned items
+                    // Record in separate Return Stock table
+                    \App\Models\AdReturnProductStock::create([
+                        'pm_product_item_id' => $returnItem['product_item_id'],
+                        'ad_daily_load_id' => $dailyLoad->id,
+                        'ad_customer_has_business_id' => $request->ad_customer_has_business_id,
+                        'quantity' => $returnItem['quantity'],
+                        'unit_price' => $returnItem['unit_price'],
+                        'reason' => $returnItem['reason'] ?? null,
+                        'status' => 1,
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
+                    ]);
+
+                    /* 
+                    // REMOVED: No longer adding returns to normal sellable stock
                     if (isset($returnItem['stm_branch_stock_id'])) {
                         StmBranchStock::where('id', $returnItem['stm_branch_stock_id'])
                             ->increment('quantity', $returnItem['quantity']);
@@ -2124,6 +2205,7 @@ class ApiManagementController extends Controller
                             $dlItem->increment('available_quantity', $returnItem['quantity']);
                         }
                     }
+                    */
 
                 }
             }
@@ -2271,7 +2353,21 @@ class ApiManagementController extends Controller
                     'updated_by' => auth()->id(),
                 ]);
 
-                // Update stock for returned items
+                // Record in separate Return Stock table
+                \App\Models\AdReturnProductStock::create([
+                    'pm_product_item_id' => $returnItem['product_item_id'],
+                    'ad_daily_load_id' => $dailyLoad->id,
+                    'ad_customer_has_business_id' => $request->ad_customer_has_business_id,
+                    'quantity' => $returnItem['quantity'],
+                    'unit_price' => $returnItem['unit_price'],
+                    'reason' => $returnItem['reason'] ?? null,
+                    'status' => 1,
+                    'created_by' => auth()->id(),
+                    'updated_by' => auth()->id(),
+                ]);
+
+                /*
+                // REMOVED: No longer adding returns to normal sellable stock
                 if (isset($returnItem['stm_branch_stock_id'])) {
                     StmBranchStock::where('id', $returnItem['stm_branch_stock_id'])
                         ->increment('quantity', $returnItem['quantity']);
@@ -2284,6 +2380,7 @@ class ApiManagementController extends Controller
                         $dlItem->increment('available_quantity', $returnItem['quantity']);
                     }
                 }
+                */
 
                 // Update the original invoice
                 $originalInvoice = AdCubusinessHasInvoice::find($returnItem['previous_invoice_id']);
@@ -2444,7 +2541,7 @@ class ApiManagementController extends Controller
             $activeLoad = AdDailyLoad::where('supervisor_id', $supervisorId)
                 ->where('status', 1) // Active
                 ->whereIn('load_status', [2, 3])
-                ->with(['route.customers.customer', 'vehicle', 'driver', 'items.product'])
+                ->with(['route.customers.customer', 'vehicle', 'driver', 'items.product', 'returns.product'])
                 ->first();
 
             if (!$activeLoad) {
@@ -2590,6 +2687,185 @@ class ApiManagementController extends Controller
         } catch (\Exception $e) {
             Log::error('Finish Daily Load Failed: ' . $e->getMessage());
             return response()->json(['status' => false, 'message' => 'Failed to finish daily load: ' . $e->getMessage()], 500);
+        }
+    }
+    /**
+     * Get returns list for the current agent or supervisor.
+     */
+    public function getReturns()
+    {
+        try {
+            $agentId = $this->getAgentId();
+            $supervisorId = $this->getSupervisorId();
+
+            $query = \App\Models\AdReturnProductStock::with(['product', 'dailyLoad.route', 'business.customer'])
+                ->orderBy('created_at', 'desc');
+
+            if ($agentId) {
+                // Agent sees all returns for their routes
+                $routeIds = AdRoute::where('agent_id', $agentId)->pluck('id');
+                $query->whereHas('dailyLoad', function($q) use ($routeIds) {
+                    $q->whereIn('route_id', $routeIds);
+                });
+            } elseif ($supervisorId) {
+                // Supervisor sees all returns for their routes
+                $routeIds = AdRoute::where('sm_superviser_id', $supervisorId)->pluck('id');
+                $query->whereHas('dailyLoad', function($q) use ($routeIds) {
+                    $q->whereIn('route_id', $routeIds);
+                });
+            } else {
+                return response()->json(['status' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            $returns = $query->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $returns
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get Returns Failed: ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Failed to fetch returns'], 500);
+        }
+    }
+
+    /**
+     * Get returns for a specific daily load.
+     */
+    public function getDailyLoadReturns($id)
+    {
+        try {
+            $returns = \App\Models\AdReturnProductStock::where('ad_daily_load_id', $id)
+                ->with(['product', 'business.customer'])
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $returns
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get Daily Load Returns Failed: ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Failed to fetch load returns'], 500);
+        }
+    }
+    /**
+     * Get daily sales summary for an agent.
+     */
+    public function getDailySalesSummary(Request $request)
+    {
+        try {
+            $date = $request->query('date', date('Y-m-d'));
+            $agentId = $this->getAgentId();
+            
+            if (!$agentId) {
+                return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
+            }
+
+            // Get all routes for this agent
+            $routeIds = AdRoute::where('agent_id', $agentId)->pluck('id');
+            $userId = auth()->id();
+            
+            // 1. Sales Summary - Include both route-based and creator-based invoices
+            $invoices = AdCubusinessHasInvoice::whereDate('created_at', $date)
+                ->where(function($query) use ($routeIds, $userId) {
+                    $query->whereHas('business', function($q) use ($routeIds) {
+                        $q->whereIn('route_id', $routeIds);
+                    })
+                    ->orWhere('created_by', $userId);
+                })
+                ->with(['items.product'])
+                ->get();
+
+            Log::info("Daily Summary for Agent $agentId on $date: Found " . $invoices->count() . " invoices. Routes: " . implode(',', $routeIds->toArray()));
+
+            $totalSales = $invoices->sum('net_price');
+            $totalCost = 0;
+            $itemCount = 0;
+
+            foreach ($invoices as $invoice) {
+                foreach ($invoice->items as $item) {
+                    $totalCost += ($item->quantity * ($item->product->cost_price ?? 0));
+                    $itemCount += $item->quantity;
+                }
+            }
+
+            $grossProfit = $totalSales - $totalCost;
+
+            // 2. Returns Summary
+            $returns = \App\Models\AdReturnProductStock::whereDate('created_at', $date)
+                ->whereHas('dailyLoad', function($q) use ($routeIds) {
+                    $q->whereIn('route_id', $routeIds);
+                })
+                ->get();
+
+            $totalReturnsValue = $returns->sum(function($r) {
+                return $r->quantity * ($r->unit_price ?? 0);
+            });
+            
+            $totalReturnsCost = $returns->sum(function($r) {
+                return $r->quantity * ($r->product->cost_price ?? 0);
+            });
+
+            // Net Profit = Gross Profit from sales - Lost profit from returns
+            // (Sales Value - Cost Value) - (Return Value - Return Cost)
+            $returnProfitLoss = $totalReturnsValue - $totalReturnsCost;
+            $netProfit = $grossProfit - $returnProfitLoss;
+
+            // 3. Payment Breakdown
+            $payments = AdCubusinessInvoicePayments::whereDate('created_at', $date)
+                ->whereHas('business', function($q) use ($routeIds) {
+                    $q->whereIn('route_id', $routeIds);
+                })
+                ->get();
+
+            $paymentBreakdown = [
+                'cash' => $payments->where('payment_method', 1)->sum('amount'),
+                'credit' => $payments->where('payment_method', 2)->sum('amount'),
+                'cheque' => $payments->where('payment_method', 3)->sum('amount'),
+                'bank_transfer' => $payments->where('payment_method', 4)->sum('amount'),
+                'total_collected' => $payments->sum('amount')
+            ];
+
+            // 4. Daily Loads for this date
+            $loads = AdDailyLoad::whereDate('load_date', $date)
+                ->whereIn('route_id', $routeIds)
+                ->with(['route', 'vehicle', 'driver'])
+                ->get()
+                ->map(function($load) {
+                    return [
+                        'id' => $load->id,
+                        'route_name' => $load->route->route_name,
+                        'vehicle' => $load->vehicle->vehicle_number,
+                        'status' => $load->load_status,
+                    ];
+                });
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'date' => $date,
+                    'summary' => [
+                        'total_sales' => (float)$totalSales,
+                        'total_cost' => (float)$totalCost,
+                        'gross_profit' => (float)$grossProfit,
+                        'item_count' => (float)$itemCount,
+                    ],
+                    'returns' => [
+                        'total_value' => (float)$totalReturnsValue,
+                        'count' => $returns->count(),
+                        'profit_impact' => (float)$returnProfitLoss
+                    ],
+                    'profit' => [
+                        'net_profit' => (float)$netProfit,
+                        'margin_percentage' => $totalSales > 0 ? round(($netProfit / $totalSales) * 100, 2) : 0
+                    ],
+                    'payments' => $paymentBreakdown,
+                    'loads' => $loads
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get Daily Sales Summary Failed: ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Failed to fetch summary: ' . $e->getMessage()], 500);
         }
     }
 }
