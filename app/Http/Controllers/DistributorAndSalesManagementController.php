@@ -31,7 +31,7 @@ class DistributorAndSalesManagementController extends Controller
     // {
     //     $this->notificationService = $notificationService;
     // }
-    
+
     // Sales Overview
     public function salesOverviewIndex()
     {
@@ -255,6 +255,35 @@ class DistributorAndSalesManagementController extends Controller
 
         } catch (\Exception $e) {
             return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Print Dispatch Note for an Order
+     */
+    public function printDispatchNote($id)
+    {
+        try {
+            $order = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'payments'])->findOrFail($id);
+
+            // Load Settings
+            $filePath = storage_path('app/Settings/quotation-settings.json');
+            $settings = [];
+            if (file_exists($filePath)) {
+                $content = file_get_contents($filePath);
+                $settings = json_decode($content, true) ?? [];
+                if (isset($settings['logo_path'])) {
+                    $settings['logo_absolute_path'] = public_path($settings['logo_path']);
+                    $settings['logo_url'] = asset($settings['logo_path']);
+                }
+            }
+
+            $pdf = Pdf::loadView('DistributorAndSalesManagement.pdf.dispatchNote', compact('order', 'settings'));
+
+            return $pdf->download('DispatchNote-' . $order->order_number . '.pdf');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating Dispatch Note: ' . $e->getMessage());
         }
     }
 
@@ -838,7 +867,7 @@ class DistributorAndSalesManagementController extends Controller
             // Update order status to Approved
             $order->status = CommonVariables::$orderRequestApproved;
             $order->save();
-            
+
             /*
             // Send Push Notification to Agent
             if ($order->agent && $order->agent->user_id) {
@@ -1106,7 +1135,7 @@ class DistributorAndSalesManagementController extends Controller
             $order->status = 5; // Out for Delivery
             $order->save();
             \Log::info('Order Status Updated to 5');
-            
+
             /*
             // Send Push Notification to Agent
             if ($order->agent && $order->agent->user_id) {
@@ -1451,7 +1480,7 @@ class DistributorAndSalesManagementController extends Controller
     public function agentPaymentIndex(Request $request)
     {
         $agents = AdAgent::where('status', 1)->get();
-        
+
         $query = AdAgentPayment::with(['agent', 'distributions.orderRequest']);
 
         // Filter by Agent
@@ -1486,7 +1515,7 @@ class DistributorAndSalesManagementController extends Controller
     {
         try {
             $payment = AdAgentPayment::with(['agent', 'distributions.orderRequest.orderProducts.productItem'])->findOrFail($id);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $payment
@@ -1539,7 +1568,7 @@ class DistributorAndSalesManagementController extends Controller
                             $order->payment_completed = 1; // Partially Paid
                         }
                         $order->save();
-                        
+
                         // 3. Update Agent Balance (Decrease outstanding debt)
                         $agent = $agentPayment->agent;
                         if ($agent) {

@@ -109,6 +109,7 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::post('/api/order-management/approve-payment', [DistributorAndSalesManagementController::class, 'approvePayment'])->name('orderManagement.approvePayment');
     Route::post('/api/order-management/approve-payment', [DistributorAndSalesManagementController::class, 'approvePayment'])->name('orderManagement.approvePayment');
     Route::get('/order-management/payment-approval/{id}', [DistributorAndSalesManagementController::class, 'paymentApprovalView'])->name('orderManagement.paymentApprovalView');
+    Route::get('/api/order-management/print-dispatch-note/{id}', [DistributorAndSalesManagementController::class, 'printDispatchNote'])->name('orderManagement.printDispatchNote');
     Route::get('/agent-payments', [DistributorAndSalesManagementController::class, 'agentPaymentIndex'])->name('agent-payments.index');
     Route::get('/api/agent-payments/orders/{id}', [DistributorAndSalesManagementController::class, 'getAgentPaymentOrders'])->name('agent-payments.orders');
     Route::post('/api/agent-payments/approve-bulk', [DistributorAndSalesManagementController::class, 'approveBulkAgentPayments'])->name('agent-payments.approve-bulk');

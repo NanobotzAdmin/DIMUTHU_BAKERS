@@ -68,18 +68,18 @@
 
             {{-- Quick Actions --}}
             <div class="flex gap-2 mt-4 flex-wrap">
-                <button onclick="alert('Print functionality')"
-                    class="h-9 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 text-sm transition-colors">
+                <button id="modal-print-btn" onclick="printModalDispatchNote()"
+                    class="h-9 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 text-sm transition-colors hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 6 2 18 2 18 9" />
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                         <rect width="12" height="8" x="6" y="14" />
                     </svg>
-                    Print
+                    Download Dispatch Note
                 </button>
                 <button onclick="alert('Download functionality')"
-                    class="h-9 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 text-sm transition-colors">
+                    class="h-9 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 text-sm transition-colors hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -421,6 +421,15 @@
                 `border px-3 py-1 rounded-lg text-sm font-medium ${order.priority === 'high' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100'}`;
         } else {
             prBadge.classList.add('hidden');
+        }
+
+        // Print Button Visibility
+        const printBtn = document.getElementById('modal-print-btn');
+        if (['out-for-delivery', 'dispatch-confirmed', 'completed'].includes(order.status)) {
+            printBtn.classList.remove('hidden');
+            printBtn.dataset.orderId = order.id;
+        } else {
+            printBtn.classList.add('hidden');
         }
 
         // Details
@@ -781,6 +790,12 @@
             modalContent.classList.remove('scale-95');
             modalContent.classList.add('scale-100');
         }, 10);
+    }
+
+    function printModalDispatchNote() {
+        const orderId = document.getElementById('modal-print-btn').dataset.orderId;
+        const url = `{{ route('orderManagement.printDispatchNote', ['id' => ':id']) }}`.replace(':id', orderId);
+        window.open(url, '_blank');
     }
 
     // Dispatch Function
