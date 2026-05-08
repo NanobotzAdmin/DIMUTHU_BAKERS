@@ -77,6 +77,11 @@ class StmOrderRequest extends Model
         return $this->hasMany(StmOrderRequestHasPayment::class, 'stm_order_request_id');
     }
 
+    public function stockTransfers()
+    {
+        return $this->hasMany(StmStockTransfer::class, 'stm_order_request_id');
+    }
+
     public function history()
     {
         return $this->hasMany(StmOrderRequestHistory::class, 'order_request_id');
