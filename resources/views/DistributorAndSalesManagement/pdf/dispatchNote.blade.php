@@ -206,7 +206,7 @@
 
             <div class="section-box" style="float: right; text-align: right;">
                 <div class="section-title">Dispatch Details</div>
-                <div><strong>Dispatch Date:</strong> {{ $order->stockTransfers->first() && $order->stockTransfers->first()->dispatched_date ? \Carbon\Carbon::parse($order->stockTransfers->first()->dispatched_date)->format('Y-m-d H:i') : now()->format('Y-m-d H:i') }}</div>
+                <div><strong>Dispatch Date:</strong> {{ $order->stockTransfers->first() && $order->stockTransfers->first()->dispatched_date ? \Carbon\Carbon::parse($order->stockTransfers->first()->dispatched_date)->format('Y-m-d') : now()->format('Y-m-d H:i') }}</div>
                 <div><strong>Order Date:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('Y-m-d') }}</div>
                 <div><strong>Delivery Method:</strong> {{ $order->delivery_type == 1 ? 'Store Pickup' : 'Delivery' }}</div>
                 @if($order->payment_completed == 2)
@@ -288,7 +288,7 @@
         <div class="footer">
             {{ $settings['footer_text'] ?? 'Thank you for your business! This is a system-generated dispatch note.' }}
             <br>
-            Printed at: {{ now()->format('Y-m-d H:i:s') }}
+            Printed at: {{ now()->format('Y-m-d') }}
         </div>
     </div>
 </body>
