@@ -264,7 +264,7 @@ class DistributorAndSalesManagementController extends Controller
     public function printDispatchNote($id)
     {
         try {
-            $order = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'payments'])->findOrFail($id);
+            $order = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'payments', 'stockTransfers'])->findOrFail($id);
 
             // Load Settings
             $filePath = storage_path('app/Settings/quotation-settings.json');
