@@ -14,8 +14,11 @@ class AdReturnProductStock extends Model
     protected $fillable = [
         'pm_product_item_id',
         'ad_daily_load_id',
+        'stm_stock_id',
+        'stm_branch_stock_id',
         'ad_customer_has_business_id',
         'quantity',
+        'credit_note_added_qty',
         'unit_price',
         'reason',
         'status',
@@ -36,6 +39,16 @@ class AdReturnProductStock extends Model
     public function business()
     {
         return $this->belongsTo(AdCustomerHasBusiness::class, 'ad_customer_has_business_id');
+    }
+
+    public function stock()
+    {
+        return $this->belongsTo(StmStock::class, 'stm_stock_id');
+    }
+
+    public function branchStock()
+    {
+        return $this->belongsTo(StmBranchStock::class, 'stm_branch_stock_id');
     }
 
     public function creator()

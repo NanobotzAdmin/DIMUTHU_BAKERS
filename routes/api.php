@@ -100,4 +100,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/returns', [ApiManagementController::class, 'getReturns']);
     Route::get('/daily-load/{id}/returns', [ApiManagementController::class, 'getDailyLoadReturns']);
     Route::get('/daily-sales-summary', [ApiManagementController::class, 'getDailySalesSummary']);
+
+    // Bakery Returns & Credit Notes
+    Route::get('/available-for-bakery-return', [ApiManagementController::class, 'getAvailableForBakeryReturn']);
+    Route::post('/create-bakery-return', [ApiManagementController::class, 'createBakeryReturn']);
+    Route::get('/credit-notes', [ApiManagementController::class, 'getCreditNotes']);
 });

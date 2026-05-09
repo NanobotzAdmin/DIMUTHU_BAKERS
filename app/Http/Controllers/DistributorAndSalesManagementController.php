@@ -22,6 +22,7 @@ use App\Models\StmStockTransfer;
 // use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\AdCreditNote;
 
 class DistributorAndSalesManagementController extends Controller
 {
@@ -2291,5 +2292,173 @@ class DistributorAndSalesManagementController extends Controller
     public function customerManageIndex()
     {
         return view('DistributorAndSalesManagement.customerManagement');
+    }
+
+    /**
+     * Credit Note Management Index
+     */
+    public function creditNoteIndex(Request $request)
+    {
+        $query = AdCreditNote::with(['agent', 'products.product', 'creator']);
+
+        // Search
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('credit_note_number', 'LIKE', "%{$search}%")
+                    ->orWhereHas('agent', function ($aq) use ($search) {
+                        $aq->where('agent_name', 'LIKE', "%{$search}%")
+                            ->orWhere('agent_code', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter agent
+        if ($request->has('agent_id') && $request->agent_id !== 'all' && $request->agent_id !== null) {
+            $query->where('agent_id', $request->agent_id);
+        }
+
+        // Filter status
+        if ($request->has('status') && $request->status !== 'all' && $request->status !== null) {
+            $query->where('status', $request->status);
+        }
+
+        $creditNotes = $query->orderBy('created_at', 'desc')->paginate(15);
+        $agents = AdAgent::where('status', 1)->get();
+
+        $summary = [
+            'total' => AdCreditNote::count(),
+            'pending' => AdCreditNote::where('status', 0)->count(),
+            'approved' => AdCreditNote::where('status', 1)->count(),
+            'rejected' => AdCreditNote::where('status', 2)->count(),
+            'total_value' => AdCreditNote::where('status', 1)->sum('total_amount'),
+        ];
+
+        return view('DistributorAndSalesManagement.creditNoteManagement', compact('creditNotes', 'summary', 'agents'));
+    }
+
+    /**
+     * Export Credit Notes to CSV (Excel compatible)
+     */
+    public function exportCreditNotes(Request $request)
+    {
+        $query = AdCreditNote::with(['agent', 'creator']);
+
+        // Apply same filters as index
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('credit_note_number', 'LIKE', "%{$search}%")
+                    ->orWhereHas('agent', function ($aq) use ($search) {
+                        $aq->where('agent_name', 'LIKE', "%{$search}%")
+                            ->orWhere('agent_code', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+        if ($request->has('agent_id') && $request->agent_id !== 'all' && $request->agent_id !== null) {
+            $query->where('agent_id', $request->agent_id);
+        }
+        if ($request->has('status') && $request->status !== 'all' && $request->status !== null) {
+            $query->where('status', $request->status);
+        }
+
+        $creditNotes = $query->orderBy('created_at', 'desc')->get();
+
+        $filename = "credit_notes_" . date('Y-m-d') . ".csv";
+        $handle = fopen('php://output', 'w');
+        
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        // CSV Headers
+        fputcsv($handle, ['Credit Note #', 'Agent', 'Date', 'Type', 'Amount', 'Status', 'Reason']);
+
+        foreach ($creditNotes as $note) {
+            $statusLabel = match($note->status) {
+                0 => 'Pending',
+                1 => 'Approved',
+                2 => 'Rejected',
+                3 => 'Used',
+                default => 'Unknown'
+            };
+            
+            $typeLabel = $note->note_type == 1 ? 'Physical Return' : 'Customer Return';
+
+            fputcsv($handle, [
+                $note->credit_note_number,
+                $note->agent->agent_name ?? 'N/A',
+                $note->credit_note_date,
+                $typeLabel,
+                number_format($note->total_amount, 2),
+                $statusLabel,
+                $note->reason
+            ]);
+        }
+
+        fclose($handle);
+        exit;
+    }
+
+    /**
+     * Approve Credit Note
+     */
+    public function creditNoteApprove($id)
+    {
+        DB::beginTransaction();
+        try {
+            $creditNote = AdCreditNote::findOrFail($id);
+
+            if ($creditNote->status != 0) {
+                return response()->json(['success' => false, 'message' => 'Only pending credit notes can be approved.']);
+            }
+
+            $creditNote->update([
+                'status' => 1,
+                'updated_by' => auth()->id()
+            ]);
+
+            // Update items status if needed
+            $creditNote->products()->update(['status' => 1]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Credit note approved successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Reject Credit Note
+     */
+    public function creditNoteReject(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $creditNote = AdCreditNote::findOrFail($id);
+
+            if ($creditNote->status != 0) {
+                return response()->json(['success' => false, 'message' => 'Only pending credit notes can be rejected.']);
+            }
+
+            $creditNote->update([
+                'status' => 2,
+                'reject_reason' => $request->reason,
+                'updated_by' => auth()->id()
+            ]);
+
+            // Update items status
+            $creditNote->products()->update(['status' => 2]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Credit note rejected successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

@@ -27,6 +27,9 @@ use App\Models\AdCubusinessHasReturnProductItem;
 use App\Models\AdCubusinessInvoicePaymentsHasInvoice;
 use App\Models\AdAgentMonthlyTarget;
 use App\Models\UmUser;
+use App\Models\AdCreditNote;
+use App\Models\AdCreditNoteHasProduct;
+use App\Models\AdReturnProductStock;
 use Illuminate\Support\Facades\Hash;
 
 class ApiManagementController extends Controller
@@ -2179,7 +2182,11 @@ class ApiManagementController extends Controller
                     }
 
                     // Record in separate Return Stock table
-                    \App\Models\AdReturnProductStock::create([
+                    $branchStock = StmBranchStock::find($returnItem['stm_branch_stock_id']);
+
+                    AdReturnProductStock::create([
+                        'stm_stock_id' => $branchStock ? $branchStock->stm_stock_id : null,
+                        'stm_branch_stock_id' => $returnItem['stm_branch_stock_id'],
                         'pm_product_item_id' => $returnItem['product_item_id'],
                         'ad_daily_load_id' => $dailyLoad->id,
                         'ad_customer_has_business_id' => $request->ad_customer_has_business_id,
@@ -2354,7 +2361,11 @@ class ApiManagementController extends Controller
                 ]);
 
                 // Record in separate Return Stock table
-                \App\Models\AdReturnProductStock::create([
+                $branchStock = StmBranchStock::find($returnItem['stm_branch_stock_id']);
+
+                AdReturnProductStock::create([
+                    'stm_stock_id' => $branchStock ? $branchStock->stm_stock_id : null,
+                    'stm_branch_stock_id' => $returnItem['stm_branch_stock_id'],
                     'pm_product_item_id' => $returnItem['product_item_id'],
                     'ad_daily_load_id' => $dailyLoad->id,
                     'ad_customer_has_business_id' => $request->ad_customer_has_business_id,
@@ -2866,6 +2877,209 @@ class ApiManagementController extends Controller
         } catch (\Exception $e) {
             Log::error('Get Daily Sales Summary Failed: ' . $e->getMessage());
             return response()->json(['status' => false, 'message' => 'Failed to fetch summary: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get available returns and agent stock for bakery return process.
+     */
+    public function getAvailableForBakeryReturn(Request $request)
+    {
+        try {
+            $agentId = $this->getAgentId();
+            if (!$agentId) {
+                return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
+            }
+
+            // 1. Physical Stock (from stm_branch_stock)
+            $physicalStock = StmBranchStock::where('agent_id', $agentId)
+                ->where('quantity', '>', 0)
+                ->with(['productItem'])
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'type' => 'physical',
+                        'id' => $item->id,
+                        'product_id' => $item->pm_product_item_id,
+                        'product_name' => $item->productItem->product_name ?? 'Unknown',
+                        'quantity' => $item->quantity,
+                        'stm_stock_id' => $item->stm_stock_id,
+                        'distributor_price' => $item->productItem->distributor_price ?? 0,
+                        'wholesale_price' => $item->productItem->wholesale_price ?? 0,
+                        'retail_price' => $item->productItem->selling_price ?? 0,
+                    ];
+                });
+
+            // 2. Return Stock (from ad_return_product_stocks) - filter those already returned to bakery
+            $returnedToBakeryIds = AdCreditNoteHasProduct::whereNotNull('return_stock_id')->pluck('return_stock_id');
+            
+            $returnStockQuery = AdReturnProductStock::whereHas('dailyLoad.route', function($q) use ($agentId) {
+                    $q->where('agent_id', $agentId);
+                })
+                ->whereNotIn('id', $returnedToBakeryIds)
+                ->whereRaw('quantity > credit_note_added_qty'); // Only show items with remaining quantity
+
+            if ($request->has('ad_customer_has_business_id')) {
+                $returnStockQuery->where('ad_customer_has_business_id', $request->ad_customer_has_business_id);
+            }
+
+            $returnStock = $returnStockQuery->with(['product'])
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'type' => 'return_stock',
+                        'id' => $item->id,
+                        'product_id' => $item->pm_product_item_id,
+                        'product_name' => $item->product->product_name ?? 'Unknown',
+                        'quantity' => $item->quantity,
+                        'stm_stock_id' => $item->stm_stock_id,
+                        'branch_stock_id' => $item->stm_branch_stock_id,
+                        'distributor_price' => $item->unit_price, 
+                        'wholesale_price' => $item->product->wholesale_price ?? 0,
+                        'retail_price' => $item->product->selling_price ?? 0,
+                        'reason' => $item->reason,
+                    ];
+                });
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'physical' => $physicalStock,
+                    'returns' => $returnStock
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get Available For Bakery Return Failed: ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Failed to fetch available items'], 500);
+        }
+    }
+
+    /**
+     * Create a bakery return / credit note request.
+     */
+    public function createBakeryReturn(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'note_type' => 'required|integer|in:1,2', 
+            'ad_customer_has_business_id' => 'nullable|exists:ad_customer_has_business,id',
+            'reason' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|integer', 
+            'items.*.product_id' => 'required|exists:pm_product_item,id',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.distributor_price' => 'required|numeric',
+            'items.*.wholesale_price' => 'required|numeric',
+            'items.*.retail_price' => 'required|numeric',
+            'items.*.stm_stock_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => 'Validation Error', 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $agentId = $this->getAgentId();
+            if (!$agentId) {
+                return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
+            }
+
+            $creditNoteNumber = 'CN-' . date('Ymd') . '-' . str_pad(AdCreditNote::count() + 1, 4, '0', STR_PAD_LEFT);
+
+            $totalAmount = 0;
+            foreach ($request->items as $item) {
+                $totalAmount += $item['quantity'] * $item['distributor_price'];
+            }
+
+            $creditNote = AdCreditNote::create([
+                'agent_id' => $agentId,
+                'credit_note_number' => $creditNoteNumber,
+                'credit_note_date' => date('Y-m-d'),
+                'note_type' => $request->note_type,
+                'ad_customer_has_business_id' => $request->ad_customer_has_business_id,
+                'total_amount' => $totalAmount,
+                'status' => 0, 
+                'reason' => $request->reason,
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            foreach ($request->items as $itemData) {
+                $branchStockId = $request->note_type == 1 ? $itemData['id'] : null;
+                $returnStockId = $request->note_type == 2 ? $itemData['id'] : null;
+
+                AdCreditNoteHasProduct::create([
+                    'credit_note_id' => $creditNote->id,
+                    'product_id' => $itemData['product_id'],
+                    'return_stock_id' => $returnStockId,
+                    'stm_stock_id' => $itemData['stm_stock_id'],
+                    'branch_stock_id' => $branchStockId,
+                    'qty' => $itemData['quantity'],
+                    'distributor_price' => $itemData['distributor_price'],
+                    'wholesale_price' => $itemData['wholesale_price'],
+                    'retail_price' => $itemData['retail_price'],
+                    'total' => $itemData['quantity'] * $itemData['distributor_price'],
+                    'reason' => $itemData['reason'] ?? null,
+                    'status' => 0,
+                ]);
+
+                if ($request->note_type == 1) {
+                    $stock = StmBranchStock::find($itemData['id']);
+                    if ($stock) {
+                        if ($stock->quantity < $itemData['quantity']) {
+                            throw new \Exception("Insufficient stock for product ID: " . $itemData['product_id']);
+                        }
+                        $stock->decrement('quantity', $itemData['quantity']);
+                    }
+                }
+
+                if ($request->note_type == 2) {
+                    $returnStock = AdReturnProductStock::find($itemData['id']);
+                    if ($returnStock) {
+                        $returnStock->increment('credit_note_added_qty', $itemData['quantity']);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Bakery return request created successfully',
+                'data' => $creditNote
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Create Bakery Return Failed: ' . $e.getMessage());
+            return response()->json(['status' => false, 'message' => 'Failed to create return: ' . $e.getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get credit notes for the current agent.
+     */
+    public function getCreditNotes(Request $request)
+    {
+        try {
+            $agentId = $this->getAgentId();
+            if (!$agentId) {
+                return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
+            }
+
+            $notes = AdCreditNote::where('agent_id', $agentId)
+                ->with(['products.product'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'data' => $notes
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get Credit Notes Failed: ' . $e.getMessage());
+            return response()->json(['status' => false, 'message' => 'Failed to fetch credit notes'], 500);
         }
     }
 }
