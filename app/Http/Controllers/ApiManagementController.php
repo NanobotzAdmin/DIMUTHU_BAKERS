@@ -3068,8 +3068,15 @@ class ApiManagementController extends Controller
                 return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
             }
 
-            $notes = AdCreditNote::where('agent_id', $agentId)
-                ->with(['products.product'])
+            $status = $request->query('status');
+
+            $query = AdCreditNote::where('agent_id', $agentId);
+
+            if ($status !== null) {
+                $query->where('status', $status);
+            }
+
+            $notes = $query->with(['products.product'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 

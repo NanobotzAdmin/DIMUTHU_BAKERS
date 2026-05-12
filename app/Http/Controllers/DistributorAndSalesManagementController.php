@@ -1515,7 +1515,7 @@ class DistributorAndSalesManagementController extends Controller
     public function getAgentPaymentOrders($id)
     {
         try {
-            $payment = AdAgentPayment::with(['agent', 'distributions.orderRequest.orderProducts.productItem'])->findOrFail($id);
+            $payment = AdAgentPayment::with(['agent', 'distributions.orderRequest.orderProducts.productItem', 'creditNotes'])->findOrFail($id);
 
             return response()->json([
                 'success' => true,

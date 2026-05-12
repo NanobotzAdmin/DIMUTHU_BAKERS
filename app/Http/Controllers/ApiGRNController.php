@@ -222,6 +222,7 @@ class ApiGRNController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'method' => 'required|string',
             'notes' => 'nullable|string',
+            'credit_note_ids' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -249,12 +250,21 @@ class ApiGRNController extends Controller
             $agentPayment = AdAgentPayment::create([
                 'agent_id' => $orderRequest->agent_id,
                 'amount' => $request->amount,
-                'payment_method' => $request->method == 'Cash' ? 1 : ($request->method == 'Card' ? 2 : 3),
+                'payment_method' => $request->method == 'Cash' ? 1 : ($request->method == 'Card' ? 2 : ($request->method == 'Bank Transfer' ? 3 : 4)),
                 'payment_date' => now(),
                 'status' => 0, // Pending
                 'notes' => $request->notes,
                 'created_by' => auth()->id(),
             ]);
+
+            // Handle Credit Note links
+            if ($request->method == 'Credit Note' && !empty($request->credit_note_ids)) {
+                \App\Models\AdCreditNote::whereIn('id', $request->credit_note_ids)
+                    ->update([
+                        'ad_agent_payment_id' => $agentPayment->id,
+                        'status' => 3 // Used
+                    ]);
+            }
 
             $payment = StmOrderRequestHasPayment::create([
                 'stm_order_request_id' => $orderRequest->id,
@@ -311,6 +321,7 @@ class ApiGRNController extends Controller
             'notes' => 'nullable|string',
             'is_auto' => 'nullable|boolean',
             'distributions' => 'nullable|array',
+            'credit_note_ids' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -377,12 +388,21 @@ class ApiGRNController extends Controller
             $agentPayment = AdAgentPayment::create([
                 'agent_id' => $agent->id,
                 'amount' => $totalAmount,
-                'payment_method' => $request->method == 'Cash' ? 1 : ($request->method == 'Card' ? 2 : 3),
+                'payment_method' => $request->method == 'Cash' ? 1 : ($request->method == 'Card' ? 2 : ($request->method == 'Bank Transfer' ? 3 : 4)),
                 'payment_date' => now(),
                 'status' => 0, // Pending
                 'notes' => $request->notes,
                 'created_by' => auth()->id(),
             ]);
+
+            // Handle Credit Note links
+            if ($request->method == 'Credit Note' && !empty($request->credit_note_ids)) {
+                \App\Models\AdCreditNote::whereIn('id', $request->credit_note_ids)
+                    ->update([
+                        'ad_agent_payment_id' => $agentPayment->id,
+                        'status' => 3 // Used
+                    ]);
+            }
 
             foreach ($finalDistributions as $dist) {
                 StmOrderRequestHasPayment::create([

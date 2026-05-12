@@ -22,6 +22,7 @@ class AdCreditNote extends Model
         'is_credit_use',
         'ad_customer_has_business_id',
         'reason',
+        'ad_agent_payment_id',
         'created_by',
         'updated_by',
     ];
@@ -34,6 +35,11 @@ class AdCreditNote extends Model
     public function business()
     {
         return $this->belongsTo(AdCustomerHasBusiness::class, 'ad_customer_has_business_id');
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(AdAgentPayment::class, 'ad_agent_payment_id');
     }
 
     public function products()
