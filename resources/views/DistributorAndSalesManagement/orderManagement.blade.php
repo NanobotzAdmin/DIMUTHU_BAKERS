@@ -755,6 +755,7 @@
                 history: orderData.history || [], // Audit trail
                 payment_records: orderData.payment_records || [], // Payment records
                 agent_info: orderData.agent_info || null, // New agent details
+                notes: orderData.notes || '', // Order notes
             };
 
             // Create a temporary button element to pass the data
