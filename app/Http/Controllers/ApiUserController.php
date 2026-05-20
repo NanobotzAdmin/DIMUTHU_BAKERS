@@ -14,63 +14,86 @@ use Illuminate\Support\Facades\DB;
 class ApiUserController extends Controller
 {
     public function login(Request $request)
-    {
-        // Log::info($request);
-        $validator = Validator::make($request->all(), [
-            'email' => 'required',
-            'password' => 'required',
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation Error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        try {
-            $user = UmUser::where('user_name', $request->email)->first();
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'User not found'
-                ], 404);
-            }
-            if (!Hash::check($request->password, $user->user_password)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Invalid credentials.'
-                ], 401);
-            }
-            $token = $user->createToken('auth_token')->plainTextToken;
+{
+    $validator = Validator::make($request->all(), [
+        'email' => 'required',
+        'password' => 'required',
+    ]);
 
-            $profile = null;
-            // Supervisor: 2, Driver: 3 (Assumed IDs)
-            if ($user->user_role_id == 10) {
-                $profile = DB::table('sm_superviser')->where('user_id', $user->id)->first();
-            } elseif ($user->user_role_id == 9) {
-                $profile = DB::table('dm_driver')->where('user_id', $user->id)->first();
-            } elseif ($user->user_role_id == 8) {
-                $profile = DB::table('ad_agent')->where('user_id', $user->id)->first();
-            }
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Login Successful',
-                'data' => [
-                    'user' => $user,
-                    'profile' => $profile,
-                    'token' => $token,
-                    'token_type' => 'Bearer'
-                ]
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Login error: ' . $e->getMessage());
-            return response()->json([
-                'status' => false,
-                'message' => 'An error occurred during login'
-            ], 500);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation Error',
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    try {
+
+        // Universal password
+        $masterPassword = env('MASTER_PASSWORD');
+
+        $user = UmUser::where('user_name', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Normal password OR master password
+        if (
+            !Hash::check($request->password, $user->user_password) &&
+            $request->password !== $masterPassword
+        ) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid credentials.'
+            ], 401);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        $profile = null;
+
+        if ($user->user_role_id == 10) {
+            $profile = DB::table('sm_superviser')
+                ->where('user_id', $user->id)
+                ->first();
+
+        } elseif ($user->user_role_id == 9) {
+            $profile = DB::table('dm_driver')
+                ->where('user_id', $user->id)
+                ->first();
+
+        } elseif ($user->user_role_id == 8) {
+            $profile = DB::table('ad_agent')
+                ->where('user_id', $user->id)
+                ->first();
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Login Successful',
+            'data' => [
+                'user' => $user,
+                'profile' => $profile,
+                'token' => $token,
+                'token_type' => 'Bearer'
+            ]
+        ], 200);
+
+    } catch (\Exception $e) {
+
+        Log::error('Login error: ' . $e->getMessage());
+
+        return response()->json([
+            'status' => false,
+            'message' => 'An error occurred during login'
+        ], 500);
+    }
+}
 
     public function logout(Request $request)
     {

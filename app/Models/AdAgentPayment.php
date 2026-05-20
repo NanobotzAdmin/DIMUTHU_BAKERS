@@ -17,7 +17,6 @@ class AdAgentPayment extends Model
         'payment_method',
         'payment_date',
         'status',
-        'notes',
         'created_by',
     ];
 
@@ -50,6 +49,14 @@ class AdAgentPayment extends Model
     public function creator()
     {
         return $this->belongsTo(UmUser::class, 'created_by');
+    }
+
+    /**
+     * Get the credit notes associated with this payment.
+     */
+    public function creditNotes()
+    {
+        return $this->hasMany(AdCreditNote::class, 'ad_agent_payment_id');
     }
     
 }

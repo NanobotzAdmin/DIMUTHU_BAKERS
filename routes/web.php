@@ -114,6 +114,12 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::get('/api/agent-payments/orders/{id}', [DistributorAndSalesManagementController::class, 'getAgentPaymentOrders'])->name('agent-payments.orders');
     Route::post('/api/agent-payments/approve-bulk', [DistributorAndSalesManagementController::class, 'approveBulkAgentPayments'])->name('agent-payments.approve-bulk');
 
+    // Credit Note Management
+    Route::get('/credit-note-management', [DistributorAndSalesManagementController::class, 'creditNoteIndex'])->name('credit-note-management.index');
+    Route::get('/credit-note/export', [DistributorAndSalesManagementController::class, 'exportCreditNotes'])->name('credit-note.export');
+    Route::post('/credit-note/approve/{id}', [DistributorAndSalesManagementController::class, 'creditNoteApprove'])->name('credit-note.approve');
+    Route::post('/credit-note/reject/{id}', [DistributorAndSalesManagementController::class, 'creditNoteReject'])->name('credit-note.reject');
+
     Route::get('/invoice-management', [DistributorAndSalesManagementController::class, 'invoiceManageIndex'])->name('invoice-management.index');
     Route::get('/payment-tracking', [DistributorAndSalesManagementController::class, 'paymentTrackingIndex'])->name('payment-tracking.index');
     Route::get('/delivery-scheduling', [DistributorAndSalesManagementController::class, 'deliverySchedulingIndex'])->name('delivery-scheduling.index');
