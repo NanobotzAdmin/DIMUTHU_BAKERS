@@ -237,12 +237,15 @@ class ApiGRNController extends Controller
             DB::beginTransaction();
             $orderRequest = StmOrderRequest::findOrFail($id);
 
-            // Validation: Prevent overpayment
-            $remaining = $orderRequest->grand_total - $orderRequest->paid_amount;
+            // Validation: Prevent overpayment after accounting for pending payments
+            $pendingAmount = StmOrderRequestHasPayment::where('stm_order_request_id', $orderRequest->id)
+                ->where('status', 1) // Pending Approval
+                ->sum('payment_amount');
+            $remaining = $orderRequest->grand_total - ($orderRequest->paid_amount + $pendingAmount);
             if ($request->amount > $remaining + 0.01) { // Small epsilon for floating point
                  return response()->json([
                     'status' => false,
-                    'message' => 'Payment amount (Rs. ' . number_format($request->amount, 2) . ') exceeds remaining balance (Rs. ' . number_format($remaining, 2) . ')',
+                    'message' => 'Payment amount (Rs. ' . number_format($request->amount, 2) . ') exceeds remaining balance after accounting for pending payments (Rs. ' . number_format($remaining, 2) . ')',
                 ], 422);
             }
 
@@ -337,11 +340,19 @@ class ApiGRNController extends Controller
 
             $agent = AdAgent::findOrFail($request->agent_id);
 
-            // Validation: Prevent overpayment against total outstanding
-            if ($request->amount > $agent->outstanding_balance + 0.01) {
+            // Calculate total pending payments for this agent to deduct from validation
+            $totalPendingPayments = StmOrderRequestHasPayment::join('stm_order_requests', 'stm_order_request_has_payments.stm_order_request_id', '=', 'stm_order_requests.id')
+                ->where('stm_order_requests.agent_id', $agent->id)
+                ->where('stm_order_request_has_payments.status', 1) // Pending Approval
+                ->sum('stm_order_request_has_payments.payment_amount');
+
+            $effectiveOutstanding = $agent->outstanding_balance - $totalPendingPayments;
+
+            // Validation: Prevent overpayment against total outstanding after accounting for pending payments
+            if ($request->amount > $effectiveOutstanding + 0.01) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Payment amount (Rs. ' . number_format($request->amount, 2) . ') exceeds total outstanding balance (Rs. ' . number_format($agent->outstanding_balance, 2) . ')',
+                    'message' => 'Payment amount (Rs. ' . number_format($request->amount, 2) . ') exceeds total outstanding balance after accounting for pending payments (Rs. ' . number_format($effectiveOutstanding, 2) . ')',
                 ], 422);
             }
 
@@ -362,7 +373,10 @@ class ApiGRNController extends Controller
                 foreach ($outstandingOrders as $order) {
                     if ($remainingAmount <= 0.01) break;
 
-                    $orderOutstanding = $order->grand_total - $order->paid_amount;
+                    $pendingAmount = StmOrderRequestHasPayment::where('stm_order_request_id', $order->id)
+                        ->where('status', 1) // Pending Approval
+                        ->sum('payment_amount');
+                    $orderOutstanding = $order->grand_total - ($order->paid_amount + $pendingAmount);
                     if ($orderOutstanding <= 0) continue;
 
                     $paymentToApply = min($remainingAmount, $orderOutstanding);
@@ -374,7 +388,22 @@ class ApiGRNController extends Controller
                 }
             } else {
                 $finalDistributions = $distInput;
-                // Optional: Validate distribution sum matches totalAmount
+                
+                // Validate manual distribution amounts against each order's actual outstanding after pending payments
+                foreach ($finalDistributions as $dist) {
+                    $order = StmOrderRequest::findOrFail($dist['order_id']);
+                    $pendingAmount = StmOrderRequestHasPayment::where('stm_order_request_id', $order->id)
+                        ->where('status', 1) // Pending Approval
+                        ->sum('payment_amount');
+                    $orderOutstanding = $order->grand_total - ($order->paid_amount + $pendingAmount);
+
+                    if ($dist['amount'] > $orderOutstanding + 0.01) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Distributed amount for Order #' . $order->order_number . ' (Rs. ' . number_format($dist['amount'], 2) . ') exceeds remaining outstanding balance after accounting for pending payments (Rs. ' . number_format($orderOutstanding, 2) . ')',
+                        ], 422);
+                    }
+                }
             }
 
             if (empty($finalDistributions)) {

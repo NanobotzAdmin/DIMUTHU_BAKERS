@@ -588,9 +588,10 @@
             order.products.forEach((item, index) => {
                 const bgClass = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                 const requestedQty = formatQuantity(item.quantity);
+                const defaultQty = Math.round(parseFloat(item.quantity)) || 0;
 
                 const dispatchInput = isEditable ?
-                    `<input type="number" min="0" step="0.001" class="order-item-qty w-full px-2 py-1.5 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-purple-500 focus:border-purple-500" value="${requestedQty}" data-item-id="${item.product_item_id}">` :
+                    `<input type="number" min="0" step="1" onkeydown="if(['.', 'e', 'E', '-', '+'].includes(event.key)) event.preventDefault();" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="order-item-qty w-full px-2 py-1.5 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-purple-500 focus:border-purple-500" value="${defaultQty}" data-item-id="${item.product_item_id}">` :
                     `<span class="font-medium text-gray-900">${requestedQty}</span>`;
 
                 // Calculate subtotal correctly
