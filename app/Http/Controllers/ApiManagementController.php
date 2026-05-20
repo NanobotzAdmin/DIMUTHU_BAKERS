@@ -3085,7 +3085,7 @@ class ApiManagementController extends Controller
                 'data' => $notes
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Credit Notes Failed: ' . $e.getMessage());
+            Log::error('Get Credit Notes Failed: ' . $e->getMessage());
             return response()->json(['status' => false, 'message' => 'Failed to fetch credit notes'], 500);
         }
     }
