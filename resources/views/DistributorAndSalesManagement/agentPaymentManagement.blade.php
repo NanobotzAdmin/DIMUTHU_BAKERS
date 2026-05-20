@@ -77,6 +77,7 @@
                         <option value="1" {{ request('payment_method') === '1' ? 'selected' : '' }}>Cash</option>
                         <option value="2" {{ request('payment_method') === '2' ? 'selected' : '' }}>Card</option>
                         <option value="3" {{ request('payment_method') === '3' ? 'selected' : '' }}>Bank Transfer</option>
+                        <option value="4" {{ request('payment_method') === '4' ? 'selected' : '' }}>Credit Note</option>
                     </select>
                 </div>
 
@@ -123,12 +124,14 @@
                                     1 => 'Cash',
                                     2 => 'Card',
                                     3 => 'Bank Transfer',
+                                    4 => 'Credit Note',
                                     default => 'Other'
                                 };
                                 $methodIcon = match((int)$payment->payment_method) {
                                     1 => 'bi-cash-stack text-green-600',
                                     2 => 'bi-credit-card text-blue-600',
                                     3 => 'bi-bank text-purple-600',
+                                    4 => 'bi-ticket-perforated text-orange-600',
                                     default => 'bi-wallet2 text-gray-600'
                                 };
                             @endphp
@@ -274,6 +277,19 @@
                             </table>
                         </div>
                         
+                        <!-- Credit Notes Section -->
+                        <div id="credit-notes-section" class="mt-8 hidden">
+                            <div class="mb-4">
+                                <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest flex items-center">
+                                    <span class="w-8 h-[2px] bg-orange-500 mr-3"></span>
+                                    Applied Credit Notes
+                                </h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="credit-notes-list">
+                                <!-- Credit Note Cards will be injected here -->
+                            </div>
+                        </div>
+
                         <!-- Notes Section (Optional if you have notes in DB) -->
                         <div id="payment-notes-container" class="mt-8 hidden">
                             <label class="block text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Agent Notes</label>
@@ -317,7 +333,7 @@
                     const payment = response.data;
                     
                     // Header Update
-                    document.getElementById('modal-title').innerHTML = `Payment Approval <span class="text-sm font-normal text-gray-500">via ${payment.payment_method == 1 ? 'Cash' : (payment.payment_method == 2 ? 'Card' : 'Bank Transfer')}</span>`;
+                    document.getElementById('modal-title').innerHTML = `Payment Approval <span class="text-sm font-normal text-gray-500">via ${payment.payment_method == 1 ? 'Cash' : (payment.payment_method == 2 ? 'Card' : (payment.payment_method == 4 ? 'Credit Note' : 'Bank Transfer'))}</span>`;
                     
                     // Stats Update
                     document.getElementById('detail-total').textContent = `Rs. ${parseFloat(payment.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
@@ -331,7 +347,8 @@
                     const methods = {
                         1: { text: 'Cash Payment', icon: 'bi-cash-stack text-green-600' },
                         2: { text: 'Card Payment', icon: 'bi-credit-card text-blue-600' },
-                        3: { text: 'Bank Transfer', icon: 'bi-bank text-purple-600' }
+                        3: { text: 'Bank Transfer', icon: 'bi-bank text-purple-600' },
+                        4: { text: 'Credit Note', icon: 'bi-ticket-perforated text-orange-600' }
                     };
                     const method = methods[payment.payment_method] || { text: 'Other', icon: 'bi-wallet2 text-gray-600' };
                     
@@ -358,6 +375,35 @@
                         document.getElementById('btn-approve-all').onclick = () => approveBulkPayments(payment.id);
                     } else {
                         bulkContainer.classList.add('hidden');
+                    }
+
+                    // Credit Notes Handling
+                    const cnSection = document.getElementById('credit-notes-section');
+                    const cnList = document.getElementById('credit-notes-list');
+                    cnList.innerHTML = '';
+                    
+                    if (payment.credit_notes && payment.credit_notes.length > 0) {
+                        cnSection.classList.remove('hidden');
+                        payment.credit_notes.forEach(cn => {
+                            cnList.innerHTML += `
+                                <div class="bg-orange-50/50 border border-orange-100 rounded-xl p-4 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+                                            <i class="bi bi-ticket-perforated text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <span class="block text-xs font-black text-orange-700">#${cn.credit_note_number}</span>
+                                            <span class="block text-[10px] text-orange-500 font-bold">Credit Note</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="block text-sm font-black text-orange-800">Rs. ${parseFloat(cn.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        cnSection.classList.add('hidden');
                     }
 
                     // Notes

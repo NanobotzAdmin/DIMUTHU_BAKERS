@@ -59,6 +59,7 @@ class AgentDistributionManagementController extends Controller
                 'commissionRate' => $agent->commission_rate,
                 'creditLimit' => $agent->credit_limit,
                 'creditPeriodDays' => $agent->credit_period_days,
+                'vehicleCategory' => $agent->vehicle_category,
                 'bank_accounts' => $agent->bankAccounts->map(
                     function ($ba) {
                         return [
@@ -1485,6 +1486,8 @@ class AgentDistributionManagementController extends Controller
                 'email' => 'nullable|email|max:255',
                 'nic_number' => 'nullable|string|max:20',
                 'address' => 'nullable|string',
+                'credit_limit' => 'nullable|numeric|min:0',
+                'credit_period_days' => 'nullable|integer|min:0',
                 'bank_accounts' => 'required|array|min:1',
                 'bank_accounts.*.bank_id' => 'required|exists:so_banks,id',
                 'bank_accounts.*.account_owner_name' => 'nullable|string|max:255',
