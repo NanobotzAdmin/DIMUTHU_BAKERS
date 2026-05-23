@@ -206,9 +206,8 @@
 
             <div class="section-box" style="float: right; text-align: right;">
                 <div class="section-title">Dispatch Details</div>
-                <div><strong>Dispatch Date:</strong> {{ $order->stockTransfers->first() && $order->stockTransfers->first()->dispatched_date ? \Carbon\Carbon::parse($order->stockTransfers->first()->dispatched_date)->format('Y-m-d') : now()->format('Y-m-d H:i') }}</div>
-                <div><strong>Order Date:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('Y-m-d') }}</div>
-                <div><strong>Delivery Method:</strong> {{ $order->delivery_type == 1 ? 'Store Pickup' : 'Delivery' }}</div>
+                <div><strong>Dispatch Date:</strong> {{ $order->stockTransfers->first() && $order->stockTransfers->first()->dispatched_date ? \Carbon\Carbon::parse($order->stockTransfers->first()->dispatched_date)->tz('Asia/Colombo')->format('M j, Y, g:i A') : \Carbon\Carbon::now()->tz('Asia/Colombo')->format('M j, Y, g:i A') }}</div>
+                <div><strong>Order Date:</strong> {{ \Carbon\Carbon::parse($order->created_at)->tz('Asia/Colombo')->format('M j, Y, g:i A') }}</div>
                 @if($order->payment_completed == 2)
                     <div style="color: green; font-weight: bold; margin-top: 5px;">PAID</div>
                 @elseif($order->payment_completed == 3)
@@ -229,8 +228,6 @@
                     <th>Item Description</th>
                     <th class="text-right">Ordered Qty</th>
                     <th class="text-right">Dispatched Qty</th>
-                    <th class="text-right">Unit Price</th>
-                    <th class="text-right">Total (LKR)</th>
                 </tr>
             </thead>
             <tbody>
@@ -241,20 +238,11 @@
                             <div style="font-weight: 600;">{{ $item->productItem->product_name ?? 'Product' }}</div>
                             <div style="font-size: 11px; color: #6b7280;">{{ $item->productItem->reference_number ?? '' }}</div>
                         </td>
-                        <td class="text-right">{{ number_format($item->quantity, 2) }}</td>
-                        <td class="text-right" style="font-weight: bold;">{{ number_format($item->dispatched_quantity ?? $item->quantity, 2) }}</td>
-                        <td class="text-right">{{ number_format($item->unit_price, 2) }}</td>
-                        <td class="text-right">{{ number_format(($item->dispatched_quantity ?? $item->quantity) * $item->unit_price, 2) }}</td>
+                        <td>{{ number_format($item->quantity, 2) }}</td>
+                        <td style="font-weight: bold;">{{ number_format($item->dispatched_quantity ?? $item->quantity, 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td colspan="4" style="border-bottom: none; border-top: none;"></td>
-                    <td class="text-right">GRAND TOTAL</td>
-                    <td class="text-right total-amount">{{ number_format($order->grand_total, 2) }}</td>
-                </tr>
-            </tfoot>
         </table>
 
         @if($order->notes)

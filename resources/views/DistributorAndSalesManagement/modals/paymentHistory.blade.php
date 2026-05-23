@@ -104,7 +104,7 @@
 
         document.getElementById('hist-inv-number').innerText = invNum;
         document.getElementById('hist-cust-name').innerText = custName;
-        document.getElementById('hist-inv-date').innerText = new Date(invDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
+        document.getElementById('hist-inv-date').innerText = window.formatDateGMT(invDate);
         
         document.getElementById('hist-total').innerText = 'Rs ' + grandTotal.toLocaleString('en-LK', {minimumFractionDigits: 2});
         document.getElementById('hist-paid').innerText = 'Rs ' + amtPaid.toLocaleString('en-LK', {minimumFractionDigits: 2});
@@ -167,7 +167,7 @@
                     <div class="space-y-2 text-sm">
                         <div class="flex items-center gap-2 text-gray-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                            <span>Payment Date: ${new Date(p.paymentDate).toLocaleDateString()}</span>
+                            <span>Payment Date: ${window.formatDateTimeGMT(p.paymentDate)}</span>
                         </div>
                         ${p.referenceNumber ? `
                         <div class="flex items-center gap-2 text-gray-600">

@@ -316,6 +316,55 @@
     </div>
 
     <script>
+        // Global GMT Date/Time Utility Functions
+        window.formatDateTimeGMT = function(dateVal, showTime = true, showDate = true) {
+            if (!dateVal || dateVal === '-') return '-';
+            
+            let date;
+            if (dateVal instanceof Date) {
+                date = dateVal;
+            } else {
+                let str = String(dateVal).trim();
+                if (/^\d+$/.test(str)) {
+                    date = new Date(parseInt(str));
+                } else {
+                    // Force UTC parsing by appending Z if no timezone offset exists
+                    if (!str.includes('T') && !str.includes('Z') && !/[-+]\d{2}:?\d{2}$/.test(str)) {
+                        str = str.replace(' ', 'T') + 'Z';
+                    }
+                    date = new Date(str);
+                }
+            }
+            
+            if (isNaN(date.getTime())) return dateVal;
+            
+            const options = { timeZone: 'Asia/Colombo' };
+            if (showDate) {
+                options.month = 'short';
+                options.day = 'numeric';
+                options.year = 'numeric';
+            }
+            if (showTime) {
+                options.hour = 'numeric';
+                options.minute = '2-digit';
+                options.hour12 = true;
+            }
+            
+            let formatted = date.toLocaleString('en-US', options);
+            if (showTime) {
+                formatted += ' ';
+            }
+            return formatted;
+        };
+
+        window.formatDateGMT = function(dateVal) {
+            return window.formatDateTimeGMT(dateVal, false, true);
+        };
+
+        window.formatTimeGMT = function(dateVal) {
+            return window.formatDateTimeGMT(dateVal, true, false);
+        };
+
         function toggleMenu(menuId) {
             const menu = document.getElementById(menuId);
             const icon = document.getElementById(menuId + '-icon');

@@ -265,8 +265,8 @@
 <script>
     // --- HELPERS ---
     const formatCurrency = (val) => 'Rs ' + parseFloat(val).toLocaleString('en-LK', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    const formatDate = (str) => new Date(str).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
-    const formatDateTime = (str) => new Date(str).toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true});
+    const formatDate = (str) => window.formatDateGMT(str);
+    const formatDateTime = (str) => window.formatDateTimeGMT(str);
 
     const statusConfigs = {
         'draft': { color: 'bg-gray-100 text-gray-700 border-gray-300', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>', label: 'Draft' },
