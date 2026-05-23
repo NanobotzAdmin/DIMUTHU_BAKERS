@@ -431,8 +431,7 @@
         // 5. Schedule Info
         if (delivery.scheduledDate) {
             document.getElementById('detail-schedule-section').classList.remove('hidden');
-            const date = new Date(delivery.scheduledDate);
-            document.getElementById('detail-schedule-date').textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('detail-schedule-date').textContent = window.formatDateGMT(delivery.scheduledDate);
             
             // Time Slot Label Logic matching React component
             const timeSlotLabels = {
@@ -486,10 +485,7 @@
         // 8. Delivered Info
         if (delivery.deliveredAt) {
             document.getElementById('detail-delivered-section').classList.remove('hidden');
-            const date = new Date(delivery.deliveredAt);
-            document.getElementById('detail-delivered-time').textContent = date.toLocaleDateString('en-US', {
-                month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
-            });
+            document.getElementById('detail-delivered-time').textContent = window.formatDateTimeGMT(delivery.deliveredAt);
             if (delivery.deliveredBy) {
                 document.getElementById('detail-delivered-by').textContent = delivery.deliveredBy;
                 document.getElementById('detail-delivered-by-row').classList.remove('hidden');

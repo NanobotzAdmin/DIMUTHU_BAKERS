@@ -400,7 +400,7 @@
 
     const dateFormatter = (dateString) => {
         if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return window.formatDateGMT(dateString);
     };
 
     // --- Main Functions ---
@@ -480,7 +480,7 @@
         loadPreviewSettings(quotation);
 
         // 8. Populate History
-        document.getElementById('history-created-at').innerText = dateFormatter(quotation.created_at) + ' ' + new Date(quotation.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('history-created-at').innerText = window.formatDateTimeGMT(quotation.created_at);
 
         // 9. Dynamic Action Buttons
         const actionsContainer = document.getElementById('modal-actions-container');
