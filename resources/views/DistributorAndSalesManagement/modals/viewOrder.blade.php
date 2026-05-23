@@ -433,7 +433,7 @@
         }
 
         // Details
-        const createdAt = order.created_at || new Date().toLocaleDateString();
+        const createdAt = window.formatDateTimeGMT(order.created_at || new Date());
         document.getElementById('modal-header-created-at').innerText = createdAt;
         document.getElementById('modal-created-at').innerText = createdAt;
 
@@ -473,7 +473,7 @@
             deliveryContent.innerHTML = `
                 <div>
                     <p class="text-sm text-gray-500 mb-1">Pickup Date</p>
-                    <p class="text-gray-900 font-medium">${order.pickupDate || 'N/A'} at ${order.pickupTime || ''}</p>
+                    <p class="text-gray-900 font-medium">${window.formatDateTimeGMT(order.pickupDate)}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 mb-1">Location</p>
@@ -485,7 +485,7 @@
             deliveryContent.innerHTML = `
                  <div>
                     <p class="text-sm text-gray-500 mb-1">Delivery Date</p>
-                    <p class="text-gray-900 font-medium">${order.deliveryDate || 'N/A'} at ${order.deliveryTime || ''}</p>
+                    <p class="text-gray-900 font-medium">${window.formatDateTimeGMT(order.deliveryDate)}</p>
                 </div>
             `;
         }
@@ -720,7 +720,7 @@
 
                 paymentsHtml += `
                     <tr class="${bgClass} hover:bg-green-50 transition-colors">
-                        <td class="py-3 px-2 text-sm text-gray-700">${payment.date}</td>
+                        <td class="py-3 px-2 text-sm text-gray-700">${window.formatDateTimeGMT(payment.date)}</td>
                         <td class="py-3 px-2 text-sm text-gray-700">${payment.method}</td>
                         <td class="py-3 px-2 text-sm text-right font-semibold text-gray-900">Rs ${payment.amount}</td>
                         <td class="py-3 px-2 text-sm text-gray-700">${payment.reference}</td>
@@ -768,7 +768,7 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-semibold text-gray-900 text-sm">${entry.action}</span>
-                                <span class="text-xs text-gray-400">${entry.created_at}</span>
+                                <span class="text-xs text-gray-400">${window.formatDateTimeGMT(entry.created_at)}</span>
                             </div>
                             <p class="text-sm text-gray-600 mt-0.5">${entry.description || ''}</p>
                             <p class="text-xs text-gray-400 mt-1 flex items-center gap-1">

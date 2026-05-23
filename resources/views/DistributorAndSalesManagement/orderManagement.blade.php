@@ -520,7 +520,9 @@
                                                 <line x1="8" y1="2" x2="8" y2="6" />
                                                 <line x1="3" y1="10" x2="21" y2="10" />
                                             </svg>
-                                            <span>{{ $order['delivery_date'] }}</span>
+                                            <span>
+                                                {{ $order['delivery_date'] ? \Carbon\Carbon::parse($order['delivery_date'])->tz('Asia/Colombo')->format('M j, Y \a\t g:i A') : '-' }}
+                                            </span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
