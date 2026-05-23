@@ -521,7 +521,7 @@
                                                 <line x1="3" y1="10" x2="21" y2="10" />
                                             </svg>
                                             <span>
-                                                {{ $order['delivery_date'] ? \Carbon\Carbon::parse($order['delivery_date'])->tz('Asia/Colombo')->format('M j, Y \a\t g:i A') : '-' }}
+                                                {{ $order['delivery_date'] ? \Carbon\Carbon::parse($order['delivery_date'])->format('M j, Y \a\t g:i A') : '-' }}
                                             </span>
                                         </div>
                                         <div class="flex items-center gap-2">

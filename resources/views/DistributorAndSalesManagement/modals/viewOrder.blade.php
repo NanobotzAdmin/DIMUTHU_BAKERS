@@ -485,7 +485,7 @@
             deliveryContent.innerHTML = `
                  <div>
                     <p class="text-sm text-gray-500 mb-1">Delivery Date</p>
-                    <p class="text-gray-900 font-medium">${window.formatDateTimeGMT(order.deliveryDate)}</p>
+                    <p class="text-gray-900 font-medium">${(order.deliveryDate)}</p>
                 </div>
             `;
         }
