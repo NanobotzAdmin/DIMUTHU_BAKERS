@@ -18,11 +18,11 @@
         </div>
 
         <!-- Filters Card -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 transform transition-all hover:shadow-md font-sans">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8 transform transition-all hover:shadow-md font-sans">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
                 <div class="md:col-span-12 lg:col-span-5">
-                    <label class="block text-sm font-semibold text-gray-700 uppercase tracking-wider mb-2">Find Agent</label>
-                    <select id="filter-agent" class="w-full h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-700 font-medium select2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Find Agent</label>
+                    <select id="filter-agent" class="w-full h-10 px-4 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-700 font-medium select2">
                         <option value="">All Agents</option>
                         @foreach($agents as $agent)
                             <option value="{{ $agent->id }}">{{ $agent->agent_name }} ({{ $agent->agent_code }})</option>
@@ -30,8 +30,8 @@
                     </select>
                 </div>
                 <div class="md:col-span-6 lg:col-span-3">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">Year</label>
-                    <select id="filter-year" class="w-full h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold px-4 text-gray-700">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Year</label>
+                    <select id="filter-year" class="w-full h-10 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold px-3 text-slate-700">
                         <option value="">All Years</option>
                         @php $currentYear = date('Y'); @endphp
                         @for($y = $currentYear - 2; $y <= $currentYear + 1; $y++)
@@ -40,8 +40,8 @@
                     </select>
                 </div>
                 <div class="md:col-span-6 lg:col-span-3">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">Month</label>
-                    <select id="filter-month" class="w-full h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold px-4 text-gray-700">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Month</label>
+                    <select id="filter-month" class="w-full h-10 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold px-3 text-slate-700">
                         <option value="">All Months</option>
                         @foreach(range(1, 12) as $m)
                             <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
@@ -49,7 +49,7 @@
                     </select>
                 </div>
                 <div class="md:col-span-12 lg:col-span-1">
-                    <button class="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl transition-all flex items-center justify-center border-0" onclick="resetFilters()">
+                    <button class="w-full h-10 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all flex items-center justify-center border-0 active:scale-95 shadow-sm" onclick="resetFilters()">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
@@ -165,16 +165,16 @@
         </div>
 
         <!-- Initial Selectors -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
                 <div class="md:col-span-12 lg:col-span-5">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">Target Agent</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Target Agent</label>
                         <button type="button" class="hidden text-indigo-600 hover:text-indigo-700 text-sm font-bold flex items-center transition-colors px-0 bg-transparent border-0" onclick="openQuickAgentModal()">
                             <i class="bi bi-person-plus-fill mr-1"></i> Quick Recruit
                         </button>
                     </div>
-                    <select id="agent-selector" class="w-full h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-700 font-medium select2">
+                    <select id="agent-selector" class="w-full h-10 px-4 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-700 font-medium select2">
                         <option value="">Select Agent...</option>
                         @foreach($agents as $agent)
                             <option value="{{ $agent->id }}">{{ $agent->agent_name }} ({{ $agent->agent_code }})</option>
@@ -182,8 +182,8 @@
                     </select>
                 </div>
                 <div class="md:col-span-6 lg:col-span-3">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">Target Year</label>
-                    <select id="year-selector" class="w-full h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold px-4 text-gray-700">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Target Year</label>
+                    <select id="year-selector" class="w-full h-10 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold px-3 text-slate-700">
                         @php $currentYear = date('Y'); @endphp
                         @for($y = $currentYear - 1; $y <= $currentYear + 2; $y++)
                             <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
@@ -191,8 +191,8 @@
                     </select>
                 </div>
                 <div class="md:col-span-6 lg:col-span-3">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">Target Month</label>
-                    <select id="month-selector" class="w-full h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold px-4 text-gray-700">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Target Month</label>
+                    <select id="month-selector" class="w-full h-10 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold px-3 text-slate-700">
                         @php $currentMonth = date('n'); @endphp
                         @foreach(range(1, 12) as $m)
                             <option value="{{ $m }}" {{ $m == $currentMonth ? 'selected' : '' }}>
@@ -202,7 +202,7 @@
                     </select>
                 </div>
                 <div class="md:col-span-12 lg:col-span-1">
-                    <button id="verify-selection" class="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all flex items-center justify-center border-0" onclick="loadTargetsForSelection()">
+                    <button id="verify-selection" class="w-full h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center border-0 active:scale-95 shadow-sm" onclick="loadTargetsForSelection()">
                         <i class="bi bi-chevron-right"></i>
                     </button>
                 </div>
@@ -222,45 +222,45 @@
                         </div>
                         <div class="p-6">
                             <div class="mb-6">
-                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Monthly Sales Target (LKR)</label>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Monthly Sales Target (LKR)</label>
                                 <div class="relative">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">LKR</span>
-                                    <input type="text" id="monthly-sales-target" class="w-full h-14 pl-14 pr-4 rounded-xl border-gray-100 bg-gray-50 text-2xl font-bold text-indigo-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all amount-input" placeholder="0.00">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs font-sans">LKR</span>
+                                    <input type="text" id="monthly-sales-target" class="w-full h-10 pl-12 pr-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-bold text-indigo-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all amount-input" placeholder="0.00">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4 mb-6 hidden">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Base Salary</label>
-                                    <input type="number" id="base-salary" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="0.00">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Base Salary</label>
+                                    <input type="number" id="base-salary" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all text-sm" placeholder="0.00">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Comm. Rate (%)</label>
-                                    <input type="number" id="commission-rate" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="0.00">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Comm. Rate (%)</label>
+                                    <input type="number" id="commission-rate" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all text-sm" placeholder="0.00">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4 mb-6">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Inv. Comm. (%)</label>
-                                    <input type="number" id="invoicing-commission-rate" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="15.00">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Inv. Comm. (%)</label>
+                                    <input type="number" id="invoicing-commission-rate" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all text-sm" placeholder="15.00">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Target Comm. (%)</label>
-                                    <input type="number" id="target-commission-rate" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="5.00">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Target Comm. (%)</label>
+                                    <input type="number" id="target-commission-rate" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all text-sm" placeholder="5.00">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4 mb-6 hidden">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Threshold (%)</label>
-                                    <input type="number" id="achievement-threshold" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="80.00">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Threshold (%)</label>
+                                    <input type="number" id="achievement-threshold" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all text-sm" placeholder="80.00">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Redu. Comm. (%)</label>
-                                    <input type="number" id="reduced-target-commission-rate" class="w-full h-12 px-4 rounded-xl border-gray-100 bg-gray-50 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all" placeholder="4.00">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Redu. Comm. (%)</label>
+                                    <input type="number" id="reduced-target-commission-rate" class="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50/50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all text-sm" placeholder="4.00">
                                 </div>
                             </div>
                             <div class="mb-6 hidden">
-                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Planning Status</label>
-                                <select id="target-status" class="w-full h-12 rounded-xl border-gray-100 bg-gray-50 font-bold transition-all px-4 text-gray-700">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Planning Status</label>
+                                <select id="target-status" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/50 font-bold transition-all px-3 text-slate-700 text-sm">
                                     <option value="1" class="text-green-600 font-bold font-sans">Active</option>
                                     <option value="2" class="text-red-500 font-bold font-sans">Inactive</option>
                                     <option value="0" class="text-orange-500 font-bold font-sans">Draft</option>
@@ -354,7 +354,7 @@
 <template id="category-row-template">
     <tr class="hover:bg-gray-50/50 transition-colors border-0">
         <td class="px-6 py-3 border-0">
-            <select class="w-full h-11 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-semibold text-gray-700 select-category font-sans px-3">
+            <select class="w-full h-9 text-xs border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-semibold text-slate-700 select-category font-sans px-2.5">
                 <option value="">Choose Category</option>
                 @foreach($productCategories as $cat)
                     <option value="{{ $cat->id }}">{{ $cat->category_name }} ({{ $cat->category_code }})</option>
@@ -362,20 +362,20 @@
             </select>
         </td>
         <td class="px-6 py-3 border-0">
-            <div class="relative max-w-[180px] mx-auto">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold font-sans">LKR</span>
-                <input type="text" class="w-full h-11 pl-12 pr-4 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-gray-700 target-amount amount-input font-sans" placeholder="0.00">
+            <div class="relative w-full">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[10px] font-sans">LKR</span>
+                <input type="text" class="w-full h-9 pl-10 pr-2 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-slate-700 target-amount amount-input text-xs font-sans" placeholder="0.00">
             </div>
         </td>
         <td class="px-6 py-3 border-0">
             <div class="flex items-center justify-center gap-2 max-w-[100px] mx-auto font-sans">
-                <input type="number" class="w-16 h-11 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-indigo-600 text-center target-percentage font-sans" placeholder="0">
-                <span class="text-gray-400 font-bold font-sans">%</span>
+                <input type="number" class="w-14 h-9 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-indigo-600 text-center target-percentage text-xs font-sans" placeholder="0">
+                <span class="text-gray-400 font-bold text-xs font-sans">%</span>
             </div>
         </td>
         <td class="px-6 py-3 text-right border-0">
-            <button class="w-9 h-9 flex items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all remove-row border-0 bg-transparent font-sans">
-                <i class="bi bi-trash3-fill"></i>
+            <button class="w-8 h-8 flex items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all remove-row border-0 bg-transparent font-sans">
+                <i class="bi bi-trash3-fill text-sm"></i>
             </button>
         </td>
     </tr>
@@ -385,7 +385,7 @@
 <template id="sku-row-template">
     <tr class="hover:bg-gray-50/50 transition-colors border-0">
         <td class="px-6 py-3 border-0">
-            <select class="w-full h-11 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-semibold text-gray-700 select-sku font-sans px-3">
+            <select class="w-full h-9 text-xs border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-semibold text-slate-700 select-sku font-sans px-2.5">
                 <option value="">Select SKU</option>
                 @foreach($productItems as $item)
                     <option value="{{ $item->id }}" data-category-id="{{ $item->pm_product_category_id }}" data-category-name="{{ $item->category->category_name ?? 'Unknown' }}">
@@ -395,19 +395,19 @@
             </select>
         </td>
         <td class="px-6 py-3 border-0">
-            <div class="relative max-w-[180px] mx-auto">
-                <input type="number" class="w-full h-11 px-4 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-gray-700 target-qty font-sans" placeholder="0">
+            <div class="relative w-full">
+                <input type="number" class="w-full h-9 px-3 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-slate-700 target-qty text-xs font-sans" placeholder="0">
             </div>
         </td>
         <td class="px-6 py-3 border-0">
             <div class="flex items-center justify-center gap-2 max-w-[100px] mx-auto font-sans">
-                <input type="number" class="w-16 h-11 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-indigo-600 text-center target-percentage font-sans" placeholder="0">
-                <span class="text-gray-400 font-bold font-sans">%</span>
+                <input type="number" class="w-14 h-9 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 font-bold text-indigo-600 text-center target-percentage text-xs font-sans" placeholder="0">
+                <span class="text-gray-400 font-bold text-xs font-sans">%</span>
             </div>
         </td>
         <td class="px-6 py-3 text-right border-0">
-            <button class="w-9 h-9 flex items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all remove-row border-0 bg-transparent font-sans">
-                <i class="bi bi-trash3-fill"></i>
+            <button class="w-8 h-8 flex items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all remove-row border-0 bg-transparent font-sans">
+                <i class="bi bi-trash3-fill text-sm"></i>
             </button>
         </td>
     </tr>
@@ -417,24 +417,24 @@
 <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 hidden" id="quickAgentModal">
     <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden transform transition-all scale-95 duration-300" id="modal-container">
         <div class="px-8 pt-8 flex justify-between items-center font-sans">
-            <h5 class="text-2xl font-black text-gray-900 tracking-tight font-sans">Quick Recruit</h5>
+            <h5 class="text-xl font-black text-gray-900 tracking-tight font-sans">Quick Recruit</h5>
             <button type="button" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 border-0" onclick="closeQuickAgentModal()">
-                <i class="bi bi-x-lg"></i>
+                <i class="bi bi-x-lg text-sm"></i>
             </button>
         </div>
         <div class="p-8 font-sans">
-            <p class="text-gray-500 text-sm mb-8 leading-relaxed font-medium text-center font-sans">Establish a new agent profile instantly.</p>
-            <form id="quick-agent-form" class="space-y-6">
+            <p class="text-gray-500 text-xs mb-6 leading-relaxed font-medium text-center font-sans">Establish a new agent profile instantly.</p>
+            <form id="quick-agent-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-sans">Display Name *</label>
-                    <input type="text" id="quick-agent-name" class="w-full h-14 px-5 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-gray-700 font-sans" placeholder="e.g. Namal Perera" required>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 font-sans">Display Name *</label>
+                    <input type="text" id="quick-agent-name" class="w-full h-10 px-4 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-gray-700 text-sm font-sans" placeholder="e.g. Namal Perera" required>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-sans">Primary Phone</label>
-                    <input type="tel" id="quick-agent-phone" class="w-full h-14 px-5 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-gray-700 font-sans" placeholder="+94 7X XXX XXXX">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 font-sans">Primary Phone</label>
+                    <input type="tel" id="quick-agent-phone" class="w-full h-10 px-4 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-gray-700 text-sm font-sans" placeholder="+94 7X XXX XXXX">
                 </div>
-                <div class="pt-4">
-                    <button type="button" class="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 tracking-wide transition-all border-0 font-sans" onclick="submitQuickAgent()">
+                <div class="pt-2">
+                    <button type="button" class="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-xl shadow-indigo-100 tracking-wide transition-all border-0 text-sm font-sans active:scale-95" onclick="submitQuickAgent()">
                         Onboard Agent
                     </button>
                 </div>

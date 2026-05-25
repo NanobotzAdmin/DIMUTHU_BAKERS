@@ -21,6 +21,7 @@ class ProductManagementController extends Controller
             'name' => 'required|string|max:150',
             'category' => 'required|exists:pm_product_category,id',
             'items' => 'required|array|min:1',
+            'item_type' => 'nullable|integer|in:1,2',
         ]);
 
         try {
@@ -61,6 +62,7 @@ class ProductManagementController extends Controller
                     'pm_product_id' => $product->id,
                     'pm_brands_id' => $request->brand ?? null, // Optional
                     'pm_product_category_id' => $request->category,
+                    'item_type' => $request->item_type ?? 1,
                     'pm_variation_id' => $item['variation_id'] ?? null,
                     'pm_variation_value_id' => $item['variation_value_id'] ?? null,
                     'product_name' => $item['name'],
@@ -440,6 +442,7 @@ class ProductManagementController extends Controller
                 'sellingPrice' => $item->selling_price,
                 'distributorPercentage' => $item->distributor_percentage,
                 'wholesalePercentage' => $item->wholesale_percentage,
+                'itemType' => $item->item_type ?? 1,
             ];
         });
 
@@ -490,6 +493,7 @@ class ProductManagementController extends Controller
             'selling_price' => 'nullable|numeric',
             'distributor_percentage' => 'nullable|numeric',
             'wholesale_percentage' => 'nullable|numeric',
+            'item_type' => 'nullable|integer|in:1,2',
         ]);
 
         try {
@@ -500,12 +504,14 @@ class ProductManagementController extends Controller
             $sellingPrice = $request->input('selling_price', 0);
             $distributorPercentage = $request->input('distributor_percentage', 0);
             $wholesalePercentage = $request->input('wholesale_percentage', 0);
+            $itemType = $request->input('item_type', 1);
 
             // Update price fields
             $productItem->update([
                 'selling_price' => $sellingPrice,
                 'distributor_percentage' => $distributorPercentage,
                 'wholesale_percentage' => $wholesalePercentage,
+                'item_type' => $itemType,
                 'updated_by' => auth()->id() ?? 1
             ]);
 

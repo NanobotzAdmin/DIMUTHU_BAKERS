@@ -38,5 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         // Run commission generation on the 1st of every month at midnight
         $schedule->command('agent:generate-commissions')->monthlyOn(1, '00:00');
+        // Process queued emails every minute
+        $schedule->command('email:send-pending')->everyMinute();
     })
     ->create();

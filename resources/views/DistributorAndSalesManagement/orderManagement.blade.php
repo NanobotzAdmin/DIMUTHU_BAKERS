@@ -168,100 +168,96 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                 {{-- Total --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-purple-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-purple-600">
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="8" cy="21" r="1" />
                                 <circle cx="19" cy="21" r="1" />
                                 <path
                                     d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">All</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">Total Orders</h3>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Total Orders</h3>
                     <p class="text-2xl font-bold text-gray-900">{{ $summary['totalOrders'] }}</p>
-                    <p class="text-sm text-gray-500">Rs {{ number_format($summary['totalValue'], 2) }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Rs {{ number_format($summary['totalValue'], 2) }}</p>
                 </div>
 
-                {{-- In Production --}}
+                {{-- Pending Approval --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-amber-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-indigo-600">
-                                <path
-                                    d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
-                                <line x1="6" y1="17" x2="18" y2="17" />
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">Pending</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">In Production</h3>
-                    <p class="text-2xl font-bold text-gray-900">{{ $summary['inProduction'] }}</p>
-                    <p class="text-sm text-gray-500">orders</p>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Pending Approval</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['pending-approval'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Requires action</p>
                 </div>
 
-                {{-- Ready --}}
+                {{-- Approved --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-blue-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-teal-600">
-                                <path d="m7.5 4.27 9 5.15" />
-                                <path
-                                    d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                                <path d="m3.3 7 8.7 5 8.7-5" />
-                                <path d="M12 22v-9" />
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Approved</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">Ready</h3>
-                    <p class="text-2xl font-bold text-gray-900">{{ $summary['readyForPickup'] }}</p>
-                    <p class="text-sm text-gray-500">for pickup</p>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Approved</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['approved'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Ready for next steps</p>
                 </div>
 
-                {{-- Out for Delivery --}}
+                {{-- Dispatched --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-cyan-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-cyan-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-cyan-600">
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="1" y="3" width="15" height="13" />
                                 <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
                                 <circle cx="5.5" cy="18.5" r="2.5" />
                                 <circle cx="18.5" cy="18.5" r="2.5" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-100">Dispatched</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">Out for Delivery</h3>
-                    <p class="text-2xl font-bold text-gray-900">{{ $summary['outForDelivery'] }}</p>
-                    <p class="text-sm text-gray-500">orders</p>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Dispatched</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['out-for-delivery'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">In transit</p>
                 </div>
 
-                {{-- Today's Orders --}}
+                {{-- Completed --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-emerald-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-green-600">
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                                <polyline points="17 6 23 6 23 12" />
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Completed</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">Today's Orders</h3>
-                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersToday'] }}</p>
-                    <p class="text-sm text-gray-500">Rs {{ number_format($summary['ordersTodayValue'], 2) }}</p>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Completed</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['completed'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Delivered successfully</p>
                 </div>
             </div>
 

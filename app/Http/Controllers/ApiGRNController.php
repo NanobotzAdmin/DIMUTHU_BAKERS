@@ -198,6 +198,155 @@ class ApiGRNController extends Controller
                 'created_by' => auth()->id(),
             ]);
 
+            // Queue Emails for active recipients (process_id = 1)
+            try {
+                $recipients = \App\Models\EmProcessHasEmailAddress::where('process_id', 1)
+                    ->where('status', 1)
+                    ->get();
+
+                if ($recipients->isNotEmpty()) {
+                    $agentName = $agent ? $agent->agent_name : ('Agent #' . $agentId);
+                    
+                    // Retrieve logo from system settings
+                    $logoUrl = asset('images/logo.png');
+                    $systemConfigPath = public_path('system_config.json');
+                    if (file_exists($systemConfigPath)) {
+                        $systemSettings = json_decode(file_get_contents($systemConfigPath), true);
+                        if (!empty($systemSettings['logos']['primary'])) {
+                            $logoUrl = asset($systemSettings['logos']['primary']);
+                        }
+                    }
+
+                    $orderItemsHtml = '';
+                    foreach ($request->items as $item) {
+                        $product = PmProductItem::find($item['product_id']);
+                        $priceToUse = $product->distributor_price ?? $product->selling_price;
+                        $subtotal = $item['quantity'] * $priceToUse;
+                        $orderItemsHtml .= '<tr>
+                            <td style="padding: 14px 16px; border-bottom: 1px solid #f1f3f7; color: #333333; font-weight: 500;">' . htmlspecialchars($product->product_name) . '</td>
+                            <td style="padding: 14px 16px; border-bottom: 1px solid #f1f3f7; text-align: right; color: #495057; font-weight: bold;">' . number_format($item['quantity'], 2) . '</td>
+                            <td style="padding: 14px 16px; border-bottom: 1px solid #f1f3f7; text-align: right; color: #495057;">Rs. ' . number_format($priceToUse, 2) . '</td>
+                            <td style="padding: 14px 16px; border-bottom: 1px solid #f1f3f7; text-align: right; color: #1a1a1a; font-weight: 600;">Rs. ' . number_format($subtotal, 2) . '</td>
+                        </tr>';
+                    }
+
+                    $notesSection = !empty($request->notes) 
+                        ? '<div style="margin-top: 25px; padding: 18px; background: #faf8f5; border-left: 4px solid #b89755; border-radius: 4px; font-style: italic; color: #5a4b31; font-size: 14px; line-height: 1.5;"><strong>Special Notes:</strong> ' . htmlspecialchars($request->notes) . '</div>' 
+                        : '';
+
+                    $emailContent = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Order Request Received</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: \'Inter\', sans-serif; color: #495057; background-color: #f6f8fb; margin: 0; padding: 40px 20px; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #eef2f6; }
+        .header { background: linear-gradient(135deg, #52381f, #2e1d0f); padding: 45px 30px; text-align: center; border-bottom: 4px solid #b89755; position: relative; }
+        .header img { max-height: 90px; width: auto; margin-bottom: 15px; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.15)); }
+        .header h1 { margin: 0; font-family: \'Cinzel\', serif; font-size: 26px; font-weight: 600; color: #ffffff; letter-spacing: 3px; text-transform: uppercase; }
+        .header p { color: #b89755; margin: 5px 0 0 0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+        .content { padding: 40px 35px; }
+        .status-badge { display: inline-block; padding: 6px 14px; background-color: #fff9db; border: 1px solid #ffe066; color: #8a6d3b; font-weight: 600; font-size: 12px; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
+        .intro-title { font-family: \'Cinzel\', serif; font-size: 20px; font-weight: 600; color: #2e1d0f; margin-top: 0; margin-bottom: 10px; }
+        .intro-p { font-size: 15px; color: #6c757d; line-height: 1.6; margin-bottom: 30px; }
+        .order-meta { display: table; width: 100%; margin-bottom: 30px; border-bottom: 1px solid #eef2f6; padding-bottom: 25px; }
+        .meta-col { display: table-cell; width: 50%; vertical-align: top; }
+        .meta-label { color: #adb5bd; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+        .meta-val { color: #2e1d0f; font-size: 15px; font-weight: 600; }
+        .table-container { border: 1px solid #eef2f6; border-radius: 8px; overflow: hidden; margin: 25px 0; }
+        .table { width: 100%; border-collapse: collapse; margin: 0; }
+        .table th { text-align: left; padding: 14px 16px; background-color: #f8fafc; border-bottom: 1px solid #eef2f6; color: #868e96; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .total-row { font-weight: bold; background-color: #fffaf0; }
+        .total-label { font-family: \'Inter\', sans-serif; font-size: 14px; color: #2e1d0f; font-weight: 700; }
+        .total-value { font-family: \'Inter\', sans-serif; font-size: 18px; color: #2e1d0f; font-weight: 700; }
+        .footer { background: #f8fafc; text-align: center; padding: 30px; font-size: 12px; color: #868e96; border-top: 1px solid #eef2f6; line-height: 1.6; }
+        .footer strong { color: #495057; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="' . htmlspecialchars($logoUrl) . '" alt="DIMUTHU BAKEHOUSE">
+            <h1>DIMUTHU BAKEHOUSE</h1>
+            <p>Artisanal Excellence</p>
+        </div>
+        <div class="content">
+            <span class="status-badge">Pending Approval</span>
+            <h2 class="intro-title">New Order Request</h2>
+            <p class="intro-p">A brand new order request has been successfully submitted and is now awaiting verification. Please review the details below.</p>
+            
+            <div class="order-meta">
+                <div class="meta-col">
+                    <div class="meta-label">Submitted By Agent</div>
+                    <div class="meta-val">' . htmlspecialchars($agentName) . '</div>
+                </div>
+                <div class="meta-col" style="padding-left: 20px;">
+                    <div class="meta-label">Delivery Target Date</div>
+                    <div class="meta-val">' . htmlspecialchars(\Carbon\Carbon::parse($request->delivery_date)->format('F d, Y')) . '</div>
+                </div>
+            </div>
+
+            <div class="order-meta" style="border-bottom: none; padding-bottom: 0; margin-bottom: 10px;">
+                <div class="meta-col">
+                    <div class="meta-label">Order Request ID</div>
+                    <div class="meta-val" style="color: #b89755; font-family: monospace; font-size: 16px;">' . htmlspecialchars($orderNumber) . '</div>
+                </div>
+                <div class="meta-col" style="padding-left: 20px;">
+                    <div class="meta-label">Submission Date</div>
+                    <div class="meta-val">' . now()->format('F d, Y - h:i A') . '</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="padding: 14px 16px;">Product Item</th>
+                            <th style="padding: 14px 16px; text-align: right;">Qty</th>
+                            <th style="padding: 14px 16px; text-align: right;">Unit Price</th>
+                            <th style="padding: 14px 16px; text-align: right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ' . $orderItemsHtml . '
+                        <tr class="total-row">
+                            <td colspan="3" class="total-label" style="padding: 18px 16px; border-top: 2px solid #eef2f6; text-align: right;">Grand Total:</td>
+                            <td class="total-value" style="padding: 18px 16px; border-top: 2px solid #eef2f6; text-align: right;">Rs. ' . number_format($grandTotal, 2) . '</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            ' . $notesSection . '
+        </div>
+        <div class="footer">
+            &copy; ' . date('Y') . ' <strong>Dimuthu Bakehouse (Pvt) Ltd.</strong><br>
+            527, Thewatta Road, Ragama, Sri Lanka.<br>
+            <span style="font-size: 11px; margin-top: 10px; display: block; color: #adb5bd;">This is an automated notification. Please do not reply directly to this email.</span>
+        </div>
+    </div>
+</body>
+</html>';
+
+                    foreach ($recipients as $recipient) {
+                        \App\Models\EmEmailSend::create([
+                            'email_address' => $recipient->email_address,
+                            'process_id' => 1,
+                            'email_subject' => 'New Order Request ' . $orderNumber . ' Submitted',
+                            'email_content' => $emailContent,
+                            'status' => 0, // Pending
+                            'created_by' => auth()->id(),
+                            'created_at' => now(),
+                        ]);
+                    }
+                }
+            } catch (\Exception $ex) {
+                Log::error('Order Request Email Queueing Failed: ' . $ex->getMessage());
+            }
+
             DB::commit();
 
             return response()->json([

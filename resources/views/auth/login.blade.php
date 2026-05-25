@@ -7,7 +7,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Cinzel:wght@500;700;900&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
@@ -47,7 +47,13 @@
         <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center relative">
             
             <div class="mb-10 text-center md:text-left">
-                <img src="{{ asset($settings->logos->login ?? 'images/logo.png') }}" alt="BakeryMate Logo" class="h-24 w-auto inline-block mb-2">
+                <div class="flex items-center justify-center md:justify-start gap-4 mb-6">
+                    <img src="{{ asset($settings->logos->login ?? 'images/logo.png') }}" alt="Logo" class="h-32 w-auto object-contain">
+                    <div class="flex flex-col text-left">
+                        <span class="font-serif leading-none" style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 2.65rem; font-weight: 900; color: #956b41ff; letter-spacing: 0.06em;">DIMUTHU</span>
+                        <span class="font-serif uppercase mt-1.5" style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 1.02rem; font-weight: 500; color: #956b41ff; opacity: 0.95; letter-spacing: 0.25em; margin-right: -0.25em;">BAKEHOUSE</span>
+                    </div>
+                </div>
                 <h2 class="text-2xl font-bold text-slate-800">Welcome Back!</h2>
                 <p class="text-slate-500 text-sm mt-1">Please enter your details to sign in.</p>
             </div>

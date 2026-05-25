@@ -1,8 +1,8 @@
 @php
     // If settings are missing for notifications, we can provide defaults here or in the controller/provider
     $channels = $settings->notifications->channels ?? [];
-    $email_config = $settings->notifications->email_config ?? (object)[];
-    $sms_config = $settings->notifications->sms_config ?? (object)[];
+    $email_config = $settings->notifications->email_config ?? (object) [];
+    $sms_config = $settings->notifications->sms_config ?? (object) [];
     $rules = $settings->notifications->rules ?? [];
 @endphp
 
@@ -218,10 +218,10 @@
                                     </span>
                                 </div>
                                 <p class="text-sm text-gray-600 mb-2">
-                                    Channels: {{ implode(', ', array_map('strtoupper', (array)$rule->channels)) }}
+                                    Channels: {{ implode(', ', array_map('strtoupper', (array) $rule->channels)) }}
                                 </p>
                                 <p class="text-sm text-gray-600">
-                                    Recipients: {{ implode(', ', (array)$rule->recipients) }}
+                                    Recipients: {{ implode(', ', (array) $rule->recipients) }}
                                 </p>
                                 @if(isset($rule->schedule))
                                     <p class="text-sm text-gray-600 mt-1">
@@ -245,6 +245,84 @@
                 @endforeach
             </div>
         </div>
+    </div>
+
+    {{-- Process Email Routing Settings --}}
+    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mt-6">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Process Email Routing</h3>
+                    <p class="text-sm text-gray-600">Configure email lists to notify automatically when a specific
+                        business process triggers</p>
+                </div>
+            </div>
+
+            <!-- Form to add new recipient -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-100">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3">Add Recipient Email Routing</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Business
+                            Process</label>
+                        <select id="pe_process_id"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2 bg-white">
+                            <option value="1">Order Request Notifications</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Select
+                            User to Notify</label>
+                        <select id="pe_user_id"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2 bg-white">
+                            <option value="">Loading users...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="button" id="btn-save-process-emails"
+                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#D4A017] hover:bg-[#B8860B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4A017]">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add Recipient
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configured email list under the selected process -->
+            <div class="mt-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3">Configured Recipients for Process</h4>
+                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    User Name</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Email Address</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-40">
+                                    Status</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">
+                                    Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="process-configured-list" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">Select a process to
+                                    view configured email routes.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     {{-- Bottom Save Actions --}}
@@ -306,35 +384,35 @@
 
         // 1. Channel Visibility
         function handleChannelToggle(toggle) {
-    const type = toggle.dataset.type;
-    const container = toggle.parentElement;
-    const statusText = container.querySelector('.status-text');
-    const toggleBg = container.querySelector('.toggle-bg'); // Select the switch track
+            const type = toggle.dataset.type;
+            const container = toggle.parentElement;
+            const statusText = container.querySelector('.status-text');
+            const toggleBg = container.querySelector('.toggle-bg'); // Select the switch track
 
-    // Update Text
-    if(statusText) statusText.textContent = toggle.checked ? 'Enabled' : 'Disabled';
+            // Update Text
+            if (statusText) statusText.textContent = toggle.checked ? 'Enabled' : 'Disabled';
 
-    // Update Color manually to be 100% sure
-    if(toggleBg) {
-        if(toggle.checked) {
-            toggleBg.classList.remove('bg-red-500');
-            toggleBg.classList.add('bg-green-500');
-        } else {
-            toggleBg.classList.remove('bg-green-500');
-            toggleBg.classList.add('bg-red-500');
+            // Update Color manually to be 100% sure
+            if (toggleBg) {
+                if (toggle.checked) {
+                    toggleBg.classList.remove('bg-red-500');
+                    toggleBg.classList.add('bg-green-500');
+                } else {
+                    toggleBg.classList.remove('bg-green-500');
+                    toggleBg.classList.add('bg-red-500');
+                }
+            }
+
+            // Toggle Visibility of Config Cards
+            if (type === 'email' && emailCard) {
+                if (toggle.checked) emailCard.classList.remove('hidden', 'opacity-50');
+                else emailCard.classList.add('hidden', 'opacity-50');
+            }
+            if (type === 'sms' && smsCard) {
+                if (toggle.checked) smsCard.classList.remove('hidden', 'opacity-50');
+                else smsCard.classList.add('hidden', 'opacity-50');
+            }
         }
-    }
-
-    // Toggle Visibility of Config Cards
-    if (type === 'email' && emailCard) {
-        if (toggle.checked) emailCard.classList.remove('hidden', 'opacity-50');
-        else emailCard.classList.add('hidden', 'opacity-50');
-    }
-    if (type === 'sms' && smsCard) {
-        if (toggle.checked) smsCard.classList.remove('hidden', 'opacity-50');
-        else smsCard.classList.add('hidden', 'opacity-50');
-    }
-}
 
         // 2. Email Provider Fields
         function updateEmailFields() {
@@ -430,6 +508,231 @@
             ruleToggles.forEach(t => updateRuleCard(t));
             checkNotifChanges();
         }
+
+        // ==========================================
+        // Process Email Routing Configuration Logic
+        // ==========================================
+        let systemUsers = [];
+        let processConfigs = [];
+        let systemProcesses = {};
+
+        function loadProcessEmails() {
+            fetch('/admin-settings/process-emails')
+                .then(response => response.json())
+                .then(res => {
+                    if (res.status) {
+                        systemUsers = res.users || [];
+                        processConfigs = res.configs || [];
+                        systemProcesses = res.processes || {};
+
+                        // 1. Populate the process dropdown dynamically
+                        const processSelect = document.getElementById('pe_process_id');
+                        if (processSelect) {
+                            processSelect.innerHTML = '';
+                            Object.entries(systemProcesses).forEach(([id, name]) => {
+                                processSelect.innerHTML += `<option value="${id}">${name}</option>`;
+                            });
+                        }
+
+                        // 2. Populate the available users select dropdown
+                        const userSelect = document.getElementById('pe_user_id');
+                        if (userSelect) {
+                            userSelect.innerHTML = '<option value="">-- Choose User --</option>';
+                            systemUsers.forEach(user => {
+                                userSelect.innerHTML += `<option value="${user.id}" data-email="${user.user_name}">${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)} (${escapeHtml(user.user_name)})</option>`;
+                            });
+                        }
+
+                        renderConfiguredRecipients();
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load process emails:', err);
+                });
+        }
+
+        function renderConfiguredRecipients() {
+            const tbody = document.getElementById('process-configured-list');
+            const processSelect = document.getElementById('pe_process_id');
+            if (!tbody || !processSelect) return;
+
+            const selectedProcessId = parseInt(processSelect.value);
+            tbody.innerHTML = '';
+
+            // Filter configurations for the selected process
+            const filteredConfigs = processConfigs.filter(c => parseInt(c.process_id) === selectedProcessId);
+
+            if (filteredConfigs.length === 0) {
+                tbody.innerHTML = `<tr>
+                    <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">No email routings configured under this process.</td>
+                </tr>`;
+                return;
+            }
+
+            filteredConfigs.forEach(config => {
+                const user = config.user || { first_name: 'Unknown', last_name: 'User', user_name: config.email_address };
+                const isActive = parseInt(config.status) === 1;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${escapeHtml(config.email_address)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="pe-status-${config.id}" class="sr-only peer pe-user-status-checkbox" ${isActive ? 'checked' : ''} onchange="toggleRecipientStatus(${config.id}, ${config.um_user_id}, '${config.email_address}')">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#D4A017] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                <span class="ml-2 text-xs font-medium text-gray-700 peer-checked:text-green-600" id="status-text-${config.id}">${isActive ? 'Active' : 'Inactive'}</span>
+                            </label>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button type="button" class="text-red-600 hover:text-red-900 transition-colors" onclick="deleteProcessEmail(${config.id})">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.toggleRecipientStatus = function (configId, umUserId, emailAddress) {
+            const processSelect = document.getElementById('pe_process_id');
+            const statusChk = document.getElementById(`pe-status-${configId}`);
+            if (!processSelect || !statusChk) return;
+
+            const processId = processSelect.value;
+            const statusText = document.getElementById(`status-text-${configId}`);
+
+            fetch('/admin-settings/process-emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: configId,
+                    process_id: processId,
+                    um_user_id: umUserId,
+                    email_address: emailAddress,
+                    status: statusChk.checked
+                })
+            })
+                .then(response => response.json())
+                .then(res => {
+                    if (res.status) {
+                        if (statusText) statusText.textContent = statusChk.checked ? 'Active' : 'Inactive';
+                        // Update local config cache
+                        const localConfig = processConfigs.find(c => c.id === configId);
+                        if (localConfig) localConfig.status = statusChk.checked ? 1 : 0;
+                    } else {
+                        statusChk.checked = !statusChk.checked;
+                        alert('Error: ' + res.message);
+                    }
+                })
+                .catch(err => {
+                    statusChk.checked = !statusChk.checked;
+                    console.error('Error toggling status:', err);
+                });
+        };
+
+        window.deleteProcessEmail = function (id) {
+            if (!confirm('Are you sure you want to remove this email notification routing?')) return;
+
+            fetch(`/admin-settings/process-emails/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(res => {
+                    if (res.status) {
+                        // Update local cache and re-render
+                        processConfigs = processConfigs.filter(c => c.id !== id);
+                        renderConfiguredRecipients();
+                        alert('Routing removed successfully!');
+                    } else {
+                        alert('Error: ' + res.message);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error deleting configuration:', err);
+                });
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Handle process selector changes
+        const processSelect = document.getElementById('pe_process_id');
+        if (processSelect) {
+            processSelect.addEventListener('change', renderConfiguredRecipients);
+        }
+
+        // Handle Add Recipient Click
+        const btnSave = document.getElementById('btn-save-process-emails');
+        if (btnSave) {
+            btnSave.addEventListener('click', function () {
+                const processSelect = document.getElementById('pe_process_id');
+                const userSelect = document.getElementById('pe_user_id');
+                if (!processSelect || !userSelect) return;
+
+                const processId = processSelect.value;
+                const userId = userSelect.value;
+
+                if (!userId) {
+                    alert('Please select a system user to notify.');
+                    return;
+                }
+
+                const selectedOption = userSelect.options[userSelect.selectedIndex];
+                const emailAddress = selectedOption.dataset.email;
+
+                btnSave.disabled = true;
+                btnSave.innerText = 'Adding Recipient...';
+
+                fetch('/admin-settings/process-emails', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        process_id: processId,
+                        um_user_id: parseInt(userId),
+                        email_address: emailAddress,
+                        status: true
+                    })
+                })
+                    .then(response => response.json())
+                    .then(res => {
+                        btnSave.disabled = false;
+                        btnSave.innerHTML = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Add Recipient`;
+
+                        if (res.status) {
+                            alert('Recipient added successfully!');
+                            // Reset dropdown selection
+                            userSelect.value = '';
+                            // Reload data to reflect in bottom list
+                            loadProcessEmails();
+                        } else {
+                            alert('Error: ' + (res.message || 'Failed to add recipient.'));
+                        }
+                    })
+                    .catch(err => {
+                        btnSave.disabled = false;
+                        btnSave.innerHTML = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Add Recipient`;
+                        console.error('Error adding recipient:', err);
+                    });
+            });
+        }
+
+        // Initialize on load
+        loadProcessEmails();
 
     })();
 </script>
