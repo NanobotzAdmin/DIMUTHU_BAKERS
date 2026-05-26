@@ -1603,7 +1603,25 @@ class AgentDistributionManagementController extends Controller
      */
     public function routeManageIndex()
     {
-        $routes = AdRoute::with('agent')->get()->map(function ($route) {
+        $routes = AdRoute::with(['agent', 'customers.customer'])->get()->map(function ($route) {
+            // Map customers assigned to this route
+            $routeCustomers = $route->customers->map(function ($business) {
+                $customer = $business->customer;
+                return [
+                    'id' => $business->id,
+                    'businessName' => $business->business_name ?? ($customer ? $customer->name : 'Unknown'),
+                    'address' => $business->address ?? ($customer ? $customer->address : ''),
+                    'phone' => $business->contact_person_phone ?? ($customer ? $customer->phone : ''),
+                    'contactPerson' => $business->contact_person_name ?? '',
+                    'b2bType' => $this->getB2BTypeName($business->b2b_customer_type ?? 0),
+                    'latitude' => (float) ($business->latitude ?? ($customer ? $customer->latitude : 6.9271)),
+                    'longitude' => (float) ($business->longitude ?? ($customer ? $customer->longitude : 79.8612)),
+                    'stopSequence' => $business->pivot->stop_sequence ?? null,
+                    'distanceKm' => $business->pivot->distance_km ?? null,
+                    'durationMinutes' => $business->pivot->duration_minutes ?? null,
+                ];
+            })->sortBy('stopSequence')->values()->toArray();
+
             return [
                 'id' => $route->id,
                 'routeCode' => $route->route_code,
@@ -1615,12 +1633,13 @@ class AgentDistributionManagementController extends Controller
                 'agentName' => $route->agent ? $route->agent->agent_name : null,
                 'agentCode' => $route->agent ? $route->agent->agent_code : null,
                 'status' => $route->status,
+                'customers' => $routeCustomers,
+                'customerCount' => count($routeCustomers),
             ];
         });
 
         // Get active agents for dropdown
-        $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)
-            ->orderBy('agent_name')
+        $agents = AdAgent::orderBy('agent_name')->where('status',CommonVariables::$agentStatusActive)
             ->get()
             ->map(function ($agent) {
                 return [
@@ -1634,7 +1653,7 @@ class AgentDistributionManagementController extends Controller
         $customers = CmCustomer::with(['businessDetails'])
             ->leftJoin('ad_customer_has_business', 'cm_customer.id', '=', 'ad_customer_has_business.customer_id')
             ->leftJoin('ad_route_has_customers', function ($join) {
-                $join->on('cm_customer.id', '=', 'ad_route_has_customers.customer_id')
+                $join->on('ad_customer_has_business.id', '=', 'ad_route_has_customers.ad_customer_has_business_id')
                     ->on('ad_customer_has_business.route_id', '=', 'ad_route_has_customers.route_id');
             })
             ->select(
@@ -1681,7 +1700,9 @@ class AgentDistributionManagementController extends Controller
             ->filter() // Remove null entries
             ->values(); // Re-index array
 
-        return view('agentDistribution.routeManagement', compact('routes', 'agents', 'customers'));
+        $googleMapsKey = config('services.google.maps_key');
+
+        return view('agentDistribution.routeManagement', compact('routes', 'agents', 'customers', 'googleMapsKey'));
     }
 
     public function routeBuilderView($id)
@@ -1703,7 +1724,7 @@ class AgentDistributionManagementController extends Controller
         $customers = CmCustomer::with(['businessDetails'])
             ->leftJoin('ad_customer_has_business', 'cm_customer.id', '=', 'ad_customer_has_business.customer_id')
             ->leftJoin('ad_route_has_customers', function ($join) use ($id) {
-                $join->on('cm_customer.id', '=', 'ad_route_has_customers.customer_id')
+                $join->on('ad_customer_has_business.id', '=', 'ad_route_has_customers.ad_customer_has_business_id')
                     ->where('ad_route_has_customers.route_id', '=', $id);
             })
             ->select(
@@ -1750,7 +1771,9 @@ class AgentDistributionManagementController extends Controller
             ->filter()
             ->values();
 
-        return view('agentDistribution.Partials.visualRouteBuilder', compact('route', 'agents', 'customers'));
+        $googleMapsKey = config('services.google.maps_key');
+
+        return view('agentDistribution.Partials.visualRouteBuilder', compact('route', 'agents', 'customers', 'googleMapsKey'));
     }
 
     /**

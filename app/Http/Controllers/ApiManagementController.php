@@ -2791,7 +2791,7 @@ class ApiManagementController extends Controller
                 });
             }
 
-            $invoices = $invoicesQuery->with(['items.product'])->get();
+            $invoices = $invoicesQuery->with(['business', 'items.product'])->get();
 
             Log::info("Daily Summary for Agent $agentId on $date: Found " . $invoices->count() . " invoices. Routes: " . implode(',', $routeIds->toArray()));
 
@@ -2862,6 +2862,40 @@ class ApiManagementController extends Controller
                     ];
                 });
 
+            $loadTransactions = [];
+            foreach ($invoices as $invoice) {
+                $salesItems = [];
+                foreach ($invoice->items as $item) {
+                    $salesItems[] = [
+                        'product_name' => $item->product->product_name ?? 'N/A',
+                        'quantity' => (float)$item->quantity,
+                        'unit_price' => (float)$item->unit_price,
+                        'total_price' => (float)$item->total_price,
+                    ];
+                }
+
+                $returnItems = [];
+                $invoiceReturns = $returns->where('ad_new_invoice_id', $invoice->id);
+                foreach ($invoiceReturns as $ret) {
+                    $returnItems[] = [
+                        'product_name' => $ret->product->product_name ?? 'N/A',
+                        'quantity' => (float)$ret->return_quantity,
+                        'unit_price' => (float)$ret->unit_price,
+                        'total_price' => (float)$ret->total_price,
+                    ];
+                }
+
+                $loadTransactions[] = [
+                    'invoice_id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'business_name' => $invoice->business->business_name ?? 'Walk-in Customer',
+                    'sales_amount' => (float)$invoice->net_price,
+                    'return_amount' => (float)$invoiceReturns->sum('total_price'),
+                    'sales_items' => $salesItems,
+                    'return_items' => $returnItems,
+                ];
+            }
+
             return response()->json([
                 'status' => true,
                 'data' => [
@@ -2882,7 +2916,8 @@ class ApiManagementController extends Controller
                         'margin_percentage' => $totalSales > 0 ? round(($netProfit / $totalSales) * 100, 2) : 0
                     ],
                     'payments' => $paymentBreakdown,
-                    'loads' => $loads
+                    'loads' => $loads,
+                    'load_transactions' => $loadTransactions
                 ]
             ]);
         } catch (\Exception $e) {

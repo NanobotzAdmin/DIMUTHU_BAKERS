@@ -82,6 +82,10 @@
             <div class="relative z-10">
                 <span class="block text-[11px] uppercase font-bold text-blue-100 tracking-wider mb-1">Total Credit Notes (Filtered)</span>
                 <span class="text-2xl font-bold text-white">Rs. {{ number_format($summary['totalCreditNotes'], 2) }}</span>
+                <div class="mt-4 pt-3 border-t border-white/20 flex justify-between items-center text-blue-100">
+                    <span class="text-[10px] font-bold uppercase tracking-wider">Used Credit Notes</span>
+                    <span class="text-sm font-black text-white">Rs. {{ number_format($summary['usedCreditNotes'], 2) }}</span>
+                </div>
             </div>
         </div>
 
@@ -106,7 +110,7 @@
             </h3>
         </div>
         <div class="p-6">
-            <form id="filter-form" action="{{ route('agent-financial-management.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <form id="filter-form" action="{{ route('agent-financial-management.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <!-- Agent Filter -->
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Agent</label>
@@ -129,14 +133,26 @@
                     </div>
                 </div>
 
-                <!-- Status Filter -->
+                <!-- Payment Status Filter -->
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Common Status</label>
-                    <select name="status" class="block w-full px-4 py-2.5 text-sm border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 rounded-xl bg-slate-50/50 transition-all">
-                        <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All Statuses</option>
-                        <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Pending</option>
-                        <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Approved</option>
-                        <option value="2" {{ request('status') === '2' ? 'selected' : '' }}>Rejected</option>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Payment Status</label>
+                    <select name="payment_status" class="block w-full px-4 py-2.5 text-sm border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 rounded-xl bg-slate-50/50 transition-all">
+                        <option value="all" {{ request('payment_status', request('status', 'all')) === 'all' ? 'selected' : '' }}>All Statuses</option>
+                        <option value="0" {{ request('payment_status', request('status')) === '0' ? 'selected' : '' }}>Pending</option>
+                        <option value="1" {{ request('payment_status', request('status')) === '1' ? 'selected' : '' }}>Approved</option>
+                        <option value="2" {{ request('payment_status', request('status')) === '2' ? 'selected' : '' }}>Rejected</option>
+                    </select>
+                </div>
+
+                <!-- Credit Note Status Filter -->
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Credit Note Status</label>
+                    <select name="cn_status" class="block w-full px-4 py-2.5 text-sm border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 rounded-xl bg-slate-50/50 transition-all">
+                        <option value="all" {{ request('cn_status', request('status', 'all')) === 'all' ? 'selected' : '' }}>All Statuses</option>
+                        <option value="0" {{ request('cn_status', request('status')) === '0' ? 'selected' : '' }}>Pending Approval</option>
+                        <option value="1" {{ request('cn_status', request('status')) === '1' ? 'selected' : '' }}>Approved</option>
+                        <option value="2" {{ request('cn_status', request('status')) === '2' ? 'selected' : '' }}>Rejected</option>
+                        <option value="3" {{ request('cn_status', request('status')) === '3' ? 'selected' : '' }}>Used</option>
                     </select>
                 </div>
 

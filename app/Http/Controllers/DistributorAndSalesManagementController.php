@@ -1567,7 +1567,9 @@ class DistributorAndSalesManagementController extends Controller
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $paymentsQuery->whereBetween('payment_date', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
         }
-        if ($request->filled('status') && $request->status !== 'all') {
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+            $paymentsQuery->where('status', $request->payment_status);
+        } elseif ($request->filled('status') && $request->status !== 'all') {
             $paymentsQuery->where('status', $request->status);
         }
 
@@ -1580,7 +1582,9 @@ class DistributorAndSalesManagementController extends Controller
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $cnQuery->whereBetween('credit_note_date', [$request->start_date, $request->end_date]);
         }
-        if ($request->filled('status') && $request->status !== 'all') {
+        if ($request->filled('cn_status') && $request->cn_status !== 'all') {
+            $cnQuery->where('status', $request->cn_status);
+        } elseif ($request->filled('status') && $request->status !== 'all') {
             $cnQuery->where('status', $request->status);
         }
 
@@ -1590,6 +1594,7 @@ class DistributorAndSalesManagementController extends Controller
             'pendingPayments' => (clone $paymentsQuery)->where('status', 0)->count(),
             'totalCreditNotes' => (clone $cnQuery)->sum('total_amount'),
             'pendingCreditNotes' => (clone $cnQuery)->where('status', 0)->count(),
+            'usedCreditNotes' => (clone $cnQuery)->where('status', 3)->sum('total_amount'),
             'totalAgentOutstanding' => $request->filled('agent_id') 
                                         ? AdAgent::where('id', $request->agent_id)->sum('outstanding_balance') 
                                         : AdAgent::sum('outstanding_balance'),

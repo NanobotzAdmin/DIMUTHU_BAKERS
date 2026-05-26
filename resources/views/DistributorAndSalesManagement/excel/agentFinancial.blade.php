@@ -48,9 +48,11 @@
             <td style="color: #e11d48; font-weight: bold; border: 1px solid #cbd5e1;">{{ $summary['pendingCreditNotes'] }}</td>
         </tr>
         <tr>
+            <td style="font-weight: bold; background-color: #f8fafc; border: 1px solid #cbd5e1;">Used Credit Notes</td>
+            <td style="color: #0284c7; font-weight: bold; border: 1px solid #cbd5e1;">Rs. {{ number_format($summary['usedCreditNotes'], 2) }}</td>
+            <td style="border: 1px solid #ffffff;"></td>
             <td style="font-weight: bold; background-color: #f8fafc; border: 1px solid #cbd5e1;">Total Outstanding</td>
             <td style="color: #4f46e5; font-weight: bold; border: 1px solid #cbd5e1;">Rs. {{ number_format($summary['totalAgentOutstanding'], 2) }}</td>
-            <td colspan="3"></td>
         </tr>
         <tr><td colspan="5"></td></tr>
     </table>

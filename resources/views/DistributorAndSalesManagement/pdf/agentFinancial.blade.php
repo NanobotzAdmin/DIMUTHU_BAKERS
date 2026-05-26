@@ -137,6 +137,10 @@
                     <div class="summary-value" style="color: #2563eb;">Rs. {{ number_format($summary['totalCreditNotes'], 2) }}</div>
                 </td>
                 <td>
+                    <div class="summary-label">Used Credit Notes</div>
+                    <div class="summary-value" style="color: #0284c7;">Rs. {{ number_format($summary['usedCreditNotes'], 2) }}</div>
+                </td>
+                <td>
                     <div class="summary-label">Pending Credit Notes</div>
                     <div class="summary-value" style="color: #e11d48;">{{ $summary['pendingCreditNotes'] }}</div>
                 </td>

@@ -48,55 +48,42 @@
     <div id="summary-content" class="hidden space-y-6">
         
         <!-- Top Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <!-- Net Profit Card -->
-            <div class="flex flex-col bg-slate-800 col-span-1 md:col-span-2 lg:col-span-1 shadow-lg rounded-xl overflow-hidden border border-slate-700 relative">
+            <!-- Sales Card -->
+            <div class="flex flex-col bg-slate-800 shadow-lg rounded-xl overflow-hidden border border-slate-700 relative">
                 <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 pointer-events-none"></div>
                 <div class="px-5 pt-5 pb-4 relative z-10">
-                    <h2 class="text-slate-300 font-semibold mb-1 text-sm uppercase tracking-wider">Net Profit</h2>
-                    <div class="text-3xl font-bold text-white mb-1" id="stat-net-profit">Rs. 0.00</div>
-                    <div class="flex items-center">
-                        <div class="text-sm px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-full font-medium" id="stat-margin">
-                            0.0% Margin
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sales Card -->
-            <div class="flex flex-col bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
-                <div class="px-5 pt-5 pb-4">
                     <header class="flex justify-between items-start mb-2">
-                        <h2 class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Total Sales</h2>
-                        <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><i class="bi bi-graph-up-arrow"></i></div>
+                        <h2 class="text-slate-300 font-semibold text-sm uppercase tracking-wider">Total Sales</h2>
+                        <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg"><i class="bi bi-graph-up-arrow"></i></div>
                     </header>
-                    <div class="text-2xl font-bold text-slate-800 mb-1" id="stat-sales">Rs. 0.00</div>
-                    <div class="text-sm text-slate-500" id="stat-items">0 items sold</div>
+                    <div class="text-3xl font-bold text-white mb-1" id="stat-sales">Rs. 0.00</div>
+                    <div class="text-sm text-slate-400" id="stat-items">0 items sold</div>
                 </div>
             </div>
 
-            <!-- Cost Card -->
+            <!-- Collected Card -->
             <div class="flex flex-col bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
                 <div class="px-5 pt-5 pb-4">
                     <header class="flex justify-between items-start mb-2">
-                        <h2 class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Total Cost</h2>
-                        <div class="p-2 bg-rose-100 text-rose-600 rounded-lg"><i class="bi bi-wallet2"></i></div>
-                    </header>
-                    <div class="text-2xl font-bold text-slate-800 mb-1" id="stat-cost">Rs. 0.00</div>
-                    <div class="text-sm text-slate-500">Order requested value</div>
-                </div>
-            </div>
-
-            <!-- Gross Profit Card -->
-            <div class="flex flex-col bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
-                <div class="px-5 pt-5 pb-4">
-                    <header class="flex justify-between items-start mb-2">
-                        <h2 class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Gross Profit</h2>
+                        <h2 class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Total Collection (Cash/Cheque/Bank)</h2>
                         <div class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i class="bi bi-cash-stack"></i></div>
                     </header>
-                    <div class="text-2xl font-bold text-slate-800 mb-1" id="stat-gross">Rs. 0.00</div>
-                    <div class="text-sm text-slate-500">Before returns</div>
+                    <div class="text-2xl font-bold text-slate-800 mb-1" id="stat-collected">Rs. 0.00</div>
+                    <div class="text-sm text-slate-500">Cash, Cheque & Bank Transfer</div>
+                </div>
+            </div>
+
+            <!-- Credit Card -->
+            <div class="flex flex-col bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+                <div class="px-5 pt-5 pb-4">
+                    <header class="flex justify-between items-start mb-2">
+                        <h2 class="text-slate-500 font-semibold text-sm uppercase tracking-wider">Credit Sales</h2>
+                        <div class="p-2 bg-amber-100 text-amber-600 rounded-lg"><i class="bi bi-credit-card"></i></div>
+                    </header>
+                    <div class="text-2xl font-bold text-slate-800 mb-1" id="stat-credit">Rs. 0.00</div>
+                    <div class="text-sm text-slate-500">Outstanding amount</div>
                 </div>
             </div>
 
@@ -119,10 +106,6 @@
                     <div class="flex justify-between items-center py-2 border-b border-slate-100">
                         <span class="text-slate-600">Returns Value</span>
                         <span class="font-semibold text-slate-800" id="ret-value">Rs. 0.00</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                        <span class="text-slate-600">Profit Impact (Loss)</span>
-                        <span class="font-bold text-rose-500" id="ret-impact">Rs. 0.00</span>
                     </div>
                 </div>
             </div>
@@ -157,7 +140,7 @@
                         <span class="font-semibold text-slate-800" id="pay-bank">Rs. 0.00</span>
                     </div>
                     <div class="flex justify-between items-center py-3 mt-2 bg-slate-50 rounded-lg px-4">
-                        <span class="font-bold text-slate-800">Total Collected</span>
+                        <span class="font-bold text-slate-800">Total Collection</span>
                         <span class="font-bold text-emerald-600 text-lg" id="pay-total">Rs. 0.00</span>
                     </div>
                 </div>
@@ -207,7 +190,7 @@
 
     <!-- Load Details Modal -->
     <div id="load-modal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden transform transition-all">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <h3 id="modal-title" class="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <i class="bi bi-box-seam text-indigo-600"></i> Load Summary
@@ -231,46 +214,59 @@
                             <p id="modal-sales" class="text-xl font-bold text-slate-800">Rs. 0.00</p>
                         </div>
                         <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-                            <p class="text-emerald-600/80 text-xs font-medium uppercase tracking-wider mb-1">Total Collected</p>
+                            <p class="text-emerald-600/80 text-xs font-medium uppercase tracking-wider mb-1">Total Collection</p>
                             <p id="modal-collected" class="text-xl font-bold text-emerald-700">Rs. 0.00</p>
                         </div>
                     </div>
-                    
-                    <!-- Returns -->
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                            <i class="bi bi-arrow-return-left text-amber-500"></i> Returns
-                        </h4>
-                        <div class="bg-white border border-slate-100 rounded-xl divide-y divide-slate-100">
-                            <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                                <span class="text-slate-600 text-sm">Returns Value</span>
-                                <span id="modal-return-val" class="font-medium text-slate-800">Rs. 0.00</span>
+
+                    <!-- Returns & Payment Breakdown Side by Side -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Returns -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                <i class="bi bi-arrow-return-left text-amber-500"></i> Returns
+                            </h4>
+                            <div class="bg-white border border-slate-100 rounded-xl divide-y divide-slate-100">
+                                <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                    <span class="text-slate-600 text-sm">Returns Value</span>
+                                    <span id="modal-return-val" class="font-medium text-slate-800">Rs. 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Breakdown -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                <i class="bi bi-pie-chart text-indigo-500"></i> Payment Breakdown
+                            </h4>
+                            <div class="bg-white border border-slate-100 rounded-xl divide-y divide-slate-100">
+                                <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                    <span class="text-slate-600 text-sm flex items-center gap-2"><i class="bi bi-cash text-emerald-500"></i> Cash</span>
+                                    <span id="modal-pay-cash" class="font-medium text-slate-800">Rs. 0.00</span>
+                                </div>
+                                <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                    <span class="text-slate-600 text-sm flex items-center gap-2"><i class="bi bi-credit-card text-blue-500"></i> Credit</span>
+                                    <span id="modal-pay-credit" class="font-medium text-slate-800">Rs. 0.00</span>
+                                </div>
+                                <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                    <span class="text-slate-600 text-sm flex items-center gap-2"><i class="bi bi-bank text-amber-500"></i> Cheque</span>
+                                    <span id="modal-pay-cheque" class="font-medium text-slate-800">Rs. 0.00</span>
+                                </div>
+                                <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                                    <span class="text-slate-600 text-sm flex items-center gap-2"><i class="bi bi-arrow-left-right text-cyan-500"></i> Bank Transfer</span>
+                                    <span id="modal-pay-bank" class="font-medium text-slate-800">Rs. 0.00</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Payment Breakdown -->
+
+                    <!-- Customer Transactions Accordion -->
                     <div>
                         <h4 class="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                            <i class="bi bi-pie-chart text-indigo-500"></i> Payment Breakdown
+                            <i class="bi bi-shop text-indigo-500"></i> Customer Transactions
                         </h4>
-                        <div class="bg-white border border-slate-100 rounded-xl divide-y divide-slate-100">
-                            <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                                <span class="text-slate-600 text-sm flex items-center gap-2"><i class="bi bi-cash text-emerald-500"></i> Cash</span>
-                                <span id="modal-pay-cash" class="font-medium text-slate-800">Rs. 0.00</span>
-                            </div>
-                            <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                                <span class="text-slate-600 text-sm flex items-center gap-2"><i class="bi bi-credit-card text-blue-500"></i> Credit</span>
-                                <span id="modal-pay-credit" class="font-medium text-slate-800">Rs. 0.00</span>
-                            </div>
-                            <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                                <span class="text-slate-600 text-sm flex items-center gap-2"><i class="bi bi-bank text-amber-500"></i> Cheque</span>
-                                <span id="modal-pay-cheque" class="font-medium text-slate-800">Rs. 0.00</span>
-                            </div>
-                            <div class="p-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                                <span class="text-slate-600 text-sm flex items-center gap-2"><i class="bi bi-arrow-left-right text-cyan-500"></i> Bank Transfer</span>
-                                <span id="modal-pay-bank" class="font-medium text-slate-800">Rs. 0.00</span>
-                            </div>
+                        <div id="modal-transactions-container" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                            <!-- Populated by JS -->
                         </div>
                     </div>
                 </div>
@@ -329,17 +325,14 @@
                     const data = result.data;
 
                     // Update Top Stats
-                    document.getElementById('stat-net-profit').innerText = formatCurrency(data.profit.net_profit);
-                    document.getElementById('stat-margin').innerText = `${data.profit.margin_percentage}% Margin`;
                     document.getElementById('stat-sales').innerText = formatCurrency(data.summary.total_sales);
                     document.getElementById('stat-items').innerText = `${data.summary.item_count} items sold`;
-                    document.getElementById('stat-cost').innerText = formatCurrency(data.summary.total_cost);
-                    document.getElementById('stat-gross').innerText = formatCurrency(data.summary.gross_profit);
+                    document.getElementById('stat-collected').innerText = formatCurrency(data.payments.total_collected);
+                    document.getElementById('stat-credit').innerText = formatCurrency(data.payments.credit);
 
                     // Update Returns
                     document.getElementById('ret-count').innerText = `${data.returns.count} records`;
                     document.getElementById('ret-value').innerText = formatCurrency(data.returns.total_value);
-                    document.getElementById('ret-impact').innerText = formatCurrency(data.returns.profit_impact);
 
                     // Update Payments
                     document.getElementById('pay-cash').innerText = formatCurrency(data.payments.cash);
@@ -427,6 +420,68 @@
                     document.getElementById('modal-pay-credit').innerText = formatCurrency(data.payments.credit);
                     document.getElementById('modal-pay-cheque').innerText = formatCurrency(data.payments.cheque);
                     document.getElementById('modal-pay-bank').innerText = formatCurrency(data.payments.bank_transfer);
+                    
+                    // Render Transactions Accordion
+                    const transContainer = document.getElementById('modal-transactions-container');
+                    transContainer.innerHTML = '';
+                    if (data.load_transactions && data.load_transactions.length > 0) {
+                        data.load_transactions.forEach((tx, idx) => {
+                            const txDiv = document.createElement('div');
+                            txDiv.className = "border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm";
+                            
+                            const contentId = `tx-content-${idx}`;
+                            
+                            let salesHtml = tx.sales_items.map(item => `
+                                <div class="flex justify-between items-center py-1.5 text-xs text-slate-600 border-b border-slate-50 last:border-0">
+                                    <span>${item.product_name} <span class="text-slate-400">x${item.quantity}</span></span>
+                                    <span class="font-semibold text-slate-700">${formatCurrency(item.total_price)}</span>
+                                </div>
+                            `).join('');
+                            if (tx.sales_items.length === 0) {
+                                salesHtml = '<div class="text-xs text-slate-400 italic py-1">No sales items</div>';
+                            }
+
+                            let returnsHtml = tx.return_items.map(item => `
+                                <div class="flex justify-between items-center py-1.5 text-xs text-rose-600 border-b border-slate-50 last:border-0">
+                                    <span>${item.product_name} <span class="text-rose-400">x${item.quantity}</span> (Return)</span>
+                                    <span class="font-semibold">-${formatCurrency(item.total_price)}</span>
+                                </div>
+                            `).join('');
+                            if (tx.return_items.length === 0) {
+                                returnsHtml = '<div class="text-xs text-slate-400 italic py-1">No returns</div>';
+                            }
+
+                            txDiv.innerHTML = `
+                                <button type="button" class="w-full flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left font-medium text-slate-800" onclick="document.getElementById('${contentId}').classList.toggle('hidden'); this.querySelector('.arrow-icon').classList.toggle('rotate-180')">
+                                    <div class="flex-1">
+                                        <div class="text-sm font-bold text-slate-800">${tx.business_name}</div>
+                                        <div class="text-xs text-slate-500 mt-0.5">Inv: #${tx.invoice_number}</div>
+                                    </div>
+                                    <div class="flex items-center gap-3 mr-1">
+                                        <div class="text-right">
+                                            <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Sales / Returns</span>
+                                            <span class="text-xs font-bold text-emerald-600">${formatCurrency(tx.sales_amount)}</span>
+                                            ${tx.return_amount > 0 ? `<span class="text-xs font-bold text-rose-500 ml-1">/ -${formatCurrency(tx.return_amount)}</span>` : ''}
+                                        </div>
+                                        <i class="bi bi-chevron-down arrow-icon text-slate-400 transition-transform duration-200"></i>
+                                    </div>
+                                </button>
+                                <div id="${contentId}" class="hidden p-3.5 border-t border-slate-100 bg-white space-y-3.5">
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sales Details</div>
+                                        <div class="bg-slate-50/50 rounded-lg p-2.5">${salesHtml}</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Returns Details</div>
+                                        <div class="bg-rose-50/20 rounded-lg p-2.5">${returnsHtml}</div>
+                                    </div>
+                                </div>
+                            `;
+                            transContainer.appendChild(txDiv);
+                        });
+                    } else {
+                        transContainer.innerHTML = '<div class="text-center py-6 text-slate-400 text-sm">No completed customer transactions found for this load.</div>';
+                    }
                     
                     modalLoader.classList.add('hidden');
                     modalContent.classList.remove('hidden');

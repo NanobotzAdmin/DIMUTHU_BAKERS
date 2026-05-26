@@ -777,6 +777,39 @@
             };
             return typeMap[orderType] || 'pos-pickup';
         }
+
+        // Auto-search and view order on load if search parameter is present in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchVal = urlParams.get('search');
+            if (searchVal) {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = searchVal;
+                    filterSearch(searchVal);
+                    
+                    // If there is exactly one visible order that matches, open it automatically
+                    setTimeout(() => {
+                        const visibleOrders = document.querySelectorAll('.order-item');
+                        let matchedOrder = null;
+                        let matchedCount = 0;
+                        visibleOrders.forEach(item => {
+                            if (item.style.display !== 'none') {
+                                matchedOrder = item;
+                                matchedCount++;
+                            }
+                        });
+                        
+                        if (matchedCount === 1 && matchedOrder) {
+                            const viewBtn = matchedOrder.querySelector('button[onclick^="openViewOrderModal"]');
+                            if (viewBtn) {
+                                viewBtn.click();
+                            }
+                        }
+                    }, 300);
+                }
+            }
+        });
     </script>
 
     {{-- Include View Order Modal --}}

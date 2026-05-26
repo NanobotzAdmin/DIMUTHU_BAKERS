@@ -244,9 +244,11 @@ class ApiGRNController extends Controller
     <style>
         body { font-family: \'Inter\', sans-serif; color: #495057; background-color: #f6f8fb; margin: 0; padding: 40px 20px; -webkit-font-smoothing: antialiased; }
         .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #eef2f6; }
-        .header { background: linear-gradient(135deg, #52381f, #2e1d0f); padding: 45px 30px; text-align: center; border-bottom: 4px solid #b89755; position: relative; }
-        .header img { max-height: 90px; width: auto; margin-bottom: 15px; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.15)); }
-        .header h1 { margin: 0; font-family: \'Cinzel\', serif; font-size: 26px; font-weight: 600; color: #ffffff; letter-spacing: 3px; text-transform: uppercase; }
+        .header { background: linear-gradient(135deg, #52381f, #2e1d0f); padding: 35px 30px; border-bottom: 4px solid #b89755; position: relative; }
+        .header-content { display: flex; align-items: center; justify-content: center; gap: 20px; text-align: left; }
+        .header img { max-height: 80px; width: auto; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.15)); margin: 0; }
+        .header-text-container { text-align: left; }
+        .header h1 { margin: 0; font-family: \'Cinzel\', serif; font-size: 24px; font-weight: 600; color: #ffffff; letter-spacing: 1px; text-transform: uppercase; line-height: 1.2; }
         .header p { color: #b89755; margin: 5px 0 0 0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
         .content { padding: 40px 35px; }
         .status-badge { display: inline-block; padding: 6px 14px; background-color: #fff9db; border: 1px solid #ffe066; color: #8a6d3b; font-weight: 600; font-size: 12px; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
@@ -269,14 +271,18 @@ class ApiGRNController extends Controller
 <body>
     <div class="container">
         <div class="header">
-            <img src="' . htmlspecialchars($logoUrl) . '" alt="DIMUTHU BAKEHOUSE">
-            <h1>DIMUTHU BAKEHOUSE</h1>
-            <p>Artisanal Excellence</p>
+            <div class="header-content">
+                <img src="' . htmlspecialchars($logoUrl) . '" alt="DIMUTHU BAKEHOUSE">
+                <div class="header-text-container">
+                    <h1>Dimuthu Bake House (Pvt) Ltd.</h1>
+                    <p>Artisanal Excellence</p>
+                </div>
+            </div>
         </div>
         <div class="content">
             <span class="status-badge">Pending Approval</span>
             <h2 class="intro-title">New Order Request</h2>
-            <p class="intro-p">A brand new order request has been successfully submitted and is now awaiting verification. Please review the details below.</p>
+            <p class="intro-p">A new order request has been successfully submitted and is now awaiting verification. Please review the details below.</p>
             
             <div class="order-meta">
                 <div class="meta-col">
@@ -321,6 +327,10 @@ class ApiGRNController extends Controller
             </div>
 
             ' . $notesSection . '
+
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
+                <a href="' . url('/order-management?search=' . urlencode($orderNumber)) . '" target="_blank" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #b89755, #8a6d3b); color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(184, 151, 85, 0.25); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">View Order Request</a>
+            </div>
         </div>
         <div class="footer">
             &copy; ' . date('Y') . ' <strong>Dimuthu Bakehouse (Pvt) Ltd.</strong><br>
