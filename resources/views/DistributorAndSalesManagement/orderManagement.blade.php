@@ -631,7 +631,6 @@
             <p class="text-gray-500">Try adjusting your filters or search query</p>
         </div>
     </div>
-    @include('DistributorAndSalesManagement.modals.viewOrder')
     @include('DistributorAndSalesManagement.modals.createOrder')
 
     <script>

@@ -444,15 +444,6 @@
             printBtn.classList.add('hidden');
         }
 
-        // Order Notes
-        const notesSection = document.getElementById('modal-order-notes-section');
-        if (order.notes) {
-            notesSection.classList.remove('hidden');
-            document.getElementById('modal-order-notes').innerText = order.notes;
-        } else {
-            notesSection.classList.add('hidden');
-        }
-
         // Details
         const createdAt = window.formatDateTimeGMT(order.created_at || new Date());
         document.getElementById('modal-header-created-at').innerText = createdAt;
