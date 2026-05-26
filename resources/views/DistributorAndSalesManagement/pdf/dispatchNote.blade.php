@@ -6,7 +6,7 @@
     <title>Dispatch Note - {{ $order->order_number }}</title>
     <style>
         @page {
-            margin: 20px 40px 200px 40px;
+            margin: 20px 40px 175px 40px;
         }
 
         body {
@@ -23,7 +23,7 @@
 
         .footer-wrapper {
             position: fixed;
-            bottom: -130px;
+            bottom: -120px;
             left: 0;
             right: 0;
             height: 120px;
@@ -268,9 +268,9 @@
         </table>
 
         @if($order->notes)
-            <div style="margin-top: -10px; margin-bottom: 20px;">
+            <div style="margin-top: 15px; margin-bottom: 20px;">
                 <div class="section-title">Notes / Instructions</div>
-                <div style="font-style: italic; color: #4b5563;">{{ $order->notes }}</div>
+                <div style="font-style: italic; color: #4b5563; line-height: 1.2;">{!! nl2br(e($order->notes)) !!}</div>
             </div>
         @endif
 

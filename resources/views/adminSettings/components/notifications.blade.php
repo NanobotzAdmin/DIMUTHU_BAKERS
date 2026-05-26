@@ -45,208 +45,6 @@
         </div>
     </div>
 
-    {{-- Channels --}}
-    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Notification Channels</h3>
-            <div class="space-y-3">
-                @foreach($channels as $channel)
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">
-                                @if($channel->type == 'email') 📧
-                                @elseif($channel->type == 'sms') 📱
-                                @else 🔔
-                                @endif
-                            </span>
-                            <div>
-                                <p class="font-medium text-gray-900 capitalize">{{ $channel->type }}</p>
-                                <p class="text-sm text-gray-600">
-                                    @if($channel->type == 'email') Send email notifications
-                                    @elseif($channel->type == 'sms') Send SMS text messages
-                                    @else Browser push notifications
-                                    @endif
-                                </p>
-                            </div>
-                        </div>
-
-                        {{-- Channel Toggle --}}
-                        <input type="hidden" name="notifications[channels][{{ $channel->id }}][enabled]" value="0">
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="notifications[channels][{{ $channel->id }}][enabled]" value="1"
-                                id="channel_toggle_{{ $channel->type }}" data-type="{{ $channel->type }}"
-                                class="channel-toggle sr-only peer" {{ $channel->enabled ? 'checked' : '' }}>
-
-                            {{-- SWITCH TRACK --}}
-                            <div
-                                class="toggle-bg w-11 h-6 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all {{ $channel->enabled ? 'bg-green-500' : 'bg-red-500' }}">
-                            </div>
-
-                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-gray-900 status-text">
-                                {{ $channel->enabled ? 'Enabled' : 'Disabled' }}
-                            </span>
-                        </label>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
-    {{-- Email Config --}}
-    <div id="email-config-card"
-        class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 {{ collect($channels)->firstWhere('type', 'email')->enabled ?? false ? '' : 'hidden opacity-50' }}">
-        <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Email Configuration</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="email_provider" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
-                    <select name="notifications[email_config][provider]" id="email_provider"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                        @php $eProvider = $email_config->provider ?? 'smtp'; @endphp
-                        <option value="smtp" {{ $eProvider == 'smtp' ? 'selected' : '' }}>SMTP</option>
-                        <option value="sendgrid" {{ $eProvider == 'sendgrid' ? 'selected' : '' }}>SendGrid</option>
-                        <option value="ses" {{ $eProvider == 'ses' ? 'selected' : '' }}>Amazon SES</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="from_name" class="block text-sm font-medium text-gray-700 mb-1">From Name</label>
-                    <input type="text" name="notifications[email_config][from_name]" id="from_name"
-                        value="{{ old('notifications.email_config.from_name', $email_config->from_name ?? 'Your Bakery ERP') }}"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label for="from_address" class="block text-sm font-medium text-gray-700 mb-1">From Email
-                        Address</label>
-                    <input type="email" name="notifications[email_config][from_address]" id="from_address"
-                        value="{{ old('notifications.email_config.from_address', $email_config->from_address ?? 'noreply@yourbakery.com') }}"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                </div>
-
-                {{-- SMTP Fields --}}
-                <div id="smtp-fields" class="contents {{ $eProvider == 'smtp' ? '' : 'hidden' }}">
-                    <div>
-                        <label for="smtp_host" class="block text-sm font-medium text-gray-700 mb-1">SMTP Host</label>
-                        <input type="text" name="notifications[email_config][smtp_host]" id="smtp_host"
-                            value="{{ old('notifications.email_config.smtp_host', $email_config->smtp_host ?? '') }}"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
-                            placeholder="smtp.gmail.com">
-                    </div>
-                    <div>
-                        <label for="smtp_port" class="block text-sm font-medium text-gray-700 mb-1">SMTP Port</label>
-                        <input type="number" name="notifications[email_config][smtp_port]" id="smtp_port"
-                            value="{{ old('notifications.email_config.smtp_port', $email_config->smtp_port ?? '587') }}"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                    </div>
-                </div>
-
-                {{-- API Key Field (Non-SMTP) --}}
-                <div id="email-api-field" class="md:col-span-2 {{ $eProvider != 'smtp' ? '' : 'hidden' }}">
-                    <label for="email_api_key" class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
-                    <input type="password" name="notifications[email_config][api_key]" id="email_api_key"
-                        value="{{ old('notifications.email_config.api_key', $email_config->api_key ?? '') }}"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
-                        placeholder="Enter API Key">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- SMS Config --}}
-    <div id="sms-config-card"
-        class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 {{ collect($channels)->firstWhere('type', 'sms')->enabled ?? false ? '' : 'hidden opacity-50' }}">
-        <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">SMS Configuration</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="sms_provider" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
-                    <select name="notifications[sms_config][provider]" id="sms_provider"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                        @php $sProvider = $sms_config->provider ?? 'twilio'; @endphp
-                        <option value="twilio" {{ $sProvider == 'twilio' ? 'selected' : '' }}>Twilio (International)
-                        </option>
-                        <option value="dialog" {{ $sProvider == 'dialog' ? 'selected' : '' }}>Dialog (Sri Lanka)</option>
-                        <option value="mobitel" {{ $sProvider == 'mobitel' ? 'selected' : '' }}>Mobitel (Sri Lanka)
-                        </option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="sms_from_number" class="block text-sm font-medium text-gray-700 mb-1">From
-                        Number</label>
-                    <input type="text" name="notifications[sms_config][from_number]" id="sms_from_number"
-                        value="{{ old('notifications.sms_config.from_number', $sms_config->from_number ?? '') }}"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
-                        placeholder="+94771234567">
-                </div>
-
-                {{-- Twilio Specifics --}}
-                <div id="twilio-fields" class="contents {{ $sProvider == 'twilio' ? '' : 'hidden' }}">
-                    <div>
-                        <label for="twilio_sid" class="block text-sm font-medium text-gray-700 mb-1">Account SID</label>
-                        <input type="text" name="notifications[sms_config][account_sid]" id="twilio_sid"
-                            value="{{ old('notifications.sms_config.account_sid', $sms_config->account_sid ?? '') }}"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                    </div>
-                    <div>
-                        <label for="twilio_token" class="block text-sm font-medium text-gray-700 mb-1">Auth
-                            Token</label>
-                        <input type="password" name="notifications[sms_config][auth_token]" id="twilio_token"
-                            value="{{ old('notifications.sms_config.auth_token', $sms_config->auth_token ?? '') }}"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Notification Rules --}}
-    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Notification Rules</h3>
-            <div class="space-y-3">
-                @foreach($rules as $rule)
-                    <div id="rule-card-{{ $rule->id }}"
-                        class="p-4 rounded-lg border-2 transition-colors duration-200 {{ $rule->enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200' }}">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h4 class="font-medium text-gray-900">{{ $rule->name }}</h4>
-                                    <span class="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">
-                                        {{ $rule->event }}
-                                    </span>
-                                </div>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    Channels: {{ implode(', ', array_map('strtoupper', (array) $rule->channels)) }}
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    Recipients: {{ implode(', ', (array) $rule->recipients) }}
-                                </p>
-                                @if(isset($rule->schedule))
-                                    <p class="text-sm text-gray-600 mt-1">
-                                        Schedule: {{ $rule->schedule }}
-                                    </p>
-                                @endif
-                            </div>
-
-                            {{-- Rule Toggle --}}
-                            <input type="hidden" name="notifications[rules][{{ $rule->id }}][enabled]" value="0">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="notifications[rules][{{ $rule->id }}][enabled]" value="1"
-                                    id="rule_toggle_{{ $rule->id }}" data-rule-id="{{ $rule->id }}"
-                                    class="rule-toggle sr-only peer" {{ $rule->enabled ? 'checked' : '' }}>
-                                <div
-                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
     {{-- Process Email Routing Settings --}}
     <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mt-6">
         <div class="p-6">
@@ -323,6 +121,214 @@
             </div>
         </div>
     </div>
+
+    {{-- Channels --}}
+    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hidden">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Notification Channels</h3>
+            <div class="space-y-3">
+                @foreach($channels as $channel)
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">
+                                @if($channel->type == 'email') 📧
+                                @elseif($channel->type == 'sms') 📱
+                                @else 🔔
+                                @endif
+                            </span>
+                            <div>
+                                <p class="font-medium text-gray-900 capitalize">{{ $channel->type }}</p>
+                                <p class="text-sm text-gray-600">
+                                    @if($channel->type == 'email') Send email notifications
+                                    @elseif($channel->type == 'sms') Send SMS text messages
+                                    @else Browser push notifications
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Channel Toggle --}}
+                        <input type="hidden" name="notifications[channels][{{ $channel->id }}][enabled]" value="0">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="notifications[channels][{{ $channel->id }}][enabled]" value="1"
+                                id="channel_toggle_{{ $channel->type }}" data-type="{{ $channel->type }}"
+                                class="channel-toggle sr-only peer" {{ $channel->enabled ? 'checked' : '' }}>
+
+                            {{-- SWITCH TRACK --}}
+                            <div
+                                class="toggle-bg w-11 h-6 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all {{ $channel->enabled ? 'bg-green-500' : 'bg-red-500' }}">
+                            </div>
+
+                            <span class="ml-3 text-sm font-medium text-gray-700 peer-checked:text-gray-900 status-text">
+                                {{ $channel->enabled ? 'Enabled' : 'Disabled' }}
+                            </span>
+                        </label>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+
+    {{-- Email Config --}}
+    <div id="email-config-card hidden"
+        class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 {{ collect($channels)->firstWhere('type', 'email')->enabled ?? false ? '' : 'hidden opacity-50' }}">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Email Configuration</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="email_provider" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+                    <select name="notifications[email_config][provider]" id="email_provider"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
+                        @php $eProvider = $email_config->provider ?? 'smtp'; @endphp
+                        <option value="smtp" {{ $eProvider == 'smtp' ? 'selected' : '' }}>SMTP</option>
+                        <option value="sendgrid" {{ $eProvider == 'sendgrid' ? 'selected' : '' }}>SendGrid</option>
+                        <option value="ses" {{ $eProvider == 'ses' ? 'selected' : '' }}>Amazon SES</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="from_name" class="block text-sm font-medium text-gray-700 mb-1">From Name</label>
+                    <input type="text" name="notifications[email_config][from_name]" id="from_name"
+                        value="{{ old('notifications.email_config.from_name', $email_config->from_name ?? 'Your Bakery ERP') }}"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="from_address" class="block text-sm font-medium text-gray-700 mb-1">From Email
+                        Address</label>
+                    <input type="email" name="notifications[email_config][from_address]" id="from_address"
+                        value="{{ old('notifications.email_config.from_address', $email_config->from_address ?? 'noreply@yourbakery.com') }}"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
+                </div>
+
+                {{-- SMTP Fields --}}
+                <div id="smtp-fields" class="contents {{ $eProvider == 'smtp' ? '' : 'hidden' }}">
+                    <div>
+                        <label for="smtp_host" class="block text-sm font-medium text-gray-700 mb-1">SMTP Host</label>
+                        <input type="text" name="notifications[email_config][smtp_host]" id="smtp_host"
+                            value="{{ old('notifications.email_config.smtp_host', $email_config->smtp_host ?? '') }}"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
+                            placeholder="smtp.gmail.com">
+                    </div>
+                    <div>
+                        <label for="smtp_port" class="block text-sm font-medium text-gray-700 mb-1">SMTP Port</label>
+                        <input type="number" name="notifications[email_config][smtp_port]" id="smtp_port"
+                            value="{{ old('notifications.email_config.smtp_port', $email_config->smtp_port ?? '587') }}"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
+                    </div>
+                </div>
+
+                {{-- API Key Field (Non-SMTP) --}}
+                <div id="email-api-field" class="md:col-span-2 {{ $eProvider != 'smtp' ? '' : 'hidden' }}">
+                    <label for="email_api_key" class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                    <input type="password" name="notifications[email_config][api_key]" id="email_api_key"
+                        value="{{ old('notifications.email_config.api_key', $email_config->api_key ?? '') }}"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
+                        placeholder="Enter API Key">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    {{-- SMS Config --}}
+    <div id="sms-config-card hidden"
+        class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 {{ collect($channels)->firstWhere('type', 'sms')->enabled ?? false ? '' : 'hidden opacity-50' }}">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">SMS Configuration</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="sms_provider" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+                    <select name="notifications[sms_config][provider]" id="sms_provider"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
+                        @php $sProvider = $sms_config->provider ?? 'twilio'; @endphp
+                        <option value="twilio" {{ $sProvider == 'twilio' ? 'selected' : '' }}>Twilio (International)
+                        </option>
+                        <option value="dialog" {{ $sProvider == 'dialog' ? 'selected' : '' }}>Dialog (Sri Lanka)</option>
+                        <option value="mobitel" {{ $sProvider == 'mobitel' ? 'selected' : '' }}>Mobitel (Sri Lanka)
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="sms_from_number" class="block text-sm font-medium text-gray-700 mb-1">From
+                        Number</label>
+                    <input type="text" name="notifications[sms_config][from_number]" id="sms_from_number"
+                        value="{{ old('notifications.sms_config.from_number', $sms_config->from_number ?? '') }}"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
+                        placeholder="+94771234567">
+                </div>
+
+                {{-- Twilio Specifics --}}
+                <div id="twilio-fields" class="contents {{ $sProvider == 'twilio' ? '' : 'hidden' }}">
+                    <div>
+                        <label for="twilio_sid" class="block text-sm font-medium text-gray-700 mb-1">Account SID</label>
+                        <input type="text" name="notifications[sms_config][account_sid]" id="twilio_sid"
+                            value="{{ old('notifications.sms_config.account_sid', $sms_config->account_sid ?? '') }}"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
+                    </div>
+                    <div>
+                        <label for="twilio_token" class="block text-sm font-medium text-gray-700 mb-1">Auth
+                            Token</label>
+                        <input type="password" name="notifications[sms_config][auth_token]" id="twilio_token"
+                            value="{{ old('notifications.sms_config.auth_token', $sms_config->auth_token ?? '') }}"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Notification Rules --}}
+    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hidden">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Notification Rules</h3>
+            <div class="space-y-3">
+                @foreach($rules as $rule)
+                    <div id="rule-card-{{ $rule->id }}"
+                        class="p-4 rounded-lg border-2 transition-colors duration-200 {{ $rule->enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200' }}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="font-medium text-gray-900">{{ $rule->name }}</h4>
+                                    <span class="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">
+                                        {{ $rule->event }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-2">
+                                    Channels: {{ implode(', ', array_map('strtoupper', (array) $rule->channels)) }}
+                                </p>
+                                <p class="text-sm text-gray-600">
+                                    Recipients: {{ implode(', ', (array) $rule->recipients) }}
+                                </p>
+                                @if(isset($rule->schedule))
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        Schedule: {{ $rule->schedule }}
+                                    </p>
+                                @endif
+                            </div>
+
+                            {{-- Rule Toggle --}}
+                            <input type="hidden" name="notifications[rules][{{ $rule->id }}][enabled]" value="0">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="notifications[rules][{{ $rule->id }}][enabled]" value="1"
+                                    id="rule_toggle_{{ $rule->id }}" data-rule-id="{{ $rule->id }}"
+                                    class="rule-toggle sr-only peer" {{ $rule->enabled ? 'checked' : '' }}>
+                                <div
+                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+
     </div>
 
     {{-- Bottom Save Actions --}}
@@ -516,7 +522,10 @@
         let processConfigs = [];
         let systemProcesses = {};
 
-        function loadProcessEmails() {
+        function loadProcessEmails(selectPreviousProcess = false) {
+            const processSelect = document.getElementById('pe_process_id');
+            const previousProcessId = processSelect ? processSelect.value : '';
+
             fetch('/admin-settings/process-emails')
                 .then(response => response.json())
                 .then(res => {
@@ -526,24 +535,19 @@
                         systemProcesses = res.processes || {};
 
                         // 1. Populate the process dropdown dynamically
-                        const processSelect = document.getElementById('pe_process_id');
                         if (processSelect) {
-                            processSelect.innerHTML = '';
+                            processSelect.innerHTML = '<option value="">-- Select Business Process --</option>';
                             Object.entries(systemProcesses).forEach(([id, name]) => {
                                 processSelect.innerHTML += `<option value="${id}">${name}</option>`;
                             });
-                        }
 
-                        // 2. Populate the available users select dropdown
-                        const userSelect = document.getElementById('pe_user_id');
-                        if (userSelect) {
-                            userSelect.innerHTML = '<option value="">-- Choose User --</option>';
-                            systemUsers.forEach(user => {
-                                userSelect.innerHTML += `<option value="${user.id}" data-email="${user.user_name}">${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)} (${escapeHtml(user.user_name)})</option>`;
-                            });
+                            if (selectPreviousProcess && previousProcessId) {
+                                processSelect.value = previousProcessId;
+                            }
                         }
 
                         renderConfiguredRecipients();
+                        populateAvailableUsers();
                     }
                 })
                 .catch(err => {
@@ -551,10 +555,43 @@
                 });
         }
 
+        function populateAvailableUsers() {
+            const processSelect = document.getElementById('pe_process_id');
+            const userSelect = document.getElementById('pe_user_id');
+            if (!userSelect) return;
+
+            if (!processSelect || !processSelect.value) {
+                userSelect.innerHTML = '<option value="">-- Select a process first --</option>';
+                return;
+            }
+
+            const selectedProcessId = parseInt(processSelect.value);
+
+            // Find user IDs already configured for the selected process
+            const configuredUserIds = processConfigs
+                .filter(c => parseInt(c.process_id) === selectedProcessId)
+                .map(c => parseInt(c.um_user_id));
+
+            userSelect.innerHTML = '<option value="">-- Choose User --</option>';
+            
+            // Populate only available users who are NOT already configured
+            const availableUsers = systemUsers.filter(user => !configuredUserIds.includes(parseInt(user.id)));
+
+            availableUsers.forEach(user => {
+                userSelect.innerHTML += `<option value="${user.id}" data-email="${user.user_name}">${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)} (${escapeHtml(user.user_name)})</option>`;
+            });
+        }
+
         function renderConfiguredRecipients() {
             const tbody = document.getElementById('process-configured-list');
             const processSelect = document.getElementById('pe_process_id');
-            if (!tbody || !processSelect) return;
+            if (!tbody) return;
+            if (!processSelect || !processSelect.value) {
+                tbody.innerHTML = `<tr>
+                    <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">Select a process to view configured email routes.</td>
+                </tr>`;
+                return;
+            }
 
             const selectedProcessId = parseInt(processSelect.value);
             tbody.innerHTML = '';
@@ -626,7 +663,16 @@
                         if (localConfig) localConfig.status = statusChk.checked ? 1 : 0;
                     } else {
                         statusChk.checked = !statusChk.checked;
-                        alert('Error: ' + res.message);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: res.message || 'Failed to update status',
+                                confirmButtonColor: '#D4A017'
+                            });
+                        } else {
+                            alert('Error: ' + res.message);
+                        }
                     }
                 })
                 .catch(err => {
@@ -636,8 +682,28 @@
         };
 
         window.deleteProcessEmail = function (id) {
-            if (!confirm('Are you sure you want to remove this email notification routing?')) return;
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Do you want to remove this email notification routing?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#D4A017',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, remove it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        performDelete(id);
+                    }
+                });
+            } else {
+                if (confirm('Are you sure you want to remove this email notification routing?')) {
+                    performDelete(id);
+                }
+            }
+        };
 
+        function performDelete(id) {
             fetch(`/admin-settings/process-emails/${id}`, {
                 method: 'DELETE',
                 headers: {
@@ -651,15 +717,35 @@
                         // Update local cache and re-render
                         processConfigs = processConfigs.filter(c => c.id !== id);
                         renderConfiguredRecipients();
-                        alert('Routing removed successfully!');
+                        populateAvailableUsers();
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Removed',
+                                text: 'Routing removed successfully!',
+                                confirmButtonColor: '#D4A017'
+                            });
+                        } else {
+                            alert('Routing removed successfully!');
+                        }
                     } else {
-                        alert('Error: ' + res.message);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: res.message || 'Failed to remove routing',
+                                confirmButtonColor: '#D4A017'
+                            });
+                        } else {
+                            alert('Error: ' + res.message);
+                        }
                     }
                 })
                 .catch(err => {
                     console.error('Error deleting configuration:', err);
                 });
-        };
+        }
 
         function escapeHtml(str) {
             if (!str) return '';
@@ -669,7 +755,41 @@
         // Handle process selector changes
         const processSelect = document.getElementById('pe_process_id');
         if (processSelect) {
-            processSelect.addEventListener('change', renderConfiguredRecipients);
+            processSelect.addEventListener('change', function() {
+                renderConfiguredRecipients();
+                populateAvailableUsers();
+            });
+        }
+
+        // Add change listener to user selection select element for validation
+        const userSelect = document.getElementById('pe_user_id');
+        if (userSelect) {
+            userSelect.addEventListener('change', function() {
+                const processSelect = document.getElementById('pe_process_id');
+                if (!processSelect || !processSelect.value || !userSelect.value) return;
+
+                const selectedProcessId = parseInt(processSelect.value);
+                const selectedUserId = parseInt(userSelect.value);
+
+                // Check if user is already configured
+                const alreadyExists = processConfigs.some(
+                    c => parseInt(c.process_id) === selectedProcessId && parseInt(c.um_user_id) === selectedUserId
+                );
+
+                if (alreadyExists) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Already Configured',
+                            text: 'This user is already added to this process.',
+                            confirmButtonColor: '#D4A017'
+                        });
+                    } else {
+                        alert('This user is already added to this process.');
+                    }
+                    userSelect.value = ''; // Reset selection
+                }
+            });
         }
 
         // Handle Add Recipient Click
@@ -683,52 +803,146 @@
                 const processId = processSelect.value;
                 const userId = userSelect.value;
 
+                if (!processId) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Selection Required',
+                            text: 'Please select a business process first.',
+                            confirmButtonColor: '#D4A017'
+                        });
+                    } else {
+                        alert('Please select a business process first.');
+                    }
+                    return;
+                }
+
                 if (!userId) {
-                    alert('Please select a system user to notify.');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Selection Required',
+                            text: 'Please select a system user to notify.',
+                            confirmButtonColor: '#D4A017'
+                        });
+                    } else {
+                        alert('Please select a system user to notify.');
+                    }
                     return;
                 }
 
                 const selectedOption = userSelect.options[userSelect.selectedIndex];
                 const emailAddress = selectedOption.dataset.email;
+                const userName = selectedOption.text;
 
+                // Pre-check for duplicate before confirmation
+                const alreadyExists = processConfigs.some(
+                    c => parseInt(c.process_id) === parseInt(processId) && parseInt(c.um_user_id) === parseInt(userId)
+                );
+
+                if (alreadyExists) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Already Configured',
+                            text: 'This user is already added to this process.',
+                            confirmButtonColor: '#D4A017'
+                        });
+                    } else {
+                        alert('This user is already added to this process.');
+                    }
+                    return;
+                }
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: `Do you want to add "${userName}" as a recipient for this process?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#D4A017',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, add recipient!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            saveRecipient(processId, userId, emailAddress);
+                        }
+                    });
+                } else {
+                    if (confirm(`Do you want to add "${userName}" as a recipient?`)) {
+                        saveRecipient(processId, userId, emailAddress);
+                    }
+                }
+            });
+        }
+
+        function saveRecipient(processId, userId, emailAddress) {
+            const btnSave = document.getElementById('btn-save-process-emails');
+            const userSelect = document.getElementById('pe_user_id');
+
+            if (btnSave) {
                 btnSave.disabled = true;
                 btnSave.innerText = 'Adding Recipient...';
+            }
 
-                fetch('/admin-settings/process-emails', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        process_id: processId,
-                        um_user_id: parseInt(userId),
-                        email_address: emailAddress,
-                        status: true
-                    })
+            fetch('/admin-settings/process-emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    process_id: processId,
+                    um_user_id: parseInt(userId),
+                    email_address: emailAddress,
+                    status: true
                 })
-                    .then(response => response.json())
-                    .then(res => {
+            })
+                .then(response => response.json())
+                .then(res => {
+                    if (btnSave) {
                         btnSave.disabled = false;
                         btnSave.innerHTML = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Add Recipient`;
+                    }
 
-                        if (res.status) {
+                    if (res.status) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Recipient added successfully!',
+                                confirmButtonColor: '#D4A017'
+                            });
+                        } else {
                             alert('Recipient added successfully!');
-                            // Reset dropdown selection
-                            userSelect.value = '';
-                            // Reload data to reflect in bottom list
-                            loadProcessEmails();
+                        }
+                        
+                        // Reset dropdown selection
+                        if (userSelect) userSelect.value = '';
+                        
+                        // Reload and select the same process
+                        loadProcessEmails(true);
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: res.message || 'Failed to add recipient.',
+                                confirmButtonColor: '#D4A017'
+                            });
                         } else {
                             alert('Error: ' + (res.message || 'Failed to add recipient.'));
                         }
-                    })
-                    .catch(err => {
+                    }
+                })
+                .catch(err => {
+                    if (btnSave) {
                         btnSave.disabled = false;
                         btnSave.innerHTML = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> Add Recipient`;
-                        console.error('Error adding recipient:', err);
-                    });
-            });
+                    }
+                    console.error('Error adding recipient:', err);
+                });
         }
 
         // Initialize on load

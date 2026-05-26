@@ -44,6 +44,16 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::post('/user-roles/update', [UserManagementController::class, 'updateUserRole'])->name('userRoles.update');
     Route::delete('/user-roles/delete', [UserManagementController::class, 'deleteUserRole'])->name('userRoles.delete');
 
+    // Profile Management
+    Route::get('/profile', [UserManagementController::class, 'profileIndex'])->name('profile.index');
+    Route::post('/profile/update', [UserManagementController::class, 'profileUpdate'])->name('profile.update');
+    
+    // Dedicated Password Change Management
+    Route::get('/change-password', [UserManagementController::class, 'changePasswordIndex'])->name('password.change');
+    Route::post('/change-password/update', [UserManagementController::class, 'changePasswordUpdate'])->name('password.change.update');
+
+
+
     // Production Management
     Route::get('/production-management', [ProductionManagementController::class, 'productionManageIndex'])->name('productionManagement.index');
     Route::get('/recipe-management', [ProductionManagementController::class, 'recipeManageIndex'])->name('recipeManagement.index');
@@ -426,7 +436,6 @@ Route::get('/test-qty', function () {
             'expected' => 100000.00,
             'pass' => floatval($stock->qty_in_unit) == 100000.00
         ]);
-
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json(['error' => $e->getMessage()]);

@@ -297,7 +297,7 @@
                                 <p class="text-xs text-gray-500 truncate">{{ Auth::user()->user_name ?? '' }}</p>
                             </div>
 
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            <a href="{{ route('profile.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 role="menuitem" tabindex="-1" id="user-menu-item-0">Your Profile</a>
                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 role="menuitem" tabindex="-1" id="user-menu-item-1">Settings</a>

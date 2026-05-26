@@ -63,7 +63,7 @@
             ],
             'pending-approval' => [
                 'color' => 'bg-yellow-100 text-yellow-700 border-yellow-300',
-                'label' => 'Pending Approval',
+                'label' => 'Pending Orders',
                 'icon' => 'clock',
             ],
             'approved' => [
@@ -199,7 +199,7 @@
                         </div>
                         <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">Pending</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Pending Approval</h3>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Pending Orders</h3>
                     <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['pending-approval'] ?? 0 }}</p>
                     <p class="text-sm text-gray-500 font-medium">Requires action</p>
                 </div>
@@ -331,7 +331,7 @@
                 </button>
                 <button onclick="filterData('status', 'pending-approval', this)"
                     class="filter-btn flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-300 text-gray-600 hover:bg-gray-100">
-                    <span>Pending Approval</span>
+                    <span>Pending Orders</span>
                     <span
                         class="px-1.5 py-0.5 bg-gray-200 rounded text-xs ml-1">{{ $summary['ordersByStatus']['pending-approval'] ?? 0 }}</span>
                 </button>
@@ -453,6 +453,15 @@
                                             class="{{ $statusConfig['color'] }} border px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs font-medium">
                                             {{ $statusConfig['label'] }}
                                         </span>
+                                        @if(!empty($order['notes']))
+                                            <span class="bg-amber-100 text-amber-700 border border-amber-300 px-2 py-1 rounded-lg flex items-center gap-1 text-xs font-semibold" title="{{ $order['notes'] }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
+                                                    <path d="M12 20h9" />
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                </svg>
+                                                Note Available
+                                            </span>
+                                        @endif
                                         @if ($order['recurrence_pattern'])
                                             <span
                                                 class="bg-orange-100 text-orange-700 border border-orange-300 px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs font-medium">
@@ -745,6 +754,7 @@
                 isRecurring: orderData.recurrence_pattern ? true : false,
                 instanceNumber: 1,
                 created_at: orderData.created_at,
+                notes: orderData.notes,
                 requestBranchName: orderData.request_branch_name,
                 reqFromBranchName: orderData.req_from_branch_name,
                 umBranchId: orderData.um_branch_id,
