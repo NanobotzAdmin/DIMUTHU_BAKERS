@@ -24,6 +24,7 @@ use App\Http\Controllers\ProductManagementController;
 use App\Http\Controllers\SupplierManagementController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WasteRecoveryManagementController;
+use App\Http\Controllers\HelpSupportController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.branch'*/])->group(function () {
@@ -348,6 +349,13 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::get('/admin-settings/process-emails', [AdminSettingsController::class, 'getProcessEmails'])->name('adminSettings.processEmails.get');
     Route::post('/admin-settings/process-emails', [AdminSettingsController::class, 'saveProcessEmail'])->name('adminSettings.processEmails.save');
     Route::delete('/admin-settings/process-emails/{id}', [AdminSettingsController::class, 'deleteProcessEmail'])->name('adminSettings.processEmails.delete');
+
+    // Help & Support Videos
+    Route::get('/help-support-videos', [HelpSupportController::class, 'index'])->name('helpSupportVideos.index');
+    Route::post('/help-support-videos/store', [HelpSupportController::class, 'store'])->name('helpSupportVideos.store');
+    Route::post('/help-support-videos/update', [HelpSupportController::class, 'update'])->name('helpSupportVideos.update');
+    Route::post('/help-support-videos/toggle-status', [HelpSupportController::class, 'toggleStatus'])->name('helpSupportVideos.toggleStatus');
+    Route::delete('/help-support-videos/delete', [HelpSupportController::class, 'deleteVideo'])->name('helpSupportVideos.delete');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

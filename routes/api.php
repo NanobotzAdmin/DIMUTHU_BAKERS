@@ -110,4 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [ApiUserController::class, 'getNotifications']);
     Route::post('/notifications/mark-read', [ApiUserController::class, 'markNotificationsRead']);
     Route::get('/notifications/unread-count', [ApiUserController::class, 'getUnreadCount']);
+
+    // Help & Support Guide Videos
+    Route::get('/guide-videos', [ApiUserController::class, 'getGuideVideos']);
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdAgent;
 use App\Models\UmUser;
 use App\Models\Notification;
+use App\Models\HsGuideVideo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -348,6 +349,36 @@ class ApiUserController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to get unread count',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get guide videos for the authenticated user's role.
+     */
+    public function getGuideVideos(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $userRoleId = $user->user_role_id;
+
+            $videos = HsGuideVideo::where('status', 1)
+                ->whereHas('userRoles', function ($query) use ($userRoleId) {
+                    $query->where('pm_user_role.id', $userRoleId);
+                })
+                ->orderBy('display_order')
+                ->orderBy('created_at', 'desc')
+                ->get(['id', 'title', 'description', 'video_url', 'thumbnail_url', 'display_order']);
+
+            return response()->json([
+                'status' => true,
+                'data' => $videos,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Guide videos fetch error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch guide videos',
             ], 500);
         }
     }
