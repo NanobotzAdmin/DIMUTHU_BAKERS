@@ -24,10 +24,11 @@ class UserManagementController extends Controller
     {
         $users = UmUser::join('pm_user_role', 'um_user.user_role_id', '=', 'pm_user_role.id')
             ->select('um_user.*', 'pm_user_role.user_role_name')
+            ->where('um_user.user_role_id', '!=', 1)
             ->orderBy('um_user.id', 'desc')
             ->paginate(10);
 
-        $roles = PmUserRole::all();
+        $roles = PmUserRole::where('id', '!=', 1)->get();
 
         return view('userManagement.index', compact('users', 'roles'));
     }
@@ -37,7 +38,8 @@ class UserManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:um_user,user_name', // Check uniqueness on user_name
+            'username' => 'required|string|max:255|unique:um_user,user_name',
+            'email' => 'required|email|max:255|unique:um_user,email',
             'user_role_id' => 'required|exists:pm_user_role,id',
             'contact_no' => 'required|string|max:20',
         ]);
@@ -50,8 +52,8 @@ class UserManagementController extends Controller
             $user = new UmUser();
             $user->first_name = $request->first_name;
             $user->last_name = $request->last_name;
-            $user->user_name = $request->email; // Map email to user_name
-            // $user->email field removed
+            $user->user_name = $request->username;
+            $user->email = $request->email;
 
             $user->user_role_id = $request->user_role_id;
             $user->contact_no = $request->contact_no;
@@ -80,7 +82,7 @@ class UserManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:um_user,user_name,' . $id, // Ignore current user for unique check
+            'email' => 'required|email|max:255|unique:um_user,email,' . $id, // Ignore current user for unique check
             'user_role_id' => 'required|exists:pm_user_role,id',
             'contact_no' => 'required|string|max:20',
         ]);
@@ -97,7 +99,7 @@ class UserManagementController extends Controller
 
             $user->first_name = $request->first_name;
             $user->last_name = $request->last_name;
-            $user->user_name = $request->email;
+            $user->email = $request->email;
             $user->user_role_id = $request->user_role_id;
             $user->contact_no = $request->contact_no;
             // Password update is usually separate, or optional. We'll skip it here unless requested.

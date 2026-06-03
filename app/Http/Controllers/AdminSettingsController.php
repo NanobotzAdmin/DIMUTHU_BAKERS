@@ -281,12 +281,13 @@ class AdminSettingsController extends Controller
     {
         try {
             $processes = \App\CommonVariables::$businessProcesses;
-            // Only load users who have a valid email format in their user_name
+            // Only load users who have a valid email format in their email column and exclude roles 8 and 10
             $users = \App\Models\UmUser::where('is_active', 1)
-                ->where('user_name', 'like', '%@%')
-                ->select('id', 'first_name', 'last_name', 'user_name')
+                ->where('email', 'like', '%@%')
+                ->whereNotIn('user_role_id', [8, 10])
+                ->select('id', 'first_name', 'last_name', 'user_name', 'email')
                 ->get();
-            $configs = \App\Models\EmProcessHasEmailAddress::with('user:id,first_name,last_name,user_name')->get();
+            $configs = \App\Models\EmProcessHasEmailAddress::with('user:id,first_name,last_name,user_name,email')->get();
 
             return response()->json([
                 'status' => true,
@@ -342,7 +343,7 @@ class AdminSettingsController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Configuration saved successfully',
-                'data' => $config->load('user:id,first_name,last_name,user_name')
+                'data' => $config->load('user:id,first_name,last_name,user_name,email')
             ]);
         } catch (\Exception $e) {
             return response()->json([
