@@ -44,6 +44,16 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::post('/user-roles/update', [UserManagementController::class, 'updateUserRole'])->name('userRoles.update');
     Route::delete('/user-roles/delete', [UserManagementController::class, 'deleteUserRole'])->name('userRoles.delete');
 
+    // Profile Management
+    Route::get('/profile', [UserManagementController::class, 'profileIndex'])->name('profile.index');
+    Route::post('/profile/update', [UserManagementController::class, 'profileUpdate'])->name('profile.update');
+    
+    // Dedicated Password Change Management
+    Route::get('/change-password', [UserManagementController::class, 'changePasswordIndex'])->name('password.change');
+    Route::post('/change-password/update', [UserManagementController::class, 'changePasswordUpdate'])->name('password.change.update');
+
+
+
     // Production Management
     Route::get('/production-management', [ProductionManagementController::class, 'productionManageIndex'])->name('productionManagement.index');
     Route::get('/recipe-management', [ProductionManagementController::class, 'recipeManageIndex'])->name('recipeManagement.index');
@@ -111,6 +121,7 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::get('/order-management/payment-approval/{id}', [DistributorAndSalesManagementController::class, 'paymentApprovalView'])->name('orderManagement.paymentApprovalView');
     Route::get('/api/order-management/print-dispatch-note/{id}', [DistributorAndSalesManagementController::class, 'printDispatchNote'])->name('orderManagement.printDispatchNote');
     Route::get('/agent-payments', [DistributorAndSalesManagementController::class, 'agentPaymentIndex'])->name('agent-payments.index');
+    Route::get('/agent-financial-management', [DistributorAndSalesManagementController::class, 'agentFinancialManagementIndex'])->name('agent-financial-management.index');
     Route::get('/api/agent-payments/orders/{id}', [DistributorAndSalesManagementController::class, 'getAgentPaymentOrders'])->name('agent-payments.orders');
     Route::post('/api/agent-payments/approve-bulk', [DistributorAndSalesManagementController::class, 'approveBulkAgentPayments'])->name('agent-payments.approve-bulk');
 
@@ -267,6 +278,8 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::get('/analytics-reports-inventory-reports', [AnalyticsReportsManagementController::class, 'analyticsReportsInventoryReportsIndex'])->name('analyticsReportsInventoryReports.index');
     Route::get('/analytics-reports-production-reports', [AnalyticsReportsManagementController::class, 'analyticsReportsProductionReportsIndex'])->name('analyticsReportsProductionReports.index');
     Route::get('/analytics-reports-financial-reports', [AnalyticsReportsManagementController::class, 'analyticsReportsFinancialReportsIndex'])->name('analyticsReportsFinancialReports.index');
+    Route::get('/analytics-reports-daily-summary', [AnalyticsReportsManagementController::class, 'analyticsReportsDailySummaryIndex'])->name('analyticsReportsDailySummary.index');
+    Route::get('/api/web-daily-summary', [AnalyticsReportsManagementController::class, 'getWebDailySummary'])->name('api.webDailySummary');
 
     // Product Types
     Route::get('/product-types/fetch', [ProductManagementController::class, 'fetchProductTypes'])->name('productTypes.fetch');
@@ -331,6 +344,10 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::post('/adminSettings/branches/store', [AdminSettingsController::class, 'storeBranch'])->name('adminSettings.branches.store');
     Route::post('/adminSettings/branches/setDefault', [AdminSettingsController::class, 'setDefaultRaw'])->name('adminSettings.branches.setDefault');
     Route::post('/adminSettings/branches/toggleStatus', [AdminSettingsController::class, 'toggleStatus'])->name('adminSettings.branches.toggleStatus');
+
+    Route::get('/admin-settings/process-emails', [AdminSettingsController::class, 'getProcessEmails'])->name('adminSettings.processEmails.get');
+    Route::post('/admin-settings/process-emails', [AdminSettingsController::class, 'saveProcessEmail'])->name('adminSettings.processEmails.save');
+    Route::delete('/admin-settings/process-emails/{id}', [AdminSettingsController::class, 'deleteProcessEmail'])->name('adminSettings.processEmails.delete');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -419,7 +436,6 @@ Route::get('/test-qty', function () {
             'expected' => 100000.00,
             'pass' => floatval($stock->qty_in_unit) == 100000.00
         ]);
-
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json(['error' => $e->getMessage()]);

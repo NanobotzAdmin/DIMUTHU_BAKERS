@@ -276,4 +276,97 @@ class AdminSettingsController extends Controller
 
         return response()->json(['message' => 'Branch status updated successfully']);
     }
+
+    public function getProcessEmails()
+    {
+        try {
+            $processes = \App\CommonVariables::$businessProcesses;
+            // Only load users who have a valid email format in their user_name
+            $users = \App\Models\UmUser::where('is_active', 1)
+                ->where('user_name', 'like', '%@%')
+                ->select('id', 'first_name', 'last_name', 'user_name')
+                ->get();
+            $configs = \App\Models\EmProcessHasEmailAddress::with('user:id,first_name,last_name,user_name')->get();
+
+            return response()->json([
+                'status' => true,
+                'processes' => $processes,
+                'users' => $users,
+                'configs' => $configs
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to load process email configurations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function saveProcessEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => 'nullable|integer',
+            'process_id' => 'required|integer',
+            'um_user_id' => 'required|integer',
+            'email_address' => 'required|string|max:150',
+            'status' => 'nullable'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $statusVal = 1;
+            if ($request->has('status')) {
+                $statusVal = filter_var($request->status, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+            }
+
+            $config = \App\Models\EmProcessHasEmailAddress::updateOrCreate(
+                [
+                    'process_id' => $request->process_id,
+                    'um_user_id' => $request->um_user_id,
+                ],
+                [
+                    'email_address' => $request->email_address,
+                    'status' => $statusVal,
+                    'created_by' => Auth::id() ?? 1,
+                    'updated_by' => Auth::id() ?? 1,
+                ]
+            );
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Configuration saved successfully',
+                'data' => $config->load('user:id,first_name,last_name,user_name')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to save configuration: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteProcessEmail($id)
+    {
+        try {
+            $config = \App\Models\EmProcessHasEmailAddress::findOrFail($id);
+            $config->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Configuration deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete configuration: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

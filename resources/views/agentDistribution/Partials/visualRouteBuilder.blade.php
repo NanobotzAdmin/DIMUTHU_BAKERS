@@ -22,7 +22,7 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="{{ asset('assets/sweetalert2.all.min.js') }}"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDyD-Z0FCjm3sgq4hhNqgZfhiKjOWNuuXw&libraries=places,geometry&loading=async"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ $googleMapsKey }}&libraries=places,geometry&loading=async"></script>
 </head>
 
 <body class="h-full bg-gray-50">
@@ -656,7 +656,7 @@
         }
         
         // Use Google Routes API (newer, more accurate)
-        const apiKey = 'AIzaSyDyD-Z0FCjm3sgq4hhNqgZfhiKjOWNuuXw';
+        const apiKey = '{{ $googleMapsKey }}';
         const url = 'https://routes.googleapis.com/directions/v2:computeRoutes';
         
         const requestBody = {

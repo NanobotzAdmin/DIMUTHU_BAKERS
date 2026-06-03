@@ -1,18 +1,19 @@
 {
-    "business_name": "Dimuthu Bakery",
+    "business_name": "Dimuthu Bake House (Pvt) Ltd.",
     "trading_name": "Nanobotz Bakery",
     "tax_id": null,
     "registration_number": null,
     "address": {
-        "street": null,
-        "city": null,
+        "street": "527, Thewatta Road",
+        "city": "Ragama",
         "province": null,
         "postal_code": null
     },
     "contact": {
-        "phone": null,
-        "email": null,
-        "website": null
+        "phone": "0117111601",
+        "email": "Sales@Dimuthubakehouse.com",
+        "website": null,
+        "mobile": "(77) 797 1640"
     },
     "colors": {
         "primary": "#ff8040",
@@ -20,7 +21,7 @@
         "background": "#ffffff",
         "text": "#111827",
         "accent": "#6000bf",
-        "sidebar_bg": "#030556",
+        "sidebar_bg": "#52381f",
         "sidebar_hover": "#f47a00",
         "sidebar_active": "#fc651d",
         "sidebar_text": "#ffffff",
@@ -30,10 +31,10 @@
         "sidebar_sub_active_text": "#fc651d"
     },
     "logos": {
-        "primary": "images\/systemImage\/primary_logo_1773987222.png",
-        "white": "images\/systemImage\/white_logo_1773987222.png",
-        "login": "images\/systemImage\/login_logo_1773987222.png",
-        "favicon": "images\/systemImage\/favicon_1773987222.png"
+        "primary": "images\/systemImage\/primary_logo_1779705250.png",
+        "white": "images\/systemImage\/white_logo_1779705250.png",
+        "login": "images\/systemImage\/login_logo_1779705250.png",
+        "favicon": "images\/systemImage\/favicon_1779704989.png"
     },
     "backup": {
         "enabled": false,

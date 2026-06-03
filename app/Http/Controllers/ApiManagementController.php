@@ -2767,6 +2767,7 @@ class ApiManagementController extends Controller
         try {
             $date = $request->query('date', date('Y-m-d'));
             $agentId = $this->getAgentId();
+            $loadId = $request->query('load_id');
             
             if (!$agentId) {
                 return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
@@ -2777,70 +2778,80 @@ class ApiManagementController extends Controller
             $userId = auth()->id();
             
             // 1. Sales Summary - Include both route-based and creator-based invoices
-            $invoices = AdCubusinessHasInvoice::whereDate('created_at', $date)
-                ->where(function($query) use ($routeIds, $userId) {
+            $invoicesQuery = AdCubusinessHasInvoice::whereDate('created_at', $date);
+            
+            if ($loadId) {
+                $invoicesQuery->where('ad_daily_load_id', $loadId);
+            } else {
+                $invoicesQuery->where(function($query) use ($routeIds, $userId) {
                     $query->whereHas('business', function($q) use ($routeIds) {
                         $q->whereIn('route_id', $routeIds);
                     })
                     ->orWhere('created_by', $userId);
-                })
-                ->with(['items.product'])
-                ->get();
+                });
+            }
+
+            $invoices = $invoicesQuery->with(['business', 'items.product'])->get();
 
             Log::info("Daily Summary for Agent $agentId on $date: Found " . $invoices->count() . " invoices. Routes: " . implode(',', $routeIds->toArray()));
 
+            // 1. Cost - Total value of Order Requests for this agent on this date
+            // Note: Cost might not reflect individual load perfectly if load_id is provided
+            $totalCost = \App\Models\StmOrderRequest::where('agent_id', $agentId)
+                ->whereDate('created_at', $date)
+                ->sum('grand_total');
+
+            // 2. Sales - Total value of Invoices created today
             $totalSales = $invoices->sum('net_price');
-            $totalCost = 0;
-            $itemCount = 0;
-
-            foreach ($invoices as $invoice) {
-                foreach ($invoice->items as $item) {
-                    $totalCost += ($item->quantity * ($item->product->cost_price ?? 0));
-                    $itemCount += $item->quantity;
-                }
-            }
-
-            $grossProfit = $totalSales - $totalCost;
-
-            // 2. Returns Summary
-            $returns = \App\Models\AdReturnProductStock::whereDate('created_at', $date)
-                ->whereHas('dailyLoad', function($q) use ($routeIds) {
-                    $q->whereIn('route_id', $routeIds);
-                })
-                ->get();
-
-            $totalReturnsValue = $returns->sum(function($r) {
-                return $r->quantity * ($r->unit_price ?? 0);
+            $itemCount = $invoices->sum(function ($invoice) {
+                return $invoice->items->sum('quantity');
             });
+
+            // We do not need gross profit / net profit in the new logic, but keeping them zero for response structure compatibility
+            $grossProfit = 0;
+            $netProfit = 0;
+            $returnProfitLoss = 0;
+
+            // 3. Returns - Customer returned total using AdCubusinessHasReturnProductItem
+            // Get all invoice IDs created today to find their returns
+            $invoiceIds = $invoices->pluck('id');
             
-            $totalReturnsCost = $returns->sum(function($r) {
-                return $r->quantity * ($r->product->cost_price ?? 0);
-            });
-
-            // Net Profit = Gross Profit from sales - Lost profit from returns
-            // (Sales Value - Cost Value) - (Return Value - Return Cost)
-            $returnProfitLoss = $totalReturnsValue - $totalReturnsCost;
-            $netProfit = $grossProfit - $returnProfitLoss;
-
-            // 3. Payment Breakdown
-            $payments = AdCubusinessInvoicePayments::whereDate('created_at', $date)
-                ->whereHas('business', function($q) use ($routeIds) {
-                    $q->whereIn('route_id', $routeIds);
-                })
+            $returns = \App\Models\AdCubusinessHasReturnProductItem::whereIn('ad_new_invoice_id', $invoiceIds)
                 ->get();
+
+            $totalReturnsValue = $returns->sum('total_price');
+
+            // 4. Payment Breakdown & Credit
+            $paymentsQuery = AdCubusinessInvoicePayments::whereDate('created_at', $date);
+            if ($loadId) {
+                $paymentsQuery->whereIn('ad_cubusiness_has_invoice_id', $invoiceIds);
+            } else {
+                $paymentsQuery->whereHas('business', function ($q) use ($routeIds) {
+                    $q->whereIn('route_id', $routeIds);
+                });
+            }
+            $payments = $paymentsQuery->get();
+
+            $totalCredit = $invoices->sum(function ($inv) {
+                return max(0, $inv->net_price - $inv->total_amount_paid);
+            });
 
             $paymentBreakdown = [
-                'cash' => $payments->where('payment_method', 1)->sum('amount'),
-                'credit' => $payments->where('payment_method', 2)->sum('amount'),
-                'cheque' => $payments->where('payment_method', 3)->sum('amount'),
-                'bank_transfer' => $payments->where('payment_method', 4)->sum('amount'),
-                'total_collected' => $payments->sum('amount')
+                'cash' => $payments->where('payment_type', 1)->sum('amount'),
+                'credit' => $totalCredit,
+                'cheque' => $payments->where('payment_type', 2)->sum('amount'),
+                'bank_transfer' => $payments->where('payment_type', 3)->sum('amount'),
+                'total_collected' => $payments->sum('amount'),
             ];
 
             // 4. Daily Loads for this date
-            $loads = AdDailyLoad::whereDate('load_date', $date)
-                ->whereIn('route_id', $routeIds)
-                ->with(['route', 'vehicle', 'driver'])
+            $loadsQuery = AdDailyLoad::whereDate('load_date', $date);
+            if ($loadId) {
+                $loadsQuery->where('id', $loadId);
+            } else {
+                $loadsQuery->whereIn('route_id', $routeIds);
+            }
+            $loads = $loadsQuery->with(['route', 'vehicle', 'driver'])
                 ->get()
                 ->map(function($load) {
                     return [
@@ -2850,6 +2861,40 @@ class ApiManagementController extends Controller
                         'status' => $load->load_status,
                     ];
                 });
+
+            $loadTransactions = [];
+            foreach ($invoices as $invoice) {
+                $salesItems = [];
+                foreach ($invoice->items as $item) {
+                    $salesItems[] = [
+                        'product_name' => $item->product->product_name ?? 'N/A',
+                        'quantity' => (float)$item->quantity,
+                        'unit_price' => (float)$item->unit_price,
+                        'total_price' => (float)$item->total_price,
+                    ];
+                }
+
+                $returnItems = [];
+                $invoiceReturns = $returns->where('ad_new_invoice_id', $invoice->id);
+                foreach ($invoiceReturns as $ret) {
+                    $returnItems[] = [
+                        'product_name' => $ret->product->product_name ?? 'N/A',
+                        'quantity' => (float)$ret->return_quantity,
+                        'unit_price' => (float)$ret->unit_price,
+                        'total_price' => (float)$ret->total_price,
+                    ];
+                }
+
+                $loadTransactions[] = [
+                    'invoice_id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'business_name' => $invoice->business->business_name ?? 'Walk-in Customer',
+                    'sales_amount' => (float)$invoice->net_price,
+                    'return_amount' => (float)$invoiceReturns->sum('total_price'),
+                    'sales_items' => $salesItems,
+                    'return_items' => $returnItems,
+                ];
+            }
 
             return response()->json([
                 'status' => true,
@@ -2871,7 +2916,8 @@ class ApiManagementController extends Controller
                         'margin_percentage' => $totalSales > 0 ? round(($netProfit / $totalSales) * 100, 2) : 0
                     ],
                     'payments' => $paymentBreakdown,
-                    'loads' => $loads
+                    'loads' => $loads,
+                    'load_transactions' => $loadTransactions
                 ]
             ]);
         } catch (\Exception $e) {

@@ -63,7 +63,7 @@
             ],
             'pending-approval' => [
                 'color' => 'bg-yellow-100 text-yellow-700 border-yellow-300',
-                'label' => 'Pending Approval',
+                'label' => 'Pending Orders',
                 'icon' => 'clock',
             ],
             'approved' => [
@@ -168,100 +168,96 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                 {{-- Total --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-purple-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-purple-600">
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="8" cy="21" r="1" />
                                 <circle cx="19" cy="21" r="1" />
                                 <path
                                     d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">All</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">Total Orders</h3>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Total Orders</h3>
                     <p class="text-2xl font-bold text-gray-900">{{ $summary['totalOrders'] }}</p>
-                    <p class="text-sm text-gray-500">Rs {{ number_format($summary['totalValue'], 2) }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Rs {{ number_format($summary['totalValue'], 2) }}</p>
                 </div>
 
-                {{-- In Production --}}
+                {{-- Pending Approval --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-amber-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-indigo-600">
-                                <path
-                                    d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z" />
-                                <line x1="6" y1="17" x2="18" y2="17" />
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">Pending</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">In Production</h3>
-                    <p class="text-2xl font-bold text-gray-900">{{ $summary['inProduction'] }}</p>
-                    <p class="text-sm text-gray-500">orders</p>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Pending Orders</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['pending-approval'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Requires action</p>
                 </div>
 
-                {{-- Ready --}}
+                {{-- Approved --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-blue-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-teal-600">
-                                <path d="m7.5 4.27 9 5.15" />
-                                <path
-                                    d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                                <path d="m3.3 7 8.7 5 8.7-5" />
-                                <path d="M12 22v-9" />
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Approved</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">Ready</h3>
-                    <p class="text-2xl font-bold text-gray-900">{{ $summary['readyForPickup'] }}</p>
-                    <p class="text-sm text-gray-500">for pickup</p>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Approved</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['approved'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Ready for next steps</p>
                 </div>
 
-                {{-- Out for Delivery --}}
+                {{-- Dispatched --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-cyan-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-cyan-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-cyan-600">
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="1" y="3" width="15" height="13" />
                                 <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
                                 <circle cx="5.5" cy="18.5" r="2.5" />
                                 <circle cx="18.5" cy="18.5" r="2.5" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-100">Dispatched</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">Out for Delivery</h3>
-                    <p class="text-2xl font-bold text-gray-900">{{ $summary['outForDelivery'] }}</p>
-                    <p class="text-sm text-gray-500">orders</p>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Dispatched</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['out-for-delivery'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">In transit</p>
                 </div>
 
-                {{-- Today's Orders --}}
+                {{-- Completed --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-emerald-500">
                     <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                class="text-green-600">
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                                <polyline points="17 6 23 6 23 12" />
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
                             </svg>
                         </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Completed</span>
                     </div>
-                    <h3 class="text-gray-600 mb-1">Today's Orders</h3>
-                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersToday'] }}</p>
-                    <p class="text-sm text-gray-500">Rs {{ number_format($summary['ordersTodayValue'], 2) }}</p>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Completed</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['completed'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Delivered successfully</p>
                 </div>
             </div>
 
@@ -335,7 +331,7 @@
                 </button>
                 <button onclick="filterData('status', 'pending-approval', this)"
                     class="filter-btn flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-300 text-gray-600 hover:bg-gray-100">
-                    <span>Pending Approval</span>
+                    <span>Pending Orders</span>
                     <span
                         class="px-1.5 py-0.5 bg-gray-200 rounded text-xs ml-1">{{ $summary['ordersByStatus']['pending-approval'] ?? 0 }}</span>
                 </button>
@@ -457,6 +453,15 @@
                                             class="{{ $statusConfig['color'] }} border px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs font-medium">
                                             {{ $statusConfig['label'] }}
                                         </span>
+                                        @if(!empty($order['notes']))
+                                            <span class="bg-amber-100 text-amber-700 border border-amber-300 px-2 py-1 rounded-lg flex items-center gap-1 text-xs font-semibold" title="{{ $order['notes'] }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
+                                                    <path d="M12 20h9" />
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                </svg>
+                                                Note Available
+                                            </span>
+                                        @endif
                                         @if ($order['recurrence_pattern'])
                                             <span
                                                 class="bg-orange-100 text-orange-700 border border-orange-300 px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs font-medium">
@@ -626,7 +631,6 @@
             <p class="text-gray-500">Try adjusting your filters or search query</p>
         </div>
     </div>
-    @include('DistributorAndSalesManagement.modals.viewOrder')
     @include('DistributorAndSalesManagement.modals.createOrder')
 
     <script>
@@ -749,6 +753,7 @@
                 isRecurring: orderData.recurrence_pattern ? true : false,
                 instanceNumber: 1,
                 created_at: orderData.created_at,
+                notes: orderData.notes,
                 requestBranchName: orderData.request_branch_name,
                 reqFromBranchName: orderData.req_from_branch_name,
                 umBranchId: orderData.um_branch_id,
@@ -782,6 +787,39 @@
             };
             return typeMap[orderType] || 'pos-pickup';
         }
+
+        // Auto-search and view order on load if search parameter is present in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchVal = urlParams.get('search');
+            if (searchVal) {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = searchVal;
+                    filterSearch(searchVal);
+                    
+                    // If there is exactly one visible order that matches, open it automatically
+                    setTimeout(() => {
+                        const visibleOrders = document.querySelectorAll('.order-item');
+                        let matchedOrder = null;
+                        let matchedCount = 0;
+                        visibleOrders.forEach(item => {
+                            if (item.style.display !== 'none') {
+                                matchedOrder = item;
+                                matchedCount++;
+                            }
+                        });
+                        
+                        if (matchedCount === 1 && matchedOrder) {
+                            const viewBtn = matchedOrder.querySelector('button[onclick^="openViewOrderModal"]');
+                            if (viewBtn) {
+                                viewBtn.click();
+                            }
+                        }
+                    }, 300);
+                }
+            }
+        });
     </script>
 
     {{-- Include View Order Modal --}}

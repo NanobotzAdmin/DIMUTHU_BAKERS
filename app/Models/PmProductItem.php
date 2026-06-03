@@ -17,6 +17,7 @@ class PmProductItem extends Model
         'pm_product_id',
         'pm_brands_id',
         'pm_product_category_id',
+        'item_type',
         'pm_variation_id',
         'pm_variation_value_id',
         'product_name',

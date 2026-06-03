@@ -81,21 +81,7 @@
                             class="w-full h-12 pl-12 pr-4 border-2 border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-all">
                     </div>
 
-                    <div class="flex flex-col gap-3 w-full xl:w-auto">
-                        {{-- Type Filters --}}
-                        {{-- <div class="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-xl p-1 overflow-x-auto w-full xl:w-auto scrollbar-hide">
-                            <button onclick="setFilter('all')" id="filter-btn-all"
-                                class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm bg-blue-500 text-white">
-                                All Types
-                            </button>
-                            @foreach ($productTypes as $type)
-                                <button onclick="setFilter('{{ $type->id }}')" id="filter-btn-{{ $type->id }}"
-                                    class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm text-gray-600 hover:bg-gray-100">
-                                    {{ $type->product_type_name }}
-                                </button>
-                            @endforeach
-                        </div> --}}
-
+                    <div class="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
                         {{-- Category Filters --}}
                         <div class="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-xl p-1 overflow-x-auto w-full xl:w-auto scrollbar-hide">
                             <button onclick="setCategoryFilter('all')" id="cat-filter-btn-all"
@@ -111,7 +97,21 @@
                             @endforeach
                         </div>
 
-
+                        {{-- Item Type Filters --}}
+                        <div class="flex items-center gap-2 bg-white border-2 border-gray-200 rounded-xl p-1 overflow-x-auto w-full xl:w-auto scrollbar-hide">
+                            <button onclick="setItemTypeFilter('all')" id="itemtype-filter-btn-all"
+                                class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm bg-blue-500 text-white">
+                                All Item Types
+                            </button>
+                            <button onclick="setItemTypeFilter(1)" id="itemtype-filter-btn-1"
+                                class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm text-gray-600 hover:bg-gray-100">
+                                Selling products
+                            </button>
+                            <button onclick="setItemTypeFilter(2)" id="itemtype-filter-btn-2"
+                                class="px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm text-gray-600 hover:bg-gray-100">
+                                Product Containers
+                            </button>
+                        </div>
                     </div>
 
                     {{-- Layout Switcher --}}
@@ -186,11 +186,20 @@
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Update Product Prices
+                                    Update Product Details & Prices
                                 </h3>
                                 <div class="mt-4 space-y-4">
                                     <input type="hidden" id="editItemTypeId">
                                     
+                                    <div>
+                                        <label for="item_type" class="block text-sm font-medium text-gray-700">Item Type</label>
+                                        <select name="item_type" id="item_type"
+                                            class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md border py-2 px-3 bg-white">
+                                            <option value="1">Selling product</option>
+                                            <option value="2">Product Containers</option>
+                                        </select>
+                                    </div>
+
                                     <div>
                                         <label for="selling_price" class="block text-sm font-medium text-gray-700">Selling Price</label>
                                         <div class="mt-1 relative rounded-md shadow-sm">
@@ -276,6 +285,7 @@
         let state = {
             viewMode: 'all',
             categoryFilter: 'all',
+            itemTypeFilter: 'all',
             layoutMode: 'grid',
             searchQuery: ''
         };
@@ -291,11 +301,12 @@
                 // Check if any of the product's types match the selected view mode
                 const matchesType = state.viewMode === 'all' || (p.allTypeIds && p.allTypeIds.includes(parseInt(state.viewMode))) || p.type == state.viewMode;
                 const matchesCategory = state.categoryFilter === 'all' || p.productCategory === state.categoryFilter;
+                const matchesItemType = state.itemTypeFilter === 'all' || p.itemType == state.itemTypeFilter;
                 const matchesSearch = p.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
                     p.category.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
                     p.productCategory.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
                     (p.brand && p.brand.toLowerCase().includes(state.searchQuery.toLowerCase()));
-                return matchesType && matchesCategory && matchesSearch;
+                return matchesType && matchesCategory && matchesItemType && matchesSearch;
             });
         }
 
@@ -368,7 +379,12 @@
                             </div>` : ''}
                             </div>
                             <h3 class="font-bold text-gray-900 mb-1">${p.name}</h3>
-                            <p class="text-sm font-medium text-blue-600 mb-1">${p.productCategory}</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span class="text-sm font-medium text-blue-600">${p.productCategory}</span>
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md ${p.itemType == 2 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-teal-100 text-teal-800 border border-teal-200'}">
+                                    ${p.itemType == 2 ? 'Container' : 'Selling Product'}
+                                </span>
+                            </div>
                             <p class="hidden text-sm text-gray-600 mb-3">${p.unit}</p>
                             
                             <div class="space-y-1 mb-4">
@@ -423,7 +439,12 @@
                             </div>
                             <div>
                                 <div class="font-medium text-gray-900">${p.name}</div>
-                                <div class="text-sm text-blue-600 font-medium">${p.productCategory}</div>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-sm text-blue-600 font-medium">${p.productCategory}</span>
+                                    <span class="px-1.5 py-0.5 text-[9px] font-bold rounded ${p.itemType == 2 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-teal-100 text-teal-800 border border-teal-200'}">
+                                        ${p.itemType == 2 ? 'Container' : 'Selling Product'}
+                                    </span>
+                                </div>
                                 <div class="text-sm text-gray-500">${p.id}</div>
                             </div>
                         </div>
@@ -516,13 +537,32 @@
             renderProducts();
         }
 
+        function setItemTypeFilter(type) {
+            state.itemTypeFilter = type;
+            // Update Filter Button Styles
+            document.querySelectorAll('[id^="itemtype-filter-btn-"]').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+
+            const activeBtn = document.getElementById(`itemtype-filter-btn-${type}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                activeBtn.classList.add('bg-blue-500', 'text-white');
+            }
+
+            renderProducts();
+        }
+
         function clearFilters() {
             state.searchQuery = '';
             state.viewMode = 'all';
             state.categoryFilter = 'all';
+            state.itemTypeFilter = 'all';
             document.getElementById('searchInput').value = '';
             setFilter('all');
             setCategoryFilter('all');
+            setItemTypeFilter('all');
         }
 
         function deleteProduct(id) {
@@ -591,6 +631,7 @@
             if (!product) return;
 
             document.getElementById('editItemTypeId').value = id;
+            document.getElementById('item_type').value = product.itemType || 1;
             document.getElementById('selling_price').value = product.sellingPrice || 0;
             document.getElementById('distributor_percentage').value = product.distributorPercentage || 0;
             document.getElementById('wholesale_percentage').value = product.wholesalePercentage || 0;
@@ -618,6 +659,7 @@
 
         function saveProductTypes() {
             const itemId = document.getElementById('editItemTypeId').value;
+            const itemType = document.getElementById('item_type').value;
             const sellingPrice = document.getElementById('selling_price').value;
             const distributorPercentage = document.getElementById('distributor_percentage').value;
             const wholesalePercentage = document.getElementById('wholesale_percentage').value;
@@ -630,6 +672,7 @@
                 },
                 body: JSON.stringify({
                     item_id: itemId,
+                    item_type: itemType,
                     selling_price: sellingPrice,
                     distributor_percentage: distributorPercentage,
                     wholesale_percentage: wholesalePercentage
