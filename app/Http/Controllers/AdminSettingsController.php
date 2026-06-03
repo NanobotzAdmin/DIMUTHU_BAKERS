@@ -281,12 +281,13 @@ class AdminSettingsController extends Controller
     {
         try {
             $processes = \App\CommonVariables::$businessProcesses;
-            // Only load users who have a valid email format in their user_name
+            // Only load users who have a valid email address
             $users = \App\Models\UmUser::where('is_active', 1)
-                ->where('user_name', 'like', '%@%')
-                ->select('id', 'first_name', 'last_name', 'user_name')
+                ->whereNotNull('email')
+                ->where('email', '!=', '')
+                ->select('id', 'first_name', 'last_name', 'user_name', 'email')
                 ->get();
-            $configs = \App\Models\EmProcessHasEmailAddress::with('user:id,first_name,last_name,user_name')->get();
+            $configs = \App\Models\EmProcessHasEmailAddress::with('user:id,first_name,last_name,user_name,email')->get();
 
             return response()->json([
                 'status' => true,

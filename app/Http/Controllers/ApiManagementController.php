@@ -1277,6 +1277,10 @@ class ApiManagementController extends Controller
                 })
                 ->get()
                 ->map(function ($item) {
+                    $lastOrderDate = \App\Models\AdCubusinessHasInvoice::where('ad_customer_has_business_id', $item->id)
+                        ->orderBy('created_at', 'desc')
+                        ->value('created_at');
+
                     return [
                         'id' => $item->id, // This is the ad_customer_has_business.id
                         'name' => $item->business_name ?: ($item->customer->name ?? 'N/A'),
@@ -1288,6 +1292,7 @@ class ApiManagementController extends Controller
                         'contact_name' => $item->contact_person_name ?: ($item->customer->contact_person_name ?? ''),
                         'contact_phone' => $item->contact_person_phone ?: ($item->customer->phone ?? ''),
                         'image' => $item->customer_image ? asset($item->customer_image) : null,
+                        'last_order_date' => $lastOrderDate ? \Carbon\Carbon::parse($lastOrderDate)->format('Y-m-d') : null,
                     ];
                 });
 

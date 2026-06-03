@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@600;700;800&display=swap"
+        rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
@@ -23,15 +25,33 @@
     <link rel="shortcut icon" href="{{ asset($settings->logos->favicon ?? 'favicon.ico') }}" type="image/x-icon">
     <style>
         :root {
-            --sidebar-bg: {{ $settings->colors->sidebar_bg ?? '#0f172a' }};
-            --sidebar-hover: {{ $settings->colors->sidebar_hover ?? '#1e293b' }};
-            --sidebar-active: {{ $settings->colors->sidebar_active ?? '#4f46e5' }};
-            --sidebar-text: {{ $settings->colors->sidebar_text ?? '#cbd5e1' }};
-            --sidebar-icon: {{ $settings->colors->sidebar_icon ?? '#94a3b8' }};
-            --sidebar-border: {{ $settings->colors->sidebar_border ?? '#334155' }};
-            --sidebar-sub-active-bg: {{ $settings->colors->sidebar_sub_active_bg ?? '#1e293b' }};
-            --sidebar-sub-active-text: {{ $settings->colors->sidebar_sub_active_text ?? '#fcd34d' }};
-            --primary-color: {{ $settings->colors->primary ?? '#D4A017' }};
+            --sidebar-bg:
+                {{ $settings->colors->sidebar_bg ?? '#0f172a' }}
+            ;
+            --sidebar-hover:
+                {{ $settings->colors->sidebar_hover ?? '#1e293b' }}
+            ;
+            --sidebar-active:
+                {{ $settings->colors->sidebar_active ?? '#4f46e5' }}
+            ;
+            --sidebar-text:
+                {{ $settings->colors->sidebar_text ?? '#cbd5e1' }}
+            ;
+            --sidebar-icon:
+                {{ $settings->colors->sidebar_icon ?? '#94a3b8' }}
+            ;
+            --sidebar-border:
+                {{ $settings->colors->sidebar_border ?? '#334155' }}
+            ;
+            --sidebar-sub-active-bg:
+                {{ $settings->colors->sidebar_sub_active_bg ?? '#1e293b' }}
+            ;
+            --sidebar-sub-active-text:
+                {{ $settings->colors->sidebar_sub_active_text ?? '#fcd34d' }}
+            ;
+            --primary-color:
+                {{ $settings->colors->primary ?? '#D4A017' }}
+            ;
         }
 
         #sidebar {
@@ -93,24 +113,33 @@
 
     <div class="flex h-screen overflow-hidden">
 
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"
+            onclick="toggleMobileSidebar()"></div>
+
         <!-- Sidebar -->
         <aside id="sidebar"
-            class="flex flex-col w-64 transition-all duration-300 text-slate-300 flex-shrink-0 relative z-20 hidden md:flex">
+            class="flex flex-col w-64 transition-all duration-300 text-slate-300 flex-shrink-0 absolute inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 md:flex shadow-2xl md:shadow-none bg-slate-900">
             <!-- Brand -->
             <div class="flex items-center justify-center h-20 border-b transition-all duration-300 px-2"
                 id="sidebar-brand">
                 <!-- Expanded Brand Logo -->
                 <div id="brand-expanded" class="flex items-center justify-center gap-3 transition-all duration-300">
-                    <img src="{{ asset($settings->logos->white ?? 'images/logo.png') }}" alt="Logo" class="h-12 w-auto transition-all duration-300"
-                        id="sidebar-logo">
+                    <img src="{{ asset($settings->logos->white ?? 'images/logo.png') }}" alt="Logo"
+                        class="h-12 w-auto transition-all duration-300" id="sidebar-logo">
                     <div class="flex flex-col text-left">
-                        <span class="font-serif leading-none" style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 1.65rem; font-weight: 900; color: #a67c52; letter-spacing: 0.06em;">DIMUTHU</span>
-                        <span class="font-serif uppercase mt-1" style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 0.62rem; font-weight: 500; color: #a67c52; opacity: 0.95; letter-spacing: 0.25em; margin-right: -0.25em;">BAKEHOUSE</span>
+                        <span class="font-serif leading-none"
+                            style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 1.65rem; font-weight: 900; color: #a67c52; letter-spacing: 0.06em;">DIMUTHU</span>
+                        <span class="font-serif uppercase mt-1"
+                            style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 0.62rem; font-weight: 500; color: #a67c52; opacity: 0.95; letter-spacing: 0.25em; margin-right: -0.25em;">BAKE
+                            HOUSE</span>
                     </div>
                 </div>
                 <!-- Collapsed Brand Logo -->
-                <div id="brand-collapsed" class="hidden flex-col items-center justify-center text-center transition-all duration-300">
-                    <img src="{{ asset($settings->logos->white ?? 'images/logo.png') }}" alt="Logo" class="h-12 w-auto transition-all duration-300">
+                <div id="brand-collapsed"
+                    class="hidden flex-col items-center justify-center text-center transition-all duration-300">
+                    <img src="{{ asset($settings->logos->white ?? 'images/logo.png') }}" alt="Logo"
+                        class="h-12 w-auto transition-all duration-300">
                 </div>
             </div>
 
@@ -119,8 +148,7 @@
                 <nav class="space-y-1 px-2">
                     <a href="{{ url('/adminDashboard') }}"
                         class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ Request::is('adminDashboard') ? 'sidebar-link-active' : 'sidebar-link-hover' }}">
-                        <i
-                            class="bi bi-grid-fill w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
+                        <i class="bi bi-grid-fill w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
                         <span class="sidebar-text ml-3 truncate">Dashboard</span>
                     </a>
 
@@ -139,7 +167,7 @@
                             @endphp
 
                             @if ($interfaceCount === 1)
-                             @php
+                                @php
                                     $interface = $interfaces->first();
                                 @endphp
                                 <a href="{{ url($interface->path) }}"
@@ -198,12 +226,12 @@
 
             <!-- Top Navbar -->
             <header
-                class="h-16 bg-white border-b border-gray-200 flex items-center justify-between pr-6 pl-1 shadow-sm z-10">
+                class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:pr-6 md:pl-1 shadow-sm z-10">
                 <!-- Mobile Menu Button -->
                 <button type="button"
                     class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
-                    onclick="document.getElementById('sidebar').classList.toggle('hidden')">
-                    <i class="bi bi-list"></i>
+                    onclick="toggleMobileSidebar()">
+                    <i class="bi bi-list text-2xl"></i>
                 </button>
 
                 <!-- Desktop Menu Button -->
@@ -214,8 +242,8 @@
                 </button>
 
                 <!-- Page Title -->
-                <div class="flex-1 flex items-center ml-4 md:ml-0">
-                    <h1 class="text-xl font-semibold text-gray-800 tracking-tight">
+                <div class="flex-1 flex items-center ml-2 md:ml-4 lg:ml-0 overflow-hidden">
+                    <h1 class="text-base text-sm md:text-xl font-semibold text-gray-800 tracking-tight truncate">
                         {{ $pageTitle ?? 'Admin Dashboard' }}
                     </h1>
                 </div>
@@ -240,10 +268,10 @@
 
                     <!-- POS View Button -->
                     @if(Auth::user()->hasPermission('view_pos_system'))
-                    <a href="{{ route('pos.index') }}"
-                        class="hidden md:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <i class="bi bi-shop mr-2"></i> POS View
-                    </a>
+                        <a href="{{ route('pos.index') }}"
+                            class="hidden md:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="bi bi-shop mr-2"></i> POS View
+                        </a>
                     @endif
 
                     <!-- Search (Hidden on Mobile) -->
@@ -288,8 +316,7 @@
                         <!-- Dropdown menu -->
                         <div id="user-menu-dropdown"
                             class="hidden absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                            role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button"
-                            tabindex="-1">
+                            role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
                             <div class="px-4 py-3 border-b border-gray-100">
                                 <p class="text-sm text-gray-900 font-medium truncate">
                                     {{ Auth::user()->first_name ?? 'User' }} {{ Auth::user()->last_name ?? '' }}
@@ -297,10 +324,11 @@
                                 <p class="text-xs text-gray-500 truncate">{{ Auth::user()->user_name ?? '' }}</p>
                             </div>
 
-                            <a href="{{ route('profile.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                role="menuitem" tabindex="-1" id="user-menu-item-0">Your Profile</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                role="menuitem" tabindex="-1" id="user-menu-item-1">Settings</a>
+                            <a href="{{ route('profile.index') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem"
+                                tabindex="-1" id="user-menu-item-0">Your Profile</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem"
+                                tabindex="-1" id="user-menu-item-1">Settings</a>
 
                             <form method="POST" action="{{ route('logout') }}" class="block">
                                 @csrf
@@ -328,9 +356,9 @@
 
     <script>
         // Global GMT Date/Time Utility Functions
-        window.formatDateTimeGMT = function(dateVal, showTime = true, showDate = true) {
+        window.formatDateTimeGMT = function (dateVal, showTime = true, showDate = true) {
             if (!dateVal || dateVal === '-') return '-';
-            
+
             let date;
             if (dateVal instanceof Date) {
                 date = dateVal;
@@ -346,9 +374,9 @@
                     date = new Date(str);
                 }
             }
-            
+
             if (isNaN(date.getTime())) return dateVal;
-            
+
             const options = { timeZone: 'Asia/Colombo' };
             if (showDate) {
                 options.month = 'short';
@@ -360,7 +388,7 @@
                 options.minute = '2-digit';
                 options.hour12 = true;
             }
-            
+
             let formatted = date.toLocaleString('en-US', options);
             if (showTime) {
                 formatted += ' ';
@@ -368,11 +396,11 @@
             return formatted;
         };
 
-        window.formatDateGMT = function(dateVal) {
+        window.formatDateGMT = function (dateVal) {
             return window.formatDateTimeGMT(dateVal, false, true);
         };
 
-        window.formatTimeGMT = function(dateVal) {
+        window.formatTimeGMT = function (dateVal) {
             return window.formatDateTimeGMT(dateVal, true, false);
         };
 
@@ -401,17 +429,25 @@
         }
 
         // Close dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const profileButton = document.getElementById('user-menu-button');
             const profileMenu = document.getElementById('user-menu-dropdown');
 
             if (profileButton && profileMenu && !profileButton.contains(event.target) && !profileMenu.contains(event
-                    .target)) {
+                .target)) {
                 profileMenu.classList.add('hidden');
             }
         });
     </script>
     <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const logo = document.getElementById('sidebar-logo');
@@ -443,7 +479,7 @@
                 // Hide all open submenus when collapsing
                 submenus.forEach(menu => {
                     if (!menu.id.includes(
-                            'icon')) { // Avoid selecting icons if IDs clash, though selector is safe enough usually
+                        'icon')) { // Avoid selecting icons if IDs clash, though selector is safe enough usually
                         menu.classList.add('hidden');
                     }
                 });
@@ -483,7 +519,7 @@
 
         // Enhance toggleMenu to auto-expand sidebar if collapsed
         const originalToggleMenu = window.toggleMenu;
-        window.toggleMenu = function(menuId) {
+        window.toggleMenu = function (menuId) {
             const sidebar = document.getElementById('sidebar');
             if (sidebar.classList.contains('w-20')) {
                 toggleSidebar(); // Expand first
@@ -496,7 +532,7 @@
 
     {{-- Global Flash Message Handler --}}
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             @if(session('success'))
                 // Try SweetAlert2 first
                 if (typeof Swal !== 'undefined') {
@@ -510,7 +546,7 @@
                         position: 'top-end'
                     });
                 }
-                
+
                 // Also use toastr as a secondary fallback or parallel indicator
                 if (typeof toastr !== 'undefined') {
                     toastr.success("{{ session('success') }}");

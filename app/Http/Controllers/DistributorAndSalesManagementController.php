@@ -315,6 +315,9 @@ class DistributorAndSalesManagementController extends Controller
     {
         try {
             $order = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'payments', 'stockTransfers'])->findOrFail($id);
+            
+            // Mark as downloaded
+            $order->update(['is_downloaded' => true]);
 
             // Load Settings
             $filePath = storage_path('app/Settings/quotation-settings.json');
@@ -446,6 +449,7 @@ class DistributorAndSalesManagementController extends Controller
                     'grand_total' => number_format((float) $order->grand_total, 2),
                     'status' => $statusSlug,
                     'status_int' => $order->status,
+                    'is_downloaded' => $order->is_downloaded ?? false,
                     'notes' => $order->notes ?? '',
                     'created_at' => \Carbon\Carbon::parse($order->created_at)->format('Y-m-d H:i'),
                     'products' => $order->orderProducts->map(function ($op) {

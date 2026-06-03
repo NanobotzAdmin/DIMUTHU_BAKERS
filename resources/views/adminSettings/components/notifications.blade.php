@@ -28,7 +28,7 @@
         </div>
 
         {{-- Save Actions --}}
-        <div id="notification-save-actions" class="hidden items-center gap-2 transition-all duration-300">
+        {{-- <div id="notification-save-actions" class="hidden items-center gap-2 transition-all duration-300">
             <button type="button" onclick="resetNotificationForm()"
                 class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4A017]">
                 Cancel
@@ -42,7 +42,7 @@
                 </svg>
                 Save Changes
             </button>
-        </div>
+        </div> --}}
     </div>
 
     {{-- Process Email Routing Settings --}}
@@ -332,7 +332,7 @@
     </div>
 
     {{-- Bottom Save Actions --}}
-    <div id="notification-save-actions-bottom" class="hidden justify-end gap-2 pt-4 border-t border-gray-200">
+    {{-- <div id="notification-save-actions-bottom" class="hidden justify-end gap-2 pt-4 border-t border-gray-200">
         <button type="button" onclick="resetNotificationForm()"
             class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4A017]">
             Cancel
@@ -346,7 +346,7 @@
             </svg>
             Save Changes
         </button>
-    </div>
+    </div> --}}
 
 </form>
 
@@ -573,12 +573,12 @@
                 .map(c => parseInt(c.um_user_id));
 
             userSelect.innerHTML = '<option value="">-- Choose User --</option>';
-            
+
             // Populate only available users who are NOT already configured
             const availableUsers = systemUsers.filter(user => !configuredUserIds.includes(parseInt(user.id)));
 
             availableUsers.forEach(user => {
-                userSelect.innerHTML += `<option value="${user.id}" data-email="${user.user_name}">${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)} (${escapeHtml(user.user_name)})</option>`;
+                userSelect.innerHTML += `<option value="${user.id}" data-email="${user.email}">${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)} (${escapeHtml(user.email)})</option>`;
             });
         }
 
@@ -755,7 +755,7 @@
         // Handle process selector changes
         const processSelect = document.getElementById('pe_process_id');
         if (processSelect) {
-            processSelect.addEventListener('change', function() {
+            processSelect.addEventListener('change', function () {
                 renderConfiguredRecipients();
                 populateAvailableUsers();
             });
@@ -764,7 +764,7 @@
         // Add change listener to user selection select element for validation
         const userSelect = document.getElementById('pe_user_id');
         if (userSelect) {
-            userSelect.addEventListener('change', function() {
+            userSelect.addEventListener('change', function () {
                 const processSelect = document.getElementById('pe_process_id');
                 if (!processSelect || !processSelect.value || !userSelect.value) return;
 
@@ -917,10 +917,10 @@
                         } else {
                             alert('Recipient added successfully!');
                         }
-                        
+
                         // Reset dropdown selection
                         if (userSelect) userSelect.value = '';
-                        
+
                         // Reload and select the same process
                         loadProcessEmails(true);
                     } else {

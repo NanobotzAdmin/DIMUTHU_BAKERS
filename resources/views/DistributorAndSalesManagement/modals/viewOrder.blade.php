@@ -2,33 +2,44 @@
 
 {{-- MODAL HTML STRUCTURE --}}
 <div id="view-order-modal"
-    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-95"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 md:p-4 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-95"
         id="view-order-modal-content">
 
         {{-- Header --}}
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-6">
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-4 md:px-8 py-4 md:py-6">
             <div class="flex items-start justify-between">
                 <div class="flex items-start gap-4">
                     {{-- Dynamic Channel Icon --}}
                     <div id="modal-channel-icon-container"
-                        class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 text-white">
+                        class="w-10 h-10 md:w-14 md:h-14 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0 text-white">
                     </div>
                     <div>
-                        <div class="flex items-center gap-3 mb-2 flex-wrap">
-                            <h2 id="modal-order-number" class="text-2xl text-white font-bold"></h2>
-                            <span id="modal-channel-badge"
-                                class="border px-3 py-1 rounded-lg text-sm font-medium"></span>
-                            <span id="modal-status-badge"
-                                class="border px-3 py-1 rounded-lg flex items-center gap-1.5 text-sm font-medium"></span>
-                            <span id="modal-priority-badge"
-                                class="border px-3 py-1 rounded-lg text-sm font-medium hidden"></span>
+                        <div class="mb-1 md:mb-2">
+                            <h2 id="modal-order-number" class="text-lg md:text-2xl text-white font-bold break-all md:break-normal leading-tight"></h2>
                         </div>
-                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-purple-100 text-sm">
+                        <div class="flex items-center gap-1.5 md:gap-3 mb-2 flex-wrap">
+                            <span id="modal-channel-badge"
+                                class="border px-1.5 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-sm font-medium"></span>
+                            <span id="modal-status-badge"
+                                class="border px-1.5 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg flex items-center gap-1 md:gap-1.5 text-[10px] md:text-sm font-medium"></span>
+                            <span id="modal-priority-badge"
+                                class="border px-1.5 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-sm font-medium hidden"></span>
+                            <span id="modal-downloaded-badge"
+                                class="bg-green-100 text-green-700 border border-green-300 px-1.5 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg items-center gap-1 text-[10px] md:text-sm font-semibold hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Downloaded
+                            </span>
+                        </div>
+                        <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-1 md:gap-x-6 md:gap-y-2 text-purple-100 text-[11px] md:text-sm mt-2">
                             <div class="flex items-center gap-1.5">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
+                                    stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
                                     <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
                                     <line x1="16" x2="16" y1="2" y2="6" />
                                     <line x1="8" x2="8" y1="2" y2="6" />
@@ -36,21 +47,21 @@
                                 </svg>
                                 <span id="modal-header-created-at"></span>
                             </div>
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1.5 md:border-l md:border-white/20 md:pl-6">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
+                                    stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
                                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                                     <circle cx="12" cy="10" r="3" />
                                 </svg>
                                 <span id="modal-header-outlet-code"></span>
                             </div>
-                            <div class="flex items-center gap-1.5 border-l border-white/20 pl-6">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <div class="flex items-center gap-1.5 md:border-l md:border-white/20 md:pl-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 <span id="modal-header-agent-name" class="font-bold"></span>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            <div class="flex items-center gap-1.5 md:border-l md:border-white/20 md:pl-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                                 <span id="modal-header-agent-phone"></span>
                             </div>
                         </div>
@@ -69,9 +80,9 @@
             {{-- Quick Actions --}}
             <div class="flex gap-2 mt-4 flex-wrap">
                 <button id="modal-print-btn" onclick="printModalDispatchNote()"
-                    class="h-9 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 text-sm transition-colors hidden">
+                    class="h-8 md:h-9 px-3 md:px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-sm transition-colors hidden w-full md:w-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
                         <polyline points="6 9 6 2 18 2 18 9" />
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                         <rect width="12" height="8" x="6" y="14" />
@@ -92,21 +103,21 @@
         </div>
 
         {{-- Scrollable Content --}}
-        <div class="flex-1 overflow-y-auto p-6 md:p-8">
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
             <div class="max-w-5xl mx-auto space-y-6">
 
                 {{-- Progress Bar --}}
                 <div id="modal-progress-section"
-                    class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200">
-                    <h3 class="text-lg text-gray-900 mb-4 font-semibold">Order Progress</h3>
-                    <div class="flex items-start justify-between overflow-x-auto" id="modal-progress-steps">
+                    class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4 md:p-6 border-2 border-purple-200">
+                    <h3 class="text-base md:text-lg text-gray-900 mb-4 font-semibold">Order Progress</h3>
+                    <div class="flex items-start justify-between overflow-x-auto pb-2" id="modal-progress-steps">
                     </div>
                 </div>
 
                 {{-- Order Items - MOVED TO TOP --}}
                 <div class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg text-gray-900 font-semibold flex items-center gap-2">
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
+                        <h3 class="text-base md:text-lg text-gray-900 font-semibold flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round" class="text-purple-600">
@@ -115,8 +126,8 @@
                             Order Items
                         </h3>
                     </div>
-                    <div class="p-6">
-                        <div class="space-y-3" id="modal-order-items-container">
+                    <div class="p-4 md:p-6">
+                        <div class="space-y-3 overflow-x-auto" id="modal-order-items-container">
                             <!-- Items will be injected here via JS -->
                         </div>
                     </div>
@@ -135,8 +146,8 @@
                 </div>
 
                 {{-- Customer Information --}}
-                <div class="bg-gray-50 rounded-2xl p-6">
-                    <h3 class="text-lg text-gray-900 mb-4 flex items-center gap-2 font-semibold">
+                <div class="bg-gray-50 rounded-2xl p-4 md:p-6">
+                    <h3 class="text-base md:text-lg text-gray-900 mb-4 flex items-center gap-2 font-semibold">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -195,9 +206,9 @@
                 </div>
 
                 {{-- Delivery/Pickup Info --}}
-                <div class="bg-gray-50 rounded-2xl p-6">
+                <div class="bg-gray-50 rounded-2xl p-4 md:p-6">
                     <h3 id="modal-delivery-title"
-                        class="text-lg text-gray-900 mb-4 flex items-center gap-2 font-semibold">
+                        class="text-base md:text-lg text-gray-900 mb-4 flex items-center gap-2 font-semibold">
                     </h3>
                     <div class="space-y-3" id="modal-delivery-content">
                     </div>
@@ -294,12 +305,12 @@
         </div>
 
         {{-- Footer --}}
-        <div class="bg-gray-50 px-8 py-5 flex items-center justify-between border-t border-gray-200">
-            <div class="flex items-center gap-3" id="modal-footer-actions">
+        <div class="bg-gray-50 px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-t border-gray-200">
+            <div class="flex items-center gap-2 md:gap-3 flex-wrap" id="modal-footer-actions">
                 {{-- Primary action buttons will be injected here --}}
             </div>
             <button onclick="closeOrderModal()"
-                class="h-11 px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors font-medium">
+                class="h-10 md:h-11 px-4 md:px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors font-medium text-sm md:text-base">
                 Close
             </button>
         </div>
@@ -421,8 +432,14 @@
 
         const stBadge = document.getElementById('modal-status-badge');
         stBadge.className =
-            `border px-3 py-1 rounded-lg flex items-center gap-1.5 text-sm font-medium ${statusConf.color}`;
-        stBadge.innerHTML = `${statusConf.icon} ${statusConf.label}`;
+            `border px-1.5 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg flex items-center gap-1 md:gap-1.5 text-[10px] md:text-sm font-medium ${statusConf.color}`;
+        
+        // Add specific sizing to the status icon SVG string before inserting
+        let statusIconHtml = statusConf.icon;
+        if(statusIconHtml) {
+            statusIconHtml = statusIconHtml.replace('<svg', '<svg class="w-3 h-3 md:w-4 md:h-4"');
+        }
+        stBadge.innerHTML = `${statusIconHtml} ${statusConf.label}`;
 
         // Priority
         const prBadge = document.getElementById('modal-priority-badge');
@@ -433,6 +450,16 @@
                 `border px-3 py-1 rounded-lg text-sm font-medium ${order.priority === 'high' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100'}`;
         } else {
             prBadge.classList.add('hidden');
+        }
+
+        // Downloaded Badge
+        const dnBadge = document.getElementById('modal-downloaded-badge');
+        if (order.is_downloaded) {
+            dnBadge.classList.remove('hidden');
+            dnBadge.classList.add('flex');
+        } else {
+            dnBadge.classList.add('hidden');
+            dnBadge.classList.remove('flex');
         }
 
         // Print Button Visibility
@@ -554,15 +581,15 @@
                     const isLineColored = steps.indexOf(order.status) >= index;
                     const lineColor = isLineColored ? 'bg-purple-600' : 'bg-gray-200';
                     stepsHtml +=
-                        `<div class="flex-1 h-1 rounded ${lineColor} mx-2 mt-[14px] min-w-[1.5rem]"></div>`;
+                        `<div class="flex-1 h-0.5 md:h-1 rounded ${lineColor} mx-1 md:mx-2 mt-[10px] md:mt-[14px] min-w-[1rem] md:min-w-[1.5rem]"></div>`;
                 }
 
                 stepsHtml += `
-                    <div class="flex flex-col items-center flex-shrink-0 min-w-[50px]">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all ${colorClass}">
-                            <div class="w-2 h-2 rounded-full bg-current"></div>
+                    <div class="flex flex-col items-center flex-shrink-0 min-w-[40px] md:min-w-[50px]">
+                        <div class="w-5 h-5 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-all ${colorClass}">
+                            <div class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-current"></div>
                         </div>
-                        <p class="text-[10px] mt-2 text-center text-gray-400 font-medium ${isCompleted ? 'text-purple-700' : ''}">${labels[step]}</p>
+                        <p class="text-[9px] md:text-[10px] mt-1.5 md:mt-2 text-center text-gray-400 font-medium ${isCompleted ? 'text-purple-700' : ''}">${labels[step]}</p>
                     </div>
                 `;
             });
@@ -593,7 +620,7 @@
             // Create table HTML
             let tableHtml = `
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full min-w-[500px] md:min-w-full">
                         <thead>
                             <tr class="border-b-2 border-gray-300">
                                 <th class="text-left py-3 px-2 text-sm font-semibold text-gray-700">Product</th>
@@ -622,24 +649,24 @@
 
                 tableHtml += `
                     <tr class="${bgClass} hover:bg-purple-50 transition-colors">
-                        <td class="py-3 px-2">
+                        <td class="py-2 md:py-3 px-2">
                             <div>
-                                <p class="text-gray-900 font-medium">${item.name}</p>
-                                ${item.notes ? `<p class="text-xs text-gray-500 mt-0.5">${item.notes}</p>` : ''}
+                                <p class="text-gray-900 font-medium text-xs md:text-sm">${item.name}</p>
+                                ${item.notes ? `<p class="text-[10px] md:text-xs text-gray-500 mt-0.5">${item.notes}</p>` : ''}
                             </div>
                         </td>
-                        <td class="py-3 px-2 text-center">
-                            <span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm">
+                        <td class="py-2 md:py-3 px-2 text-center">
+                            <span class="inline-block px-2 md:px-3 py-0.5 md:py-1 bg-gray-100 text-gray-700 rounded-lg font-medium text-xs md:text-sm">
                                 ${requestedQty}${item.dispatched_quantity != null && parseFloat(item.dispatched_quantity) != parseFloat(item.quantity) ? ` <span class="text-orange-600 font-semibold">(${formatQuantity(item.dispatched_quantity)})</span>` : ''}
                             </span>
                         </td>
-                        <td class="py-3 px-2 text-center">
+                        <td class="py-2 md:py-3 px-2 text-center">
                             ${dispatchInput}
                         </td>
-                        <td class="py-3 px-2 text-right text-gray-700">
+                        <td class="py-2 md:py-3 px-2 text-right text-gray-700 text-xs md:text-sm">
                             Rs ${parseFloat(item.unit_price).toLocaleString('en-LK', { minimumFractionDigits: 2 })}
                         </td>
-                        <td class="py-3 px-2 text-right font-semibold text-gray-900">
+                        <td class="py-2 md:py-3 px-2 text-right font-semibold text-gray-900 text-xs md:text-sm">
                             Rs ${subtotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}
                         </td>
                     </tr>
@@ -682,7 +709,7 @@
         // 1. Status 0 (Pending Approval) -> Show Approve Button (Transitions to 1)
         if (order.status === 'pending-approval') {
             footerActionsHtml +=
-                `<button onclick="approveOrder('${order.id}')" class="h-11 px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.check} Approve Order</button>`;
+                `<button onclick="approveOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.check} Approve Order</button>`;
 
             // footerActionsHtml +=
             //     `<button onclick="alert('Action: Reject')" class="h-11 px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">✕ Reject</button>`;
@@ -691,7 +718,7 @@
         // 2. Status 1 (Approved) -> Show Dispatch Button (Transitions to 5)
         if (order.status === 'approved') {
             footerActionsHtml +=
-                `<button onclick="dispatchOrder('${order.id}')" class="h-11 px-6 bg-orange-600 hover:bg-orange-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">${modalIcons.truck} Dispatch Order</button>`;
+                `<button onclick="dispatchOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-orange-600 hover:bg-orange-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.truck} Dispatch Order</button>`;
         }
 
         // 3. Status 5 (Dispatched) -> Completed is handled via mobile app only
