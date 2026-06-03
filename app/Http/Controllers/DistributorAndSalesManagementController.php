@@ -19,19 +19,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\StmOrderRequestHistory;
 use App\Models\StmStockTransfer;
-// use App\Services\NotificationService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AdCreditNote;
 
 class DistributorAndSalesManagementController extends Controller
 {
-    // protected $notificationService;
+    protected $notificationService;
 
-    // public function __construct(NotificationService $notificationService)
-    // {
-    //     $this->notificationService = $notificationService;
-    // }
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
 
     // Sales Overview
     public function salesOverviewIndex()
@@ -949,16 +949,22 @@ class DistributorAndSalesManagementController extends Controller
             $order->status = CommonVariables::$orderRequestApproved;
             $order->save();
 
-            /*
             // Send Push Notification to Agent
             if ($order->agent && $order->agent->user_id) {
-                $this->notificationService->sendPushNotification(
-                    $order->agent->user_id,
-                    'Order Approved',
-                    "Order #{$order->order_number} has been approved."
-                );
+                try {
+                    $this->notificationService->createAndSend(
+                        $order->agent->user_id,
+                        'Order Approved',
+                        "Order #{$order->order_number} has been approved.",
+                        'order_request',
+                        'approved',
+                        $order->id,
+                        ['order_number' => $order->order_number]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for order approval: ' . $e->getMessage());
+                }
             }
-            */
 
             // Update Stock Transfer records
             StmStockTransfer::where('stm_order_request_id', $order->id)
@@ -1217,16 +1223,22 @@ class DistributorAndSalesManagementController extends Controller
             $order->save();
             \Log::info('Order Status Updated to 5');
 
-            /*
             // Send Push Notification to Agent
             if ($order->agent && $order->agent->user_id) {
-                $this->notificationService->sendPushNotification(
-                    $order->agent->user_id,
-                    'Order Dispatched',
-                    "Order #{$order->order_number} has been dispatched and is out for delivery."
-                );
+                try {
+                    $this->notificationService->createAndSend(
+                        $order->agent->user_id,
+                        'Order Dispatched',
+                        "Order #{$order->order_number} has been dispatched and is out for delivery.",
+                        'order_request',
+                        'dispatched',
+                        $order->id,
+                        ['order_number' => $order->order_number]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for order dispatch: ' . $e->getMessage());
+                }
             }
-            */
 
             // 5. Log History
             StmOrderRequestHistory::create([

@@ -988,6 +988,21 @@ class ApiManagementController extends Controller
 
                 $load->load(['route', 'supervisor', 'driver', 'vehicle', 'items.product']);
 
+                if ($load->supervisor_id) {
+                    $supervisor = \App\Models\SmSuperviser::find($load->supervisor_id);
+                    if ($supervisor && $supervisor->user_id) {
+                        app(\App\Services\NotificationService::class)->createAndSend(
+                            $supervisor->user_id,
+                            'New Daily Load Assigned',
+                            "Daily load #{$load->id} for date {$load->load_date} has been assigned to you.",
+                            'daily_load',
+                            'created',
+                            $load->id,
+                            ['daily_load_id' => $load->id]
+                        );
+                    }
+                }
+
                 return response()->json([
                     'status' => true,
                     'message' => 'Daily load created successfully',
@@ -1060,6 +1075,21 @@ class ApiManagementController extends Controller
                 // If marked as loaded, update load_status to 2 (Loaded) if it was 1 (Loading)
                 if ($request->is_mark_as_loaded && $load->load_status == 1) {
                     $updateData['load_status'] = 2;
+                    
+                    if ($load->supervisor_id) {
+                        $supervisor = \App\Models\SmSuperviser::find($load->supervisor_id);
+                        if ($supervisor && $supervisor->user_id) {
+                            app(\App\Services\NotificationService::class)->createAndSend(
+                                $supervisor->user_id,
+                                'Daily Load Ready',
+                                "Daily load #{$load->id} has been fully loaded and is ready for departure.",
+                                'daily_load',
+                                'loaded',
+                                $load->id,
+                                ['daily_load_id' => $load->id]
+                            );
+                        }
+                    }
                 }
             }
 
@@ -2611,6 +2641,19 @@ class ApiManagementController extends Controller
                 AdDailyLoadItem::where('daily_load_id', $load->id)
                     ->where('product_item_id', $itemData['product_item_id'])
                     ->update(['unload_qty' => $itemData['unload_qty']]);
+            }
+
+            $agent = \App\Models\AdAgent::find($load->agent_id);
+            if ($agent && $agent->user_id) {
+                app(\App\Services\NotificationService::class)->createAndSend(
+                    $agent->user_id,
+                    'Daily Load Completed',
+                    "Daily load #{$load->id} has been successfully completed and unloaded.",
+                    'daily_load',
+                    'completed',
+                    $load->id,
+                    ['daily_load_id' => $load->id]
+                );
             }
 
             DB::commit();

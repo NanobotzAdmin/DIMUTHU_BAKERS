@@ -105,4 +105,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/available-for-bakery-return', [ApiManagementController::class, 'getAvailableForBakeryReturn']);
     Route::post('/create-bakery-return', [ApiManagementController::class, 'createBakeryReturn']);
     Route::get('/credit-notes', [ApiManagementController::class, 'getCreditNotes']);
+
+    // Notifications
+    Route::get('/notifications', [ApiUserController::class, 'getNotifications']);
+    Route::post('/notifications/mark-read', [ApiUserController::class, 'markNotificationsRead']);
+    Route::get('/notifications/unread-count', [ApiUserController::class, 'getUnreadCount']);
 });
