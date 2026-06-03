@@ -123,16 +123,15 @@
                 </div>
 
                 {{-- Order Notes --}}
-                <div id="modal-order-notes-section" class="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200 hidden">
-                    <h3 class="text-lg text-gray-900 mb-2 flex items-center gap-2 font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="text-blue-600">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                <div id="modal-notes-section" class="bg-amber-50 rounded-2xl p-6 border-2 border-amber-200 hidden">
+                    <h3 class="text-lg text-gray-900 mb-3 flex items-center gap-2 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                         </svg>
-                        Order Notes
+                        Order Notes / Special Instructions
                     </h3>
-                    <p id="modal-order-notes" class="text-gray-700 italic"></p>
+                    <p id="modal-order-notes" class="text-gray-700 whitespace-pre-wrap font-medium text-sm"></p>
                 </div>
 
                 {{-- Customer Information --}}
@@ -445,15 +444,6 @@
             printBtn.classList.add('hidden');
         }
 
-        // Order Notes
-        const notesSection = document.getElementById('modal-order-notes-section');
-        if (order.notes) {
-            notesSection.classList.remove('hidden');
-            document.getElementById('modal-order-notes').innerText = order.notes;
-        } else {
-            notesSection.classList.add('hidden');
-        }
-
         // Details
         const createdAt = window.formatDateTimeGMT(order.created_at || new Date());
         document.getElementById('modal-header-created-at').innerText = createdAt;
@@ -527,6 +517,16 @@
             document.getElementById('modal-event-type').innerText = order.eventType || 'General';
         } else {
             specialSection.classList.add('hidden');
+        }
+
+        // Populate Order Notes
+        const notesSection = document.getElementById('modal-notes-section');
+        const notesText = document.getElementById('modal-order-notes');
+        if (order.notes && order.notes.trim() !== '') {
+            notesSection.classList.remove('hidden');
+            notesText.innerText = order.notes;
+        } else {
+            notesSection.classList.add('hidden');
         }
 
         // Streamlined Progress

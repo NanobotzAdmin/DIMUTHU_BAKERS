@@ -210,20 +210,45 @@ class DistributorAndSalesManagementController extends Controller
     {
         try {
             $filePath = storage_path('app/Settings/quotation-settings.json');
+            $settings = [];
 
             if (file_exists($filePath)) {
                 $content = file_get_contents($filePath);
-                $settings = json_decode($content, true);
-
-                // Add public URL for logo if exists
-                if (isset($settings['logo_path'])) {
-                    $settings['logo_url'] = asset($settings['logo_path']);
-                }
-
-                return response()->json(['success' => true, 'data' => $settings]);
+                $settings = json_decode($content, true) ?? [];
             }
 
-            return response()->json(['success' => true, 'data' => []]);
+            // Fallback to system_config.json if fields are missing
+            $systemConfigPath = public_path('system_config.json');
+            if (file_exists($systemConfigPath)) {
+                $systemSettings = json_decode(file_get_contents($systemConfigPath), true) ?? [];
+                
+                if (empty($settings['company_name']) && !empty($systemSettings['business_name'])) {
+                    $settings['company_name'] = $systemSettings['business_name'];
+                }
+                if (empty($settings['logo_path']) && !empty($systemSettings['logos']['primary'])) {
+                    $settings['logo_path'] = $systemSettings['logos']['primary'];
+                }
+                if (empty($settings['address']) && !empty($systemSettings['address'])) {
+                    $addr = $systemSettings['address'];
+                    $settings['address'] = implode(', ', array_filter([$addr['street'] ?? '', $addr['city'] ?? '', $addr['province'] ?? '', $addr['postal_code'] ?? '']));
+                }
+                if (empty($settings['phone']) && !empty($systemSettings['contact']['phone'])) {
+                    $settings['phone'] = $systemSettings['contact']['phone'];
+                }
+                if (empty($settings['mobile']) && !empty($systemSettings['contact']['mobile'])) {
+                    $settings['mobile'] = $systemSettings['contact']['mobile'];
+                }
+                if (empty($settings['email']) && !empty($systemSettings['contact']['email'])) {
+                    $settings['email'] = $systemSettings['contact']['email'];
+                }
+            }
+
+            // Add public URL for logo if exists
+            if (isset($settings['logo_path'])) {
+                $settings['logo_url'] = asset($settings['logo_path']);
+            }
+
+            return response()->json(['success' => true, 'data' => $settings]);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -241,13 +266,37 @@ class DistributorAndSalesManagementController extends Controller
             if (file_exists($filePath)) {
                 $content = file_get_contents($filePath);
                 $settings = json_decode($content, true) ?? [];
-                // Process logo URL for PDF (needs absolute path or base64 usually, but DomPDF handles public paths if configured)
-                // For DomPDF, it's safer to use the base_path if it's local
-                if (isset($settings['logo_path'])) {
-                    // Calculate absolute path for DomPDF
-                    $settings['logo_absolute_path'] = public_path($settings['logo_path']);
-                    $settings['logo_url'] = asset($settings['logo_path']);
+            }
+
+            // Fallback to system_config.json
+            $systemConfigPath = public_path('system_config.json');
+            if (file_exists($systemConfigPath)) {
+                $systemSettings = json_decode(file_get_contents($systemConfigPath), true) ?? [];
+                
+                if (empty($settings['company_name']) && !empty($systemSettings['business_name'])) {
+                    $settings['company_name'] = $systemSettings['business_name'];
                 }
+                if (empty($settings['logo_path']) && !empty($systemSettings['logos']['primary'])) {
+                    $settings['logo_path'] = $systemSettings['logos']['primary'];
+                }
+                if (empty($settings['address']) && !empty($systemSettings['address'])) {
+                    $addr = $systemSettings['address'];
+                    $settings['address'] = implode(', ', array_filter([$addr['street'] ?? '', $addr['city'] ?? '', $addr['province'] ?? '', $addr['postal_code'] ?? '']));
+                }
+                if (empty($settings['phone']) && !empty($systemSettings['contact']['phone'])) {
+                    $settings['phone'] = $systemSettings['contact']['phone'];
+                }
+                if (empty($settings['mobile']) && !empty($systemSettings['contact']['mobile'])) {
+                    $settings['mobile'] = $systemSettings['contact']['mobile'];
+                }
+                if (empty($settings['email']) && !empty($systemSettings['contact']['email'])) {
+                    $settings['email'] = $systemSettings['contact']['email'];
+                }
+            }
+
+            if (isset($settings['logo_path'])) {
+                $settings['logo_absolute_path'] = public_path($settings['logo_path']);
+                $settings['logo_url'] = asset($settings['logo_path']);
             }
 
             $pdf = Pdf::loadView('DistributorAndSalesManagement.pdf.quotation', compact('quotation', 'settings'));
@@ -273,10 +322,37 @@ class DistributorAndSalesManagementController extends Controller
             if (file_exists($filePath)) {
                 $content = file_get_contents($filePath);
                 $settings = json_decode($content, true) ?? [];
-                if (isset($settings['logo_path'])) {
-                    $settings['logo_absolute_path'] = public_path($settings['logo_path']);
-                    $settings['logo_url'] = asset($settings['logo_path']);
+            }
+
+            // Fallback to system_config.json
+            $systemConfigPath = public_path('system_config.json');
+            if (file_exists($systemConfigPath)) {
+                $systemSettings = json_decode(file_get_contents($systemConfigPath), true) ?? [];
+                
+                if (empty($settings['company_name']) && !empty($systemSettings['business_name'])) {
+                    $settings['company_name'] = $systemSettings['business_name'];
                 }
+                if (empty($settings['logo_path']) && !empty($systemSettings['logos']['primary'])) {
+                    $settings['logo_path'] = $systemSettings['logos']['primary'];
+                }
+                if (empty($settings['address']) && !empty($systemSettings['address'])) {
+                    $addr = $systemSettings['address'];
+                    $settings['address'] = implode(', ', array_filter([$addr['street'] ?? '', $addr['city'] ?? '', $addr['province'] ?? '', $addr['postal_code'] ?? '']));
+                }
+                if (empty($settings['phone']) && !empty($systemSettings['contact']['phone'])) {
+                    $settings['phone'] = $systemSettings['contact']['phone'];
+                }
+                if (empty($settings['mobile']) && !empty($systemSettings['contact']['mobile'])) {
+                    $settings['mobile'] = $systemSettings['contact']['mobile'];
+                }
+                if (empty($settings['email']) && !empty($systemSettings['contact']['email'])) {
+                    $settings['email'] = $systemSettings['contact']['email'];
+                }
+            }
+
+            if (isset($settings['logo_path'])) {
+                $settings['logo_absolute_path'] = public_path($settings['logo_path']);
+                $settings['logo_url'] = asset($settings['logo_path']);
             }
 
             $pdf = Pdf::loadView('DistributorAndSalesManagement.pdf.dispatchNote', compact('order', 'settings'));
@@ -1473,6 +1549,80 @@ class DistributorAndSalesManagementController extends Controller
             $orderProduct->save();
         }
 
+    }
+
+    /**
+     * Agent Financial Management Index
+     */
+    public function agentFinancialManagementIndex(Request $request)
+    {
+        $agents = AdAgent::where('status', 1)->get();
+
+        // Payments Query
+        $paymentsQuery = AdAgentPayment::with(['agent', 'distributions.orderRequest']);
+        
+        if ($request->filled('agent_id')) {
+            $paymentsQuery->where('agent_id', $request->agent_id);
+        }
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $paymentsQuery->whereBetween('payment_date', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+        }
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+            $paymentsQuery->where('status', $request->payment_status);
+        } elseif ($request->filled('status') && $request->status !== 'all') {
+            $paymentsQuery->where('status', $request->status);
+        }
+
+        // Credit Notes Query
+        $cnQuery = AdCreditNote::with(['agent', 'products.product', 'creator']);
+        
+        if ($request->filled('agent_id')) {
+            $cnQuery->where('agent_id', $request->agent_id);
+        }
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $cnQuery->whereBetween('credit_note_date', [$request->start_date, $request->end_date]);
+        }
+        if ($request->filled('cn_status') && $request->cn_status !== 'all') {
+            $cnQuery->where('status', $request->cn_status);
+        } elseif ($request->filled('status') && $request->status !== 'all') {
+            $cnQuery->where('status', $request->status);
+        }
+
+        // Summaries
+        $summary = [
+            'totalPayments' => (clone $paymentsQuery)->sum('amount'),
+            'pendingPayments' => (clone $paymentsQuery)->where('status', 0)->count(),
+            'totalCreditNotes' => (clone $cnQuery)->sum('total_amount'),
+            'pendingCreditNotes' => (clone $cnQuery)->where('status', 0)->count(),
+            'usedCreditNotes' => (clone $cnQuery)->where('status', 3)->sum('total_amount'),
+            'totalAgentOutstanding' => $request->filled('agent_id') 
+                                        ? AdAgent::where('id', $request->agent_id)->sum('outstanding_balance') 
+                                        : AdAgent::sum('outstanding_balance'),
+        ];
+
+        if ($request->has('export')) {
+            $payments = $paymentsQuery->orderBy('payment_date', 'desc')->get();
+            $creditNotes = $cnQuery->orderBy('created_at', 'desc')->get();
+
+            if ($request->export === 'pdf') {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('DistributorAndSalesManagement.pdf.agentFinancial', compact('payments', 'creditNotes', 'agents', 'summary', 'request'));
+                return $pdf->download('Agent_Financial_Report.pdf');
+            } elseif ($request->export === 'excel') {
+                $headers = [
+                    "Content-type" => "application/vnd.ms-excel",
+                    "Content-Disposition" => "attachment; filename=Agent_Financial_Report.xls",
+                    "Pragma" => "no-cache",
+                    "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+                    "Expires" => "0"
+                ];
+                return response()->view('DistributorAndSalesManagement.excel.agentFinancial', compact('payments', 'creditNotes', 'agents', 'summary', 'request'))->withHeaders($headers);
+            }
+        }
+
+        $payments = $paymentsQuery->orderBy('payment_date', 'desc')->paginate(10, ['*'], 'payments_page');
+        $creditNotes = $cnQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'cn_page');
+
+        return view('DistributorAndSalesManagement.agentFinancialManagement', compact('payments', 'creditNotes', 'agents', 'summary'));
     }
 
     /**

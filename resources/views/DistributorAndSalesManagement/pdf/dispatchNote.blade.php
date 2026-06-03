@@ -5,6 +5,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Dispatch Note - {{ $order->order_number }}</title>
     <style>
+        @page {
+            margin: 20px 40px 175px 40px;
+        }
+
         body {
             font-family: sans-serif;
             font-size: 13px;
@@ -17,10 +21,19 @@
             margin: 0 auto;
         }
 
+        .footer-wrapper {
+            position: fixed;
+            bottom: -120px;
+            left: 0;
+            right: 0;
+            height: 120px;
+            width: 100%;
+        }
+
         .header-table {
             width: 100%;
             margin-bottom: 20px;
-            border-bottom: 2px solid #7e22ce;
+            border-bottom: 2px solid #644526ff;
             padding-bottom: 15px;
         }
 
@@ -31,18 +44,18 @@
 
         .header-right {
             text-align: right;
-            vertical-align: bottom;
+            vertical-align: top;
         }
 
         .logo {
             max-height: 70px;
-            margin-bottom: 5px;
+            vertical-align: top;
         }
 
         .company-name {
             font-weight: bold;
             font-size: 20px;
-            color: #111;
+            color: #7e22ce;
             margin-bottom: 2px;
         }
 
@@ -165,20 +178,29 @@
         <table class="header-table">
             <tr>
                 <td class="header-left">
-                    @if(isset($settings['logo_absolute_path']) && $settings['logo_absolute_path'])
-                        <img src="{{ $settings['logo_absolute_path'] }}" class="logo" alt="Logo">
-                    @elseif(isset($settings['logo_url']) && $settings['logo_url'])
-                        <img src="{{ $settings['logo_url'] }}" class="logo" alt="Logo">
-                    @endif
-                    <div class="company-name">{{ $settings['company_name'] ?? 'Dimuthu Bakers' }}</div>
-                    <div style="color: #4b5563; font-size: 12px;">{{ $settings['address'] ?? 'No. 123, Main Street, Colombo' }}</div>
-                    <div style="color: #4b5563; font-size: 12px;">Tel: {{ $settings['phone'] ?? '+94 11 234 5678' }} | Email: {{ $settings['email'] ?? 'info@dimuthubakers.lk' }}</div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 72px; vertical-align: top; padding-right: 6px;">
+                                @if(isset($settings['logo_absolute_path']) && $settings['logo_absolute_path'])
+                                    <img src="{{ $settings['logo_absolute_path'] }}" class="logo" alt="Logo" style="max-height: 70px; max-width: 70px;">
+                                @elseif(isset($settings['logo_url']) && $settings['logo_url'])
+                                    <img src="{{ $settings['logo_url'] }}" class="logo" alt="Logo" style="max-height: 70px; max-width: 70px;">
+                                @endif
+                            </td>
+                            <td style="vertical-align: top;">
+                                <div class="company-name" style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 18px; color: #956b41ff; letter-spacing: 0.04em;">{{ $settings['company_name'] ?? 'Dimuthu Bakers' }}</div>
+                                <div style="color: #4b5563; font-size: 11px; margin-top: 3px; font-weight: 500;">{{ $settings['address'] ?? 'No. 123, Main Street, Colombo' }}</div>
+                                <div style="color: #6b7280; font-size: 11px; margin-top: 2px;">Tel: {{ $settings['phone'] ?? '+94 11 234 5678' }}@if(!empty($settings['mobile'])) | Mob: {{ $settings['mobile'] }}@endif</div>
+                                <div style="color: #6b7280; font-size: 11px; margin-top: 1px;">Email: {{ $settings['email'] ?? 'info@dimuthubakers.lk' }}</div>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
                 <td class="header-right">
-                    <div class="title">DISPATCH NOTE</div>
-                    <div class="subtitle text-purple">#{{ $order->order_number }}</div>
+                    <div class="title" style="letter-spacing: 1px;">DISPATCH NOTE</div>
+                    <div class="subtitle " style="font-size: 14px; font-weight: bold; margin-top: 5px; color: #644526ff;">#{{ $order->order_number }}</div>
                     <div style="margin-top: 10px;">
-                        <span class="badge badge-purple">
+                        <span class="badge badge-purple" style="font-size: 9px; padding: 3px 10px; border-radius: 9999px;">
                             {{ $order->order_type == 1 ? 'POS Pickup' : ($order->order_type == 2 ? 'Special Order' : ($order->order_type == 3 ? 'Scheduled' : 'Agent Order')) }}
                         </span>
                     </div>
@@ -246,37 +268,39 @@
         </table>
 
         @if($order->notes)
-            <div style="margin-top: -10px; margin-bottom: 20px;">
+            <div style="margin-top: 15px; margin-bottom: 20px;">
                 <div class="section-title">Notes / Instructions</div>
-                <div style="font-style: italic; color: #4b5563;">{{ $order->notes }}</div>
+                <div style="font-style: italic; color: #4b5563; line-height: 1.2;">{!! nl2br(e($order->notes)) !!}</div>
             </div>
         @endif
 
-        {{-- Signatures --}}
-        <table class="signatures-table">
-            <tr>
-                <td class="signature-box" style="width: 30%;">
-                    Prepared By<br>
-                    <span style="font-size: 10px; color: #6b7280;">(Authorized Personnel)</span>
-                </td>
-                <td style="width: 5%;"></td>
-                <td class="signature-box" style="width: 30%;">
-                    Dispatched By<br>
-                    <span style="font-size: 10px; color: #6b7280;">(Driver/Delivery Staff)</span>
-                </td>
-                <td style="width: 5%;"></td>
-                <td class="signature-box" style="width: 30%;">
-                    Received By<br>
-                    <span style="font-size: 10px; color: #6b7280;">(Customer/Agent Signature)</span>
-                </td>
-            </tr>
-        </table>
+        <div class="footer-wrapper">
+            {{-- Signatures --}}
+            <table class="signatures-table" style="width: 100%;">
+                <tr>
+                    <td class="signature-box" style="width: 30%;">
+                        Prepared By<br>
+                        <span style="font-size: 10px; color: #6b7280;">(Authorized Personnel)</span>
+                    </td>
+                    <td style="width: 5%;"></td>
+                    <td class="signature-box" style="width: 30%;">
+                        Dispatched By<br>
+                        <span style="font-size: 10px; color: #6b7280;">(Driver/Delivery Staff)</span>
+                    </td>
+                    <td style="width: 5%;"></td>
+                    <td class="signature-box" style="width: 30%;">
+                        Received By<br>
+                        <span style="font-size: 10px; color: #6b7280;">(Customer/Agent Signature)</span>
+                    </td>
+                </tr>
+            </table>
 
-        {{-- Footer --}}
-        <div class="footer">
-            {{ $settings['footer_text'] ?? 'Thank you for your business! This is a system-generated dispatch note.' }}
-            <br>
-            Printed at: {{ now()->format('Y-m-d') }}
+            {{-- Footer --}}
+            <div class="footer" style="margin-top: 15px;">
+                {{ $settings['footer_text'] ?? 'Thank you for your business! This is a system-generated dispatch note.' }}
+                <br>
+                Printed at: {{ now()->format('Y-m-d') }}
+            </div>
         </div>
     </div>
 </body>

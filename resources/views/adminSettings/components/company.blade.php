@@ -115,13 +115,21 @@
     <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
         <div class="p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label for="contact_phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                     <input type="text" name="contact[phone]" id="contact_phone" 
                         value="{{ old('contact.phone', $settings->contact->phone ?? '') }}"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
                         placeholder="+94 11 234 5678">
+                </div>
+
+                <div>
+                    <label for="contact_mobile" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                    <input type="text" name="contact[mobile]" id="contact_mobile" 
+                        value="{{ old('contact.mobile', $settings->contact->mobile ?? '') }}"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-gray-300 focus:ring-gray-300 sm:text-sm p-2"
+                        placeholder="+94 77 123 4567">
                 </div>
                 
                 <div>
@@ -132,7 +140,7 @@
                         placeholder="info@yourbakery.com">
                 </div>
                 
-                <div class="md:col-span-2">
+                <div class="md:col-span-3">
                     <label for="contact_website" class="block text-sm font-medium text-gray-700 mb-1">Website</label>
                     <input type="url" name="contact[website]" id="contact_website" 
                         value="{{ old('contact.website', $settings->contact->website ?? '') }}"

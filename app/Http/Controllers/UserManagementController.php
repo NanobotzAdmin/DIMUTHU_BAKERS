@@ -352,4 +352,98 @@ class UserManagementController extends Controller
             return response()->json(['success' => false, 'message' => 'Error resetting password: ' . $e->getMessage()], 500);
         }
     }
+
+    public function profileIndex()
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        return view('userManagement.profile', compact('user'));
+    }
+
+    public function profileUpdate(Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:um_user,email,' . $user->id,
+            'contact_no' => 'required|string|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        try {
+            $user->first_name = $request->first_name;
+            $user->last_name = $request->last_name;
+            $user->email = $request->email;
+            $user->contact_no = $request->contact_no;
+
+            $user->updated_by = $user->id;
+            $user->save();
+
+            return response()->json(['success' => true, 'message' => 'Profile updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error updating profile: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function changePasswordIndex()
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        return view('userManagement.change-password', compact('user'));
+    }
+
+    public function changePasswordUpdate(Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ], [
+            'password.confirmed' => 'New password confirmation does not match.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        if (!Hash::check($request->current_password, $user->user_password)) {
+            return response()->json(['success' => false, 'message' => 'Your current password is incorrect.'], 422);
+        }
+
+        try {
+            $user->user_password = Hash::make($request->password);
+            $user->is_password_change = 1;
+            $user->updated_by = $user->id;
+            $user->save();
+
+            // Log activity
+            try {
+                SmSessionActivity::create([
+                    'session_id' => session('session_id'),
+                    'user_id' => $user->id,
+                    'activity_type' => 'PASSWORD_CHANGE',
+                    'description' => 'User changed password from profile settings.',
+                    'created_by' => $user->id,
+                    'updated_by' => $user->id,
+                ]);
+            } catch (\Exception $ex) {
+                // Ignore log errors to ensure success gets returned
+            }
+
+            return response()->json(['success' => true, 'message' => 'Password updated successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error updating password: ' . $e->getMessage()], 500);
+        }
+    }
 }
+

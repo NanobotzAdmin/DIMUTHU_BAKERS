@@ -200,4 +200,10 @@ class CommonVariables
     public static $orderRequestDispatchConfirmed = 6;
 
     public static $orderRequestCompleteSettled = 7;
+
+    // Business Processes for Automated Email Notifications
+    public static $businessProcesses = [
+        '1' => 'Order Request Notifications',
+        '2'=> 'Test Process',
+    ];
 }

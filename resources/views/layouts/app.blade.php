@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
@@ -39,8 +39,8 @@
         }
 
         #sidebar-brand {
-            background-color: rgba(0, 0, 0, 0.2) !important;
-            border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+            background-color: #ffffff !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
         }
 
         .sidebar-link-active {
@@ -97,10 +97,21 @@
         <aside id="sidebar"
             class="flex flex-col w-64 transition-all duration-300 text-slate-300 flex-shrink-0 relative z-20 hidden md:flex">
             <!-- Brand -->
-            <div class="flex items-center justify-center h-20 border-b transition-all duration-300"
+            <div class="flex items-center justify-center h-20 border-b transition-all duration-300 px-2"
                 id="sidebar-brand">
-                <img src="{{ asset($settings->logos->white ?? 'images/logo.png') }}" alt="Logo" class="h-16 w-auto transition-all duration-300"
-                    id="sidebar-logo">
+                <!-- Expanded Brand Logo -->
+                <div id="brand-expanded" class="flex items-center justify-center gap-3 transition-all duration-300">
+                    <img src="{{ asset($settings->logos->white ?? 'images/logo.png') }}" alt="Logo" class="h-12 w-auto transition-all duration-300"
+                        id="sidebar-logo">
+                    <div class="flex flex-col text-left">
+                        <span class="font-serif leading-none" style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 1.65rem; font-weight: 900; color: #a67c52; letter-spacing: 0.06em;">DIMUTHU</span>
+                        <span class="font-serif uppercase mt-1" style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 0.62rem; font-weight: 500; color: #a67c52; opacity: 0.95; letter-spacing: 0.25em; margin-right: -0.25em;">BAKEHOUSE</span>
+                    </div>
+                </div>
+                <!-- Collapsed Brand Logo -->
+                <div id="brand-collapsed" class="hidden flex-col items-center justify-center text-center transition-all duration-300">
+                    <img src="{{ asset($settings->logos->white ?? 'images/logo.png') }}" alt="Logo" class="h-12 w-auto transition-all duration-300">
+                </div>
             </div>
 
             <!-- Navigation -->
@@ -286,7 +297,7 @@
                                 <p class="text-xs text-gray-500 truncate">{{ Auth::user()->user_name ?? '' }}</p>
                             </div>
 
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            <a href="{{ route('profile.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 role="menuitem" tabindex="-1" id="user-menu-item-0">Your Profile</a>
                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                 role="menuitem" tabindex="-1" id="user-menu-item-1">Settings</a>
@@ -407,6 +418,8 @@
             const toggleBtn = document.getElementById('desktop-menu-btn');
             const sidebarTexts = document.querySelectorAll('.sidebar-text');
             const submenus = document.querySelectorAll('[id^="topic-"]'); // Select all submenus
+            const brandExpanded = document.getElementById('brand-expanded');
+            const brandCollapsed = document.getElementById('brand-collapsed');
 
             // Toggle Width
             if (sidebar.classList.contains('w-64')) {
@@ -414,9 +427,15 @@
                 sidebar.classList.remove('w-64');
                 sidebar.classList.add('w-20');
 
-                // Adjust Logo
-                logo.classList.remove('h-16');
-                logo.classList.add('h-8');
+                // Adjust Logo safely
+                if (logo) {
+                    logo.classList.remove('h-16');
+                    logo.classList.add('h-8');
+                }
+
+                // Adjust typography brand
+                if (brandExpanded) brandExpanded.classList.add('hidden');
+                if (brandCollapsed) brandCollapsed.classList.remove('hidden');
 
                 // Hide Text
                 sidebarTexts.forEach(el => el.classList.add('hidden'));
@@ -436,9 +455,15 @@
                 sidebar.classList.remove('w-20');
                 sidebar.classList.add('w-64');
 
-                // Adjust Logo
-                logo.classList.remove('h-8');
-                logo.classList.add('h-16');
+                // Adjust Logo safely
+                if (logo) {
+                    logo.classList.remove('h-8');
+                    logo.classList.add('h-16');
+                }
+
+                // Adjust typography brand
+                if (brandExpanded) brandExpanded.classList.remove('hidden');
+                if (brandCollapsed) brandCollapsed.classList.add('hidden');
 
                 // Show Text
                 sidebarTexts.forEach(el => el.classList.remove('hidden'));
