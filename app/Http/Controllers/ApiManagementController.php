@@ -1161,24 +1161,39 @@ class ApiManagementController extends Controller
                     $productItemId = $item['product_item_id'];
                     $requestedQty = $item['quantity'];
 
-                    $branchStock = StmBranchStock::where('agent_id', $agentId)
+                    // Find Branch Stock with available quantity
+                    $branchStocks = StmBranchStock::where('agent_id', $agentId)
                         ->where('pm_product_item_id', $productItemId)
-                        ->first();
+                        ->where('quantity', '>', 0)
+                        ->get();
 
-                    if (!$branchStock || $branchStock->quantity < $requestedQty) {
+                    $totalAvailableQty = $branchStocks->sum('quantity');
+
+                    if ($totalAvailableQty < $requestedQty) {
                         $productName = PmProductItem::find($productItemId)->product_name ?? 'Product';
-                        throw new \Exception("Insufficient stock for $productName. Available: " . ($branchStock->quantity ?? 0));
+                        throw new \Exception("Insufficient stock for $productName. Available: $totalAvailableQty");
                     }
 
-                    $availableQty = $branchStock->quantity;
-                    $branchStock->decrement('quantity', $requestedQty);
+                    $remainingQtyToDeduct = $requestedQty;
+                    $branchStockIdsUsed = [];
+
+                    // Reduce Branch Stock across available records
+                    foreach ($branchStocks as $stockRecord) {
+                        if ($remainingQtyToDeduct <= 0)
+                            break;
+
+                        $qtyToDeduct = min($stockRecord->quantity, $remainingQtyToDeduct);
+                        $stockRecord->decrement('quantity', $qtyToDeduct);
+                        $remainingQtyToDeduct -= $qtyToDeduct;
+                        $branchStockIdsUsed[] = $stockRecord->id;
+                    }
 
                     AdDailyLoadItem::create([
                         'daily_load_id' => $load->id,
                         'product_item_id' => $productItemId,
-                        'stm_branch_stock_id' => $branchStock->id,
+                        'stm_branch_stock_id' => $branchStockIdsUsed[0] ?? null,
                         'loaded_qty' => $requestedQty,
-                        'available_quantity' => $availableQty,
+                        'available_quantity' => $requestedQty,
                         'price' => $item['price'],
                         'total_value' => $requestedQty * $item['price'],
                     ]);
