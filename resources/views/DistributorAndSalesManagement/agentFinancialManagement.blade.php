@@ -492,8 +492,18 @@
                         </div>
                         
                         <div id="cnRejectReasonSection" class="hidden bg-rose-50 p-6 rounded-2xl shadow-sm border border-rose-100">
-                            <p class="text-[10px] text-rose-500 uppercase font-black tracking-widest mb-2">Rejection Reason</p>
-                            <p class="text-sm text-rose-700 font-medium leading-relaxed" id="cnDetailRejectReason">-</p>
+                            <p class="text-[10px] text-rose-500 uppercase font-black tracking-widest mb-2">Rejection Information</p>
+                            <p class="text-sm text-rose-700 font-medium leading-relaxed mb-2" id="cnDetailRejectReason">-</p>
+                            <div class="grid grid-cols-2 gap-4 mt-2 border-t border-rose-200/50 pt-2">
+                                <div>
+                                    <span class="block text-[9px] uppercase font-bold text-rose-400">Rejected By</span>
+                                    <span class="text-xs font-bold text-rose-800" id="cnDetailRejectedBy">-</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[9px] uppercase font-bold text-rose-400">Rejected At</span>
+                                    <span class="text-xs font-bold text-rose-800" id="cnDetailRejectedAt">-</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="bg-indigo-600 rounded-3xl p-8 flex flex-col justify-center items-center shadow-lg shadow-indigo-200 text-white relative overflow-hidden">
@@ -522,6 +532,16 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Audit Trail Section -->
+                <div class="mt-8">
+                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center mb-4">
+                        <span class="w-8 h-[2px] bg-indigo-500 mr-3"></span> Audit Trail
+                    </h4>
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4" id="cn-audit-trail">
+                        <!-- Audit trail items will be appended dynamically -->
+                    </div>
+                </div>
             </div>
             
             <!-- Actions Footer -->
@@ -531,10 +551,10 @@
                     <button onclick="approveNote()" class="flex-1 h-12 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">
                         Approve Credit Note
                     </button>
-                    @endif
-                    {{-- <button onclick="showCnRejectInput()" class="flex-1 h-12 bg-white text-rose-600 border-2 border-rose-200 rounded-xl font-bold hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-95">
+                    <button onclick="showCnRejectInput()" class="flex-1 h-12 bg-white text-rose-600 border-2 border-rose-200 rounded-xl font-bold hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-95">
                         Reject Request
-                    </button> --}}
+                    </button>
+                    @endif
                 </div>
                 
                 <div id="cnRejectArea" class="hidden animate-in slide-in-from-bottom-4 duration-300">
@@ -915,9 +935,15 @@
         const st = statuses[note.status] || statuses[0];
         document.getElementById('cnDetailStatusTag').innerHTML = `<span class="${st.class} px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">${st.label}</span>`;
 
-        if(note.status == 2 && note.reject_reason) {
+        if(note.status == 2) {
             document.getElementById('cnRejectReasonSection').classList.remove('hidden');
-            document.getElementById('cnDetailRejectReason').innerText = note.reject_reason;
+            document.getElementById('cnDetailRejectReason').innerText = note.reject_reason || 'No reason provided';
+            
+            // Set Rejected By and At
+            const rejectedByText = note.rejected_by_user ? (note.rejected_by_user.first_name + ' ' + (note.rejected_by_user.last_name || '')) : 'N/A';
+            const rejectedAtText = note.rejected_at ? moment(note.rejected_at).format('MMM DD, YYYY hh:mm A') : 'N/A';
+            document.getElementById('cnDetailRejectedBy').innerText = rejectedByText;
+            document.getElementById('cnDetailRejectedAt').innerText = rejectedAtText;
         } else {
             document.getElementById('cnRejectReasonSection').classList.add('hidden');
         }
@@ -934,6 +960,47 @@
                 </tr>
             `;
         });
+
+        // Credit Note Audit Trail
+        const auditTrail = document.getElementById('cn-audit-trail');
+        auditTrail.innerHTML = '';
+        if (note.histories && note.histories.length > 0) {
+            note.histories.forEach(log => {
+                const dateStr = moment(log.created_at).format('MMM DD, YYYY hh:mm A');
+                const actorName = log.creator ? (log.creator.first_name ? (log.creator.first_name + ' ' + (log.creator.last_name || '')) : log.creator.user_name) : 'System';
+                
+                let iconClass = 'bi-info-circle text-slate-500 bg-slate-100';
+                if (log.status == 1) {
+                    iconClass = 'bi-check-circle-fill text-emerald-600 bg-emerald-50';
+                } else if (log.status == 2) {
+                    iconClass = 'bi-x-circle-fill text-rose-600 bg-rose-50';
+                } else {
+                    iconClass = 'bi-plus-circle text-amber-600 bg-amber-50';
+                }
+
+                auditTrail.innerHTML += `
+                    <div class="flex gap-4 items-start pb-4 border-b border-slate-100 last:border-b-0" style="padding-top: 10px;">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconClass.split(' ').slice(1).join(' ')}">
+                            <i class="bi ${iconClass.split(' ')[0]} text-lg"></i>
+                        </div>
+                        <div class="flex-grow text-left" style="width: 100%; text-align: left;">
+                            <div class="flex justify-between items-center" style="display: flex; justify-content: space-between; width: 100%;">
+                                <span class="text-sm font-bold text-slate-800">${log.action}</span>
+                                <span class="text-[10px] text-slate-400 font-medium">${dateStr}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">${log.description}</p>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">By: ${actorName}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            auditTrail.innerHTML = `
+                <div class="text-center py-6 text-slate-400 text-xs italic">
+                    <i class="bi bi-clock-history text-xl block mb-2"></i> No history logs available.
+                </div>
+            `;
+        }
 
         const cnActionSection = document.getElementById('cnActionSection');
         if (cnActionSection) {

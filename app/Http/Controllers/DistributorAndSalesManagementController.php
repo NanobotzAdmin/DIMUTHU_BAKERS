@@ -1792,7 +1792,7 @@ class DistributorAndSalesManagementController extends Controller
         }
 
         // Credit Notes Query
-        $cnQuery = AdCreditNote::with(['agent', 'products.product', 'creator']);
+        $cnQuery = AdCreditNote::with(['agent', 'products.product', 'creator', 'rejectedByUser', 'histories.creator']);
 
         if ($request->filled('agent_id')) {
             $cnQuery->where('agent_id', $request->agent_id);
@@ -2859,7 +2859,7 @@ class DistributorAndSalesManagementController extends Controller
      */
     public function creditNoteIndex(Request $request)
     {
-        $query = AdCreditNote::with(['agent', 'products.product', 'creator']);
+        $query = AdCreditNote::with(['agent', 'products.product', 'creator', 'histories.creator']);
 
         // Search
         if ($request->has('search') && $request->search != '') {
@@ -2977,10 +2977,35 @@ class DistributorAndSalesManagementController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
+            \App\Models\AdCreditNoteHistory::create([
+                'ad_credit_note_id' => $creditNote->id,
+                'created_by' => auth()->id(),
+                'action' => 'APPROVED',
+                'status' => 1,
+                'description' => 'Credit note request approved.',
+            ]);
+
             // Update items status if needed
             $creditNote->products()->update(['status' => 1]);
 
             DB::commit();
+
+            // Send Push Notification to Agent
+            if ($creditNote->agent && $creditNote->agent->user_id) {
+                try {
+                    $this->notificationService->createAndSend(
+                        $creditNote->agent->user_id,
+                        'Credit Note Approved',
+                        "Your credit note request " . $creditNote->credit_note_number . " of Rs. " . number_format($creditNote->total_amount, 2) . " has been approved.",
+                        'credit_note',
+                        'approved',
+                        $creditNote->id,
+                        ['credit_note_id' => $creditNote->id]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for credit note approval: '.$e->getMessage());
+                }
+            }
 
             return response()->json(['success' => true, 'message' => 'Credit note approved successfully.']);
         } catch (\Exception $e) {
@@ -3010,13 +3035,40 @@ class DistributorAndSalesManagementController extends Controller
             $creditNote->update([
                 'status' => 2,
                 'reject_reason' => $request->reason,
+                'rejected_by' => auth()->id(),
+                'rejected_at' => now(),
                 'updated_by' => auth()->id(),
+            ]);
+
+            \App\Models\AdCreditNoteHistory::create([
+                'ad_credit_note_id' => $creditNote->id,
+                'created_by' => auth()->id(),
+                'action' => 'REJECTED',
+                'status' => 2,
+                'description' => 'Credit note request rejected. Reason: ' . $request->reason,
             ]);
 
             // Update items status
             $creditNote->products()->update(['status' => 2]);
 
             DB::commit();
+
+            // Send Push Notification to Agent
+            if ($creditNote->agent && $creditNote->agent->user_id) {
+                try {
+                    $this->notificationService->createAndSend(
+                        $creditNote->agent->user_id,
+                        'Credit Note Rejected',
+                        "Your credit note request " . $creditNote->credit_note_number . " of Rs. " . number_format($creditNote->total_amount, 2) . " has been rejected. Reason: " . $request->reason,
+                        'credit_note',
+                        'rejected',
+                        $creditNote->id,
+                        ['credit_note_id' => $creditNote->id, 'reject_reason' => $request->reason]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for credit note rejection: '.$e->getMessage());
+                }
+            }
 
             return response()->json(['success' => true, 'message' => 'Credit note rejected successfully.']);
         } catch (\Exception $e) {

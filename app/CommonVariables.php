@@ -205,5 +205,6 @@ class CommonVariables
     public static $businessProcesses = [
         '1' => 'Order Request Notifications',
         '2' => 'Agent Payment Request Notifications',
+        '3' => 'Credit Note Notifications',
     ];
 }

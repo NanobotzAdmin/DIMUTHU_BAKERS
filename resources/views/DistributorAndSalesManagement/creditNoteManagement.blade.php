@@ -294,16 +294,27 @@
                         </div>
                     </div>
 
+                    {{-- Audit Trail (History) --}}
+                    <div class="mb-8">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Audit Trail
+                        </h3>
+                        <div class="max-h-64 overflow-y-auto rounded-xl border border-gray-200 p-4 bg-slate-50 space-y-4" id="modalHistoryContainer">
+                            {{-- JS Injected --}}
+                        </div>
+                    </div>
+
                     {{-- Actions --}}
                     <div id="actionSection" class="flex flex-col md:flex-row gap-4 pt-6 border-t">
                         <button onclick="approveNote()" class="flex-1 h-12 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-200">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             Approve Credit Note
                         </button>
-                        {{-- <button onclick="showRejectInput()" class="flex-1 h-12 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-2">
+                        <button onclick="showRejectInput()" class="flex-1 h-12 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             Reject Request
-                        </button> --}}
+                        </button>
                     </div>
 
                     {{-- Reject Input Area (Hidden initially) --}}
@@ -368,6 +379,48 @@
                 `;
                 productsTable.appendChild(row);
             });
+
+            // History/Audit Trail
+            const historyContainer = document.getElementById('modalHistoryContainer');
+            historyContainer.innerHTML = '';
+            if (note.histories && note.histories.length > 0) {
+                note.histories.forEach(hist => {
+                    let dateStr = hist.created_at;
+                    try {
+                        if (typeof moment !== 'undefined') {
+                            dateStr = moment(hist.created_at).format('YYYY-MM-DD HH:mm:ss');
+                        } else {
+                            dateStr = new Date(hist.created_at).toLocaleString();
+                        }
+                    } catch (e) {}
+                    
+                    const creatorName = hist.creator ? hist.creator.user_name : 'System';
+                    
+                    let statusBadge = '';
+                    if (hist.status === 0) statusBadge = '<span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-semibold">Created</span>';
+                    else if (hist.status === 1) statusBadge = '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">Approved</span>';
+                    else if (hist.status === 2) statusBadge = '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-semibold">Rejected</span>';
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'flex flex-col md:flex-row md:justify-between border-b border-gray-200 pb-2 last:border-0 last:pb-0';
+                    itemDiv.innerHTML = `
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                ${statusBadge}
+                                <span class="font-bold text-sm text-slate-800">${hist.action}</span>
+                            </div>
+                            <p class="text-sm text-slate-600">${hist.description || ''}</p>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1 md:mt-0 text-right">
+                            <div>by <span class="font-semibold text-slate-600">${creatorName}</span></div>
+                            <div>${dateStr}</div>
+                        </div>
+                    `;
+                    historyContainer.appendChild(itemDiv);
+                });
+            } else {
+                historyContainer.innerHTML = '<p class="text-gray-500 text-center py-4 text-sm">No history records found.</p>';
+            }
 
             // Action Buttons Visibility
             if(note.status == 0) {

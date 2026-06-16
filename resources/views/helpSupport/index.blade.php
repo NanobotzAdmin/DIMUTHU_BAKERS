@@ -74,18 +74,21 @@
                         <td class="px-6 py-4 text-gray-500">{{ $index + 1 }}</td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-16 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                <div onclick="openViewModal({{ json_encode($video->load('userRoles')) }})" class="w-16 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 relative cursor-pointer group">
                                     @if($video->thumbnail_url)
-                                        <img src="{{ $video->thumbnail_url }}" alt="" class="w-full h-full object-cover">
+                                        <img src="{{ $video->thumbnail_url }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                                     @else
-                                        <i class="bi bi-play-btn text-gray-400 text-xl"></i>
+                                        <i class="bi bi-play-btn text-gray-400 text-xl group-hover:text-gray-600 transition-colors"></i>
                                     @endif
+                                    <div class="absolute inset-0 bg-black/35 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <i class="bi bi-play-fill text-white text-lg"></i>
+                                    </div>
                                 </div>
                                 <div class="min-w-0">
                                     <p class="font-medium text-gray-900 truncate max-w-[200px]">{{ $video->title }}</p>
-                                    <a href="{{ $video->video_url }}" target="_blank" class="text-xs text-indigo-500 hover:text-indigo-700 truncate block max-w-[200px]">
-                                        <i class="bi bi-box-arrow-up-right"></i> Open URL
-                                    </a>
+                                    <button onclick="openViewModal({{ json_encode($video->load('userRoles')) }})" class="text-xs text-indigo-500 hover:text-indigo-700 text-left block max-w-[200px]">
+                                        <i class="bi bi-play-circle-fill"></i> Play Video
+                                    </button>
                                 </div>
                             </div>
                         </td>
@@ -113,6 +116,10 @@
                         </td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end gap-2">
+                                <button onclick="openViewModal({{ json_encode($video->load('userRoles')) }})"
+                                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="View & Play">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                                 <button onclick="openEditModal({{ json_encode($video->load('userRoles')) }})"
                                     class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
@@ -235,8 +242,177 @@
     </div>
 </div>
 
+{{-- View Video Modal --}}
+<div id="viewVideoModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        {{-- Overlay --}}
+        <div class="fixed inset-0 bg-black/60 transition-opacity" onclick="closeViewModal()"></div>
+
+        {{-- Modal Content --}}
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-900 truncate pr-6" id="view-modal-title">View Guide Video</h3>
+                <button onclick="closeViewModal()" class="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                {{-- Video Player Container --}}
+                <div id="video-player-container" class="w-full">
+                    <!-- Dynamic Video Player Embedded Here -->
+                </div>
+
+                {{-- Video details --}}
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Title</h4>
+                        <p class="text-base font-semibold text-gray-900 mt-0.5" id="view-title"></p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</h4>
+                        <p class="text-sm text-gray-600 mt-0.5 whitespace-pre-line" id="view-description"></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Target User Roles</h4>
+                            <div class="flex flex-wrap gap-1" id="view-roles">
+                                <!-- Roles badges here -->
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Display Order</h4>
+                                <p class="text-sm text-gray-950 mt-0.5" id="view-order"></p>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</h4>
+                                <div class="mt-1" id="view-status-badge">
+                                    <!-- Status badge -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+                <a id="view-external-link" href="#" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center gap-1.5">
+                    <i class="bi bi-box-arrow-up-right"></i> Open original link
+                </a>
+                <button type="button" onclick="closeViewModal()"
+                    class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    function getVideoPlayerHtml(url) {
+        if (!url) return '';
+        
+        // YouTube Shorts support
+        let shortsMatch = url.match(/(?:youtube\.com\/shorts\/|youtu\.be\/shorts\/)([a-zA-Z0-9_-]{11})/i);
+        if (shortsMatch) {
+            let videoId = shortsMatch[1];
+            return `<iframe class="w-full aspect-video rounded-lg shadow-sm border border-gray-200" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
+
+        // YouTube Standard
+        let youtubeRegex = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        let youtubeMatch = url.match(youtubeRegex);
+        if (youtubeMatch && youtubeMatch[2].length === 11) {
+            let videoId = youtubeMatch[2];
+            return `<iframe class="w-full aspect-video rounded-lg shadow-sm border border-gray-200" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
+        
+        // Vimeo
+        let vimeoRegex = /vimeo\.com\/(?:video\/)?([0-9]+)/;
+        let vimeoMatch = url.match(vimeoRegex);
+        if (vimeoMatch) {
+            let videoId = vimeoMatch[1];
+            return `<iframe class="w-full aspect-video rounded-lg shadow-sm border border-gray-200" src="https://player.vimeo.com/video/${videoId}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+        }
+        
+        // Direct video link (mp4, webm, ogg, etc.)
+        if (url.match(/\.(mp4|webm|ogg|mov|3gp)($|\?)/i)) {
+            return `<video class="w-full aspect-video rounded-lg shadow-sm border border-gray-200" controls autoplay>
+                <source src="${url}">
+                Your browser does not support the video tag.
+            </video>`;
+        }
+        
+        // Fallback URL link
+        return `
+            <div class="flex flex-col items-center justify-center p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center">
+                <i class="bi bi-link-45deg text-4xl text-gray-400 mb-2"></i>
+                <p class="text-sm font-medium text-gray-700 mb-1">Direct playback not available</p>
+                <p class="text-xs text-gray-500 mb-4">We couldn't automatically embed this link. You can open it in a new window.</p>
+                <a href="${url}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors font-medium">
+                    <i class="bi bi-box-arrow-up-right"></i> Open Link
+                </a>
+            </div>
+        `;
+    }
+
+    function openViewModal(video) {
+        document.getElementById('view-modal-title').textContent = video.title || 'View Guide Video';
+        document.getElementById('view-title').textContent = video.title;
+        document.getElementById('view-description').textContent = video.description || 'No description provided.';
+        document.getElementById('view-order').textContent = video.display_order ?? 0;
+        document.getElementById('view-external-link').href = video.video_url;
+
+        // Render video player
+        const playerContainer = document.getElementById('video-player-container');
+        playerContainer.innerHTML = getVideoPlayerHtml(video.video_url);
+
+        // Render roles
+        const rolesContainer = document.getElementById('view-roles');
+        rolesContainer.innerHTML = '';
+        if (video.user_roles && video.user_roles.length > 0) {
+            video.user_roles.forEach(role => {
+                const badge = document.createElement('span');
+                badge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700';
+                badge.textContent = role.user_role_name;
+                rolesContainer.appendChild(badge);
+            });
+        } else {
+            rolesContainer.innerHTML = '<span class="text-xs text-gray-500">None</span>';
+        }
+
+        // Status badge
+        const statusContainer = document.getElementById('view-status-badge');
+        if (video.status == 1) {
+            statusContainer.innerHTML = `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    Active
+                </span>
+            `;
+        } else {
+            statusContainer.innerHTML = `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    Inactive
+                </span>
+            `;
+        }
+
+        document.getElementById('viewVideoModal').classList.remove('hidden');
+    }
+
+    function closeViewModal() {
+        document.getElementById('viewVideoModal').classList.add('hidden');
+        // Clear video player to stop playback
+        document.getElementById('video-player-container').innerHTML = '';
+    }
 
     // Open Create Modal
     function openCreateModal() {

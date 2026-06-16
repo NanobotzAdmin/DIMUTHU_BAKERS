@@ -3114,6 +3114,14 @@ class ApiManagementController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
+            \App\Models\AdCreditNoteHistory::create([
+                'ad_credit_note_id' => $creditNote->id,
+                'created_by' => auth()->id(),
+                'action' => 'CREATED',
+                'status' => 0,
+                'description' => 'Bakery return request created.',
+            ]);
+
             foreach ($request->items as $itemData) {
                 $branchStockId = $request->note_type == 1 ? $itemData['id'] : null;
                 $returnStockId = $request->note_type == 2 ? $itemData['id'] : null;
@@ -3185,7 +3193,7 @@ class ApiManagementController extends Controller
                 $query->where('status', $status);
             }
 
-            $notes = $query->with(['products.product'])
+            $notes = $query->with(['products.product', 'histories.creator'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
