@@ -204,6 +204,6 @@ class CommonVariables
     // Business Processes for Automated Email Notifications
     public static $businessProcesses = [
         '1' => 'Order Request Notifications',
-        '2'=> 'Test Process',
+        '2' => 'Agent Payment Request Notifications',
     ];
 }

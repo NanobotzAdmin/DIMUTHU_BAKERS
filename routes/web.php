@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
-
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\AdvancedPlannerController;
 use App\Http\Controllers\AgentDistributionManagementController;
@@ -13,6 +11,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DayEndProcessManagementController;
 use App\Http\Controllers\DistributorAndSalesManagementController;
 use App\Http\Controllers\FinancialManagementController;
+use App\Http\Controllers\HelpSupportController;
+use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\InterfaceManagementController;
 use App\Http\Controllers\InventoryManagementController;
 use App\Http\Controllers\OnlineOrderingManagementController;
@@ -24,10 +24,10 @@ use App\Http\Controllers\ProductManagementController;
 use App\Http\Controllers\SupplierManagementController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WasteRecoveryManagementController;
-use App\Http\Controllers\HelpSupportController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.branch'*/])->group(function () {
+Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branch' */])->group(function () {
     Route::get('/adminDashboard', [DashboardController::class, 'adminDashboard'])->name('adminDashboard');
 
     // User Management
@@ -48,12 +48,10 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     // Profile Management
     Route::get('/profile', [UserManagementController::class, 'profileIndex'])->name('profile.index');
     Route::post('/profile/update', [UserManagementController::class, 'profileUpdate'])->name('profile.update');
-    
+
     // Dedicated Password Change Management
     Route::get('/change-password', [UserManagementController::class, 'changePasswordIndex'])->name('password.change');
     Route::post('/change-password/update', [UserManagementController::class, 'changePasswordUpdate'])->name('password.change.update');
-
-
 
     // Production Management
     Route::get('/production-management', [ProductionManagementController::class, 'productionManageIndex'])->name('productionManagement.index');
@@ -114,6 +112,7 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::post('/api/order-management/store', [DistributorAndSalesManagementController::class, 'orderManageStore'])->name('orderManagement.store');
     Route::post('/api/order-management/update-status', [DistributorAndSalesManagementController::class, 'orderManageUpdateStatus'])->name('orderManagement.updateStatus');
     Route::post('/api/order-management/approve-order', [DistributorAndSalesManagementController::class, 'approveOrder'])->name('orderManagement.approveOrder');
+    Route::post('/api/order-management/reject-order', [DistributorAndSalesManagementController::class, 'rejectOrder'])->name('orderManagement.rejectOrder');
     Route::post('/api/order-management/dispatch-order', [DistributorAndSalesManagementController::class, 'dispatchOrder'])->name('orderManagement.dispatchOrder');
     Route::post('/api/order-management/confirm-dispatch', [DistributorAndSalesManagementController::class, 'confirmDispatch'])->name('orderManagement.confirmDispatch');
     Route::post('/api/order-management/complete-order', [DistributorAndSalesManagementController::class, 'completeOrder'])->name('orderManagement.completeOrder');
@@ -121,10 +120,13 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::post('/api/order-management/approve-payment', [DistributorAndSalesManagementController::class, 'approvePayment'])->name('orderManagement.approvePayment');
     Route::get('/order-management/payment-approval/{id}', [DistributorAndSalesManagementController::class, 'paymentApprovalView'])->name('orderManagement.paymentApprovalView');
     Route::get('/api/order-management/print-dispatch-note/{id}', [DistributorAndSalesManagementController::class, 'printDispatchNote'])->name('orderManagement.printDispatchNote');
+    Route::get('/api/order-management/print-sales-order/{id}', [DistributorAndSalesManagementController::class, 'printSalesOrder'])->name('orderManagement.printSalesOrder');
     Route::get('/agent-payments', [DistributorAndSalesManagementController::class, 'agentPaymentIndex'])->name('agent-payments.index');
     Route::get('/agent-financial-management', [DistributorAndSalesManagementController::class, 'agentFinancialManagementIndex'])->name('agent-financial-management.index');
     Route::get('/api/agent-payments/orders/{id}', [DistributorAndSalesManagementController::class, 'getAgentPaymentOrders'])->name('agent-payments.orders');
     Route::post('/api/agent-payments/approve-bulk', [DistributorAndSalesManagementController::class, 'approveBulkAgentPayments'])->name('agent-payments.approve-bulk');
+    Route::post('/api/agent-payments/reject', [DistributorAndSalesManagementController::class, 'rejectAgentPayment'])->name('agent-payments.reject');
+    Route::get('/api/agent-payments/receipt/{id}', [DistributorAndSalesManagementController::class, 'printPaymentReceipt'])->name('agent-payments.receipt');
 
     // Credit Note Management
     Route::get('/credit-note-management', [DistributorAndSalesManagementController::class, 'creditNoteIndex'])->name('credit-note-management.index');
@@ -350,6 +352,16 @@ Route::middleware(['auth', 'permission', 'force.password.change', /*'ensure.bran
     Route::post('/admin-settings/process-emails', [AdminSettingsController::class, 'saveProcessEmail'])->name('adminSettings.processEmails.save');
     Route::delete('/admin-settings/process-emails/{id}', [AdminSettingsController::class, 'deleteProcessEmail'])->name('adminSettings.processEmails.delete');
 
+    // Holiday Calendar Management
+    Route::get('/holidays', [HolidayController::class, 'index'])->name('holidays.index');
+    Route::get('/api/holidays/by-date', [HolidayController::class, 'getByDate'])->name('holidays.by-date');
+    Route::get('/api/holidays/api-suggest', [HolidayController::class, 'getApiHolidaysForDate'])->name('holidays.api-suggest');
+    Route::get('/api/holidays/api-suggest-year', [HolidayController::class, 'getApiHolidaysForYear'])->name('holidays.api-suggest-year');
+    Route::post('/api/holidays/store', [HolidayController::class, 'store'])->name('holidays.store');
+    Route::post('/api/holidays/update/{id}', [HolidayController::class, 'update'])->name('holidays.update');
+    Route::delete('/api/holidays/delete/{id}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
+    Route::post('/api/holidays/save-all-year', [HolidayController::class, 'saveAllApiHolidaysForYear'])->name('holidays.save-all-year');
+
     // Help & Support Videos
     Route::get('/help-support-videos', [HelpSupportController::class, 'index'])->name('helpSupportVideos.index');
     Route::post('/help-support-videos/store', [HelpSupportController::class, 'store'])->name('helpSupportVideos.store');
@@ -400,13 +412,13 @@ Route::get('/test-qty', function () {
         $product = \App\Models\PmProduct::create([
             'product_name' => 'Test Product',
             'status' => 1,
-            'created_by' => 1
+            'created_by' => 1,
         ]);
 
         $variation = \App\Models\PmVariation::create([
             'variation_name' => 'Test Variation',
             'status' => 1,
-            'created_by' => 1
+            'created_by' => 1,
         ]);
 
         // KG variation (Unit ID 3 -> 1000g)
@@ -416,7 +428,7 @@ Route::get('/test-qty', function () {
             'variation_value' => '50', // 50kg
             'status' => 1,
             'created_by' => 1,
-            'updated_by' => 1
+            'updated_by' => 1,
         ]);
 
         $itemKg = \App\Models\PmProductItem::create([
@@ -425,7 +437,7 @@ Route::get('/test-qty', function () {
             'product_name' => '50kg Test Bag',
             'status' => 1,
             'created_by' => 1,
-            'updated_by' => 1
+            'updated_by' => 1,
         ]);
 
         // Test StmStock creation
@@ -433,7 +445,7 @@ Route::get('/test-qty', function () {
             'pm_product_item_id' => $itemKg->id,
             'quantity' => 2, // 2 units of 50kg
             'created_by' => 1,
-            'updated_by' => 1
+            'updated_by' => 1,
         ]);
 
         DB::rollBack();
@@ -442,10 +454,11 @@ Route::get('/test-qty', function () {
             'qty' => $stock->quantity,
             'qty_in_unit' => $stock->qty_in_unit,
             'expected' => 100000.00,
-            'pass' => floatval($stock->qty_in_unit) == 100000.00
+            'pass' => floatval($stock->qty_in_unit) == 100000.00,
         ]);
     } catch (\Exception $e) {
         DB::rollBack();
+
         return response()->json(['error' => $e->getMessage()]);
     }
 });

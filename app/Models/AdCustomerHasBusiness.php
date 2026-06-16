@@ -53,4 +53,14 @@ class AdCustomerHasBusiness extends Model
     {
         return $this->belongsTo(SmSuperviser::class, 'sm_superviser_id');
     }
+
+    public function route()
+    {
+        return $this->belongsTo(AdRoute::class, 'route_id');
+    }
+
+    public function returnStocks()
+    {
+        return $this->hasMany(AdReturnProductStock::class, 'ad_customer_has_business_id');
+    }
 }

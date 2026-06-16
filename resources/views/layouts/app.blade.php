@@ -151,7 +151,6 @@
                         <i class="bi bi-grid-fill w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
                         <span class="sidebar-text ml-3 truncate">Dashboard</span>
                     </a>
-
                     @if (isset($sidebarTopics))
                         @foreach ($sidebarTopics as $topic)
                             @php

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Sales Order - {{ $order->order_number }}</title>
+    <style>
+        @page {
+            margin: 20px 40px 60px 40px;
+        }
+
+        body {
+            font-family: sans-serif;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .container {
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .footer-wrapper {
+            position: fixed;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+            height: 30px;
+            width: 100%;
+        }
+
+        .header-table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #6366f1;
+            padding-bottom: 15px;
+        }
+
+        .header-left {
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .header-right {
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .logo {
+            max-height: 70px;
+            vertical-align: top;
+        }
+
+        .company-name {
+            font-weight: bold;
+            font-size: 20px;
+            color: #4f46e5;
+            margin-bottom: 2px;
+        }
+
+        .text-indigo {
+            color: #4f46e5;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #111;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .info-table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .section-box {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 4px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .items-table th {
+            text-align: left;
+            background-color: #f9fafb;
+            color: #4b5563;
+            font-weight: 600;
+            padding: 10px;
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .items-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .total-row td {
+            border-top: 2px solid #e5e7eb;
+            font-weight: bold;
+            font-size: 15px;
+            color: #111;
+            padding-top: 15px;
+        }
+
+        .total-amount {
+            color: #4f46e5;
+            font-size: 18px;
+        }
+
+        .signatures-table {
+            width: 100%;
+            margin-top: 50px;
+        }
+
+        .signature-box {
+            width: 30%;
+            text-align: center;
+            border-top: 1px solid #333;
+            padding-top: 5px;
+            font-size: 12px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f3f4f6;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-indigo { background-color: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        {{-- Header --}}
+        <table class="header-table">
+            <tr>
+                <td class="header-left">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 72px; vertical-align: top; padding-right: 6px;">
+                                @if(isset($settings['logo_absolute_path']) && $settings['logo_absolute_path'])
+                                    <img src="{{ $settings['logo_absolute_path'] }}" class="logo" alt="Logo" style="max-height: 70px; max-width: 70px;">
+                                @elseif(isset($settings['logo_url']) && $settings['logo_url'])
+                                    <img src="{{ $settings['logo_url'] }}" class="logo" alt="Logo" style="max-height: 70px; max-width: 70px;">
+                                @endif
+                            </td>
+                            <td style="vertical-align: top;">
+                                <div class="company-name" style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-size: 18px; color: #956b41ff; letter-spacing: 0.04em;">{{ $settings['company_name'] ?? 'Dimuthu Bakers' }}</div>
+                                <div style="color: #4b5563; font-size: 11px; margin-top: 3px; font-weight: 500;">{{ $settings['address'] ?? 'No. 123, Main Street, Colombo' }}</div>
+                                <div style="color: #6b7280; font-size: 11px; margin-top: 2px;">Tel: {{ $settings['phone'] ?? '+94 11 234 5678' }}@if(!empty($settings['mobile'])) | Mob: {{ $settings['mobile'] }}@endif</div>
+                                <div style="color: #6b7280; font-size: 11px; margin-top: 1px;">Email: {{ $settings['email'] ?? 'info@dimuthubakers.lk' }}</div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td class="header-right">
+                    <div class="title" style="letter-spacing: 1px; color: #4f46e5;">SALES ORDER</div>
+                    <div class="subtitle" style="font-size: 14px; font-weight: bold; margin-top: 5px; color: #4338ca;">#{{ $order->order_number }}</div>
+                    <div style="margin-top: 10px;">
+                        <span class="badge badge-indigo" style="font-size: 9px; padding: 3px 10px; border-radius: 9999px;">
+                            {{ $order->order_type == 1 ? 'POS Pickup' : ($order->order_type == 2 ? 'Special Order' : ($order->order_type == 3 ? 'Scheduled' : 'Agent Order')) }}
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        {{-- Info Section --}}
+        <div style="width: 100%;">
+            <div class="section-box">
+                <div class="section-title">Customer Details</div>
+                @if($order->agent)
+                    <div style="font-size: 15px; font-weight: 600;">{{ $order->agent->agent_name }}</div>
+                    <div>Agent Code: {{ $order->agent->agent_code }}</div>
+                    <div>Phone: {{ $order->agent->phone }}</div>
+                    <div>Address: {{ $order->agent->address }}</div>
+                @elseif($order->customer)
+                    <div style="font-size: 15px; font-weight: 600;">{{ $order->customer->name }}</div>
+                    <div>Phone: {{ $order->customer->phone }}</div>
+                    <div>Address: {{ $order->customer->address }}</div>
+                @else
+                    <div style="font-size: 15px; font-weight: 600;">Walk-in Customer</div>
+                @endif
+            </div>
+
+            <div class="section-box" style="float: right; text-align: right;">
+                <div class="section-title">Order Info</div>
+                <div><strong>Order Date:</strong> {{ \Carbon\Carbon::parse($order->created_at)->tz('Asia/Colombo')->format('M j, Y, g:i A') }}</div>
+                <div><strong>Target Delivery:</strong> {{ $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->tz('Asia/Colombo')->format('M j, Y, g:i A') : '-' }}</div>
+                <div><strong>Status:</strong> <span style="font-weight: bold; text-transform: uppercase;">{{ $order->status == 2 ? 'Rejected' : ($order->status == 0 ? 'Pending' : ($order->status == 1 ? 'Approved' : ($order->status == 5 ? 'Dispatched' : 'Completed'))) }}</span></div>
+                @if($order->payment_completed == 2)
+                    <div style="color: green; font-weight: bold; margin-top: 5px;">PAID</div>
+                @elseif($order->payment_completed == 3)
+                    <div style="color: blue; font-weight: bold; margin-top: 5px;">CREDIT</div>
+                @else
+                    <div style="color: red; font-weight: bold; margin-top: 5px;">UNPAID</div>
+                @endif
+            </div>
+        </div>
+
+        <div style="clear: both;"></div>
+
+        {{-- Items Table --}}
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Item Description</th>
+                    <th class="" style="width: 120px;">Requested Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($order->orderProducts as $index => $item)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>
+                            <div style="font-weight: 600;">{{ $item->productItem->product_name ?? 'Product' }}</div>
+                            <div style="font-size: 11px; color: #6b7280;">{{ $item->productItem->reference_number ?? '' }}</div>
+                        </td>
+                        <td class="" style="font-weight: bold;">{{ number_format($item->quantity, 2) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        @if($order->notes)
+            <div style="margin-top: 15px; margin-bottom: 20px;">
+                <div class="section-title">Order Notes / Instructions</div>
+                <div style="font-style: italic; color: #4b5563; line-height: 1.2;">{!! nl2br(e($order->notes)) !!}</div>
+            </div>
+        @endif
+
+        @if($order->status == 2 && $order->rejection_reason)
+            <div style="margin-top: 15px; margin-bottom: 20px; border-left: 4px solid #ef4444; padding-left: 10px; background-color: #fef2f2; padding-top: 8px; padding-bottom: 8px;">
+                <div class="section-title" style="color: #ef4444; border: none; margin-bottom: 4px;">Rejection Information</div>
+                <div style="font-weight: bold; color: #b91c1c;">Reason: {{ $order->rejection_reason }}</div>
+                @if($order->rejectedByUser)
+                    <div style="font-size: 11px; color: #7f1d1d; margin-top: 2px;">Rejected by {{ $order->rejectedByUser->name }} on {{ \Carbon\Carbon::parse($order->rejected_at)->format('Y-m-d H:i') }}</div>
+                @endif
+            </div>
+        @endif
+
+        <div class="footer-wrapper">
+            {{-- Footer --}}
+            <div class="footer" style="margin-top: 15px;">
+                {{ $settings['footer_text'] ?? 'Thank you for your business! This is a system-generated Sales Order document.' }}
+                <br>
+                Printed at: {{ now()->format('Y-m-d H:i') }}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

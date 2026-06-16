@@ -79,6 +79,26 @@
 
             {{-- Quick Actions --}}
             <div class="flex gap-2 mt-4 flex-wrap">
+                <button id="modal-print-so-btn" onclick="printModalSalesOrder('print')"
+                    class="h-8 md:h-9 px-3 md:px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-sm transition-colors w-full md:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                        <polyline points="6 9 6 2 18 2 18 9" />
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                        <rect width="12" height="8" x="6" y="14" />
+                    </svg>
+                    Print Sales Order
+                </button>
+                <button id="modal-download-so-btn" onclick="printModalSalesOrder('download')"
+                    class="h-8 md:h-9 px-3 md:px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-sm transition-colors w-full md:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" x2="12" y1="15" y2="3" />
+                    </svg>
+                    Download Sales Order
+                </button>
                 <button id="modal-print-btn" onclick="printModalDispatchNote()"
                     class="h-8 md:h-9 px-3 md:px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-sm transition-colors hidden w-full md:w-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -88,16 +108,6 @@
                         <rect width="12" height="8" x="6" y="14" />
                     </svg>
                     Download Dispatch Note
-                </button>
-                <button onclick="alert('Download functionality')"
-                    class="h-9 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 text-sm transition-colors hidden">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" x2="12" y1="15" y2="3" />
-                    </svg>
-                    Download
                 </button>
             </div>
         </div>
@@ -143,6 +153,32 @@
                         Order Notes / Special Instructions
                     </h3>
                     <p id="modal-order-notes" class="text-gray-700 whitespace-pre-wrap font-medium text-sm"></p>
+                </div>
+
+                {{-- Rejection Information --}}
+                <div id="modal-rejection-section" class="bg-red-50 rounded-2xl p-6 border-2 border-red-200 hidden">
+                    <h3 class="text-lg text-gray-900 mb-3 flex items-center gap-2 font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y1="16" />
+                        </svg>
+                        Rejection Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-3">
+                        <div>
+                            <span class="text-gray-500 font-medium">Rejected By:</span>
+                            <span id="modal-rejected-by" class="text-gray-900 font-bold ml-1"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 font-medium">Rejected At:</span>
+                            <span id="modal-rejected-at" class="text-gray-900 font-medium ml-1"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 font-medium text-xs mb-1">Reason for Rejection</p>
+                        <p id="modal-rejection-reason" class="text-red-700 whitespace-pre-wrap font-semibold text-sm bg-red-100/50 p-3 rounded-lg border border-red-200"></p>
+                    </div>
                 </div>
 
                 {{-- Customer Information --}}
@@ -333,7 +369,8 @@
         clock: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
         package: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-9"/></svg>`,
         truck: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
-        alert: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`
+        alert: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`,
+        x: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
     };
 
     function getModalChannelConfig(channel) {
@@ -401,8 +438,8 @@
             },
             'rejected': {
                 color: 'bg-red-100 text-red-700 border-red-300',
-                label: 'Cancelled',
-                icon: modalIcons.alert
+                label: 'Rejected',
+                icon: modalIcons.x
             }
         };
         return configs[status] || {
@@ -470,6 +507,12 @@
         } else {
             printBtn.classList.add('hidden');
         }
+
+        // Print SO Buttons dataset setup
+        const printSoBtn = document.getElementById('modal-print-so-btn');
+        const downloadSoBtn = document.getElementById('modal-download-so-btn');
+        if (printSoBtn) printSoBtn.dataset.orderId = order.id;
+        if (downloadSoBtn) downloadSoBtn.dataset.orderId = order.id;
 
         // Details
         const createdAt = window.formatDateTimeGMT(order.created_at || new Date());
@@ -552,8 +595,17 @@
         if (order.notes && order.notes.trim() !== '') {
             notesSection.classList.remove('hidden');
             notesText.innerText = order.notes;
+        }
+
+        // Populate Rejection Details
+        const rejectionSection = document.getElementById('modal-rejection-section');
+        if (order.status === 'rejected') {
+            rejectionSection.classList.remove('hidden');
+            document.getElementById('modal-rejected-by').innerText = order.rejectedByName || 'N/A';
+            document.getElementById('modal-rejected-at').innerText = order.rejectedAt || 'N/A';
+            document.getElementById('modal-rejection-reason').innerText = order.rejectionReason || 'No reason provided';
         } else {
-            notesSection.classList.add('hidden');
+            rejectionSection.classList.add('hidden');
         }
 
         // Streamlined Progress
@@ -706,13 +758,13 @@
         // Footer buttons: Approve and Reject
         // MODIFIED: 0 (Pending) -> 1 (Approved) -> 5 (Dispatched)
 
-        // 1. Status 0 (Pending Approval) -> Show Approve Button (Transitions to 1)
+        // 1. Status 0 (Pending Approval) -> Show Approve Button (Transitions to 1) and Reject Button (Transitions to 2)
         if (order.status === 'pending-approval') {
             footerActionsHtml +=
                 `<button onclick="approveOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.check} Approve Order</button>`;
 
-            // footerActionsHtml +=
-            //     `<button onclick="alert('Action: Reject')" class="h-11 px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium">✕ Reject</button>`;
+            footerActionsHtml +=
+                `<button onclick="rejectOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.x} Reject Order</button>`;
         }
 
         // 2. Status 1 (Approved) -> Show Dispatch Button (Transitions to 5)
@@ -845,6 +897,14 @@
     function printModalDispatchNote() {
         const orderId = document.getElementById('modal-print-btn').dataset.orderId;
         const url = `{{ route('orderManagement.printDispatchNote', ['id' => ':id']) }}`.replace(':id', orderId);
+        window.open(url, '_blank');
+    }
+
+    function printModalSalesOrder(action) {
+        const btn = document.getElementById('modal-print-so-btn');
+        const orderId = btn ? btn.dataset.orderId : null;
+        if (!orderId) return;
+        const url = `{{ route('orderManagement.printSalesOrder', ['id' => ':id']) }}`.replace(':id', orderId) + `?action=${action}`;
         window.open(url, '_blank');
     }
 
@@ -1089,6 +1149,64 @@
                 });
             } else if (result.isConfirmed && !result.value.success) {
                 Swal.fire('Error', result.value.message || 'Approval failed', 'error');
+            }
+        });
+    }
+
+    function rejectOrder(orderId) {
+        Swal.fire({
+            title: 'Reject Order?',
+            text: "Please provide a reason for rejecting this order:",
+            input: 'textarea',
+            inputPlaceholder: 'Type rejection reason here...',
+            inputAttributes: {
+                'aria-label': 'Type rejection reason here'
+            },
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, Reject it!',
+            inputValidator: (value) => {
+                if (!value || value.trim() === "") {
+                    return 'A rejection reason is required!'
+                }
+            },
+            showLoaderOnConfirm: true,
+            preConfirm: (reason) => {
+                return fetch('{{ route('orderManagement.rejectOrder') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        reason: reason
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(json => { throw new Error(json.message || 'Server error'); });
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Request failed: ${error}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed && result.value.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Rejected!',
+                    text: 'Order has been rejected successfully.',
+                    timer: 1500
+                }).then(() => {
+                    location.reload();
+                });
+            } else if (result.isConfirmed && !result.value.success) {
+                Swal.fire('Error', result.value.message || 'Rejection failed', 'error');
             }
         });
     }

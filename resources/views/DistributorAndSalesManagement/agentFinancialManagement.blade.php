@@ -426,16 +426,34 @@
                             No notes provided.
                         </div>
                     </div>
+
+                    <!-- Audit Trail Section -->
+                    <div class="mt-8">
+                        <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center mb-4">
+                            <span class="w-8 h-[2px] bg-indigo-500 mr-3"></span> Audit Trail
+                        </h4>
+                        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4" id="payment-audit-trail">
+                            <!-- Audit trail items will be appended dynamically -->
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="bg-white px-8 py-5 flex justify-between items-center border-t border-slate-100">
                 @if(Auth::user()->hasPermission('can_payment_approve'))
-                <div id="payment-bulk-approve-container" class="hidden">
+                <div id="payment-bulk-approve-container" class="hidden flex gap-4">
                     <button id="btn-approve-all" type="button" class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95">
                         <i class="bi bi-check2-all mr-2"></i> Approve All Related Orders
                     </button>
+                    <button id="btn-reject-payment" type="button" class="inline-flex items-center px-6 py-3 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 active:scale-95">
+                        <i class="bi bi-x-circle mr-2"></i> Reject Payment
+                    </button>
                 </div>
                 @endif
+                <div id="payment-receipt-container" class="hidden">
+                    <a id="btn-print-receipt" href="#" target="_blank" class="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">
+                        <i class="bi bi-file-earmark-pdf-fill mr-2"></i> Download Receipt
+                    </a>
+                </div>
                 <button type="button" onclick="closePaymentModal()" class="px-8 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-200 transition-all ml-auto active:scale-95">
                     Close
                 </button>
@@ -588,6 +606,10 @@
                         if (payment.status == 0) {
                             bulkContainer.classList.remove('hidden');
                             document.getElementById('btn-approve-all').onclick = () => approveBulkPayments(payment.id);
+                            const btnReject = document.getElementById('btn-reject-payment');
+                            if (btnReject) {
+                                btnReject.onclick = () => rejectPayment(payment.id);
+                            }
                         } else {
                             bulkContainer.classList.add('hidden');
                         }
@@ -627,6 +649,56 @@
                         notesContainer.classList.add('hidden');
                     }
 
+                    // Audit Trail
+                    const auditTrail = document.getElementById('payment-audit-trail');
+                    auditTrail.innerHTML = '';
+                    if (payment.history && payment.history.length > 0) {
+                        payment.history.forEach(log => {
+                            const dateStr = moment(log.created_at).format('MMM DD, YYYY hh:mm A');
+                            const actorName = log.creator ? (log.creator.first_name + ' ' + (log.creator.last_name || '')) : 'System';
+                            
+                            let iconClass = 'bi-info-circle text-slate-500 bg-slate-100';
+                            if (log.status == 1) {
+                                iconClass = 'bi-check-circle-fill text-emerald-600 bg-emerald-50';
+                            } else if (log.status == 2) {
+                                iconClass = 'bi-x-circle-fill text-rose-600 bg-rose-50';
+                            } else {
+                                iconClass = 'bi-plus-circle text-amber-600 bg-amber-50';
+                            }
+
+                            auditTrail.innerHTML += `
+                                <div class="flex gap-4 items-start pb-4 border-b border-slate-100 last:border-b-0" style="padding-top: 10px;">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconClass.split(' ').slice(1).join(' ')}">
+                                        <i class="bi ${iconClass.split(' ')[0]} text-lg"></i>
+                                    </div>
+                                    <div class="flex-grow" style="width: 100%;">
+                                        <div class="flex justify-between items-center" style="display: flex; justify-content: space-between; width: 100%;">
+                                            <span class="text-sm font-bold text-slate-800">${log.action}</span>
+                                            <span class="text-[10px] text-slate-400 font-medium">${dateStr}</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-1">${log.description}</p>
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">By: ${actorName}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        auditTrail.innerHTML = `
+                            <div class="text-center py-6 text-slate-400 text-xs italic">
+                                <i class="bi bi-clock-history text-xl block mb-2"></i> No history logs available.
+                            </div>
+                        `;
+                    }
+
+                    // Receipt Option
+                    const receiptContainer = document.getElementById('payment-receipt-container');
+                    if (payment.status == 1) {
+                        receiptContainer.classList.remove('hidden');
+                        document.getElementById('btn-print-receipt').href = `/api/agent-payments/receipt/${payment.id}`;
+                    } else {
+                        receiptContainer.classList.add('hidden');
+                    }
+
                     // Orders Table
                     const ordersList = document.getElementById('payment-orders-list');
                     ordersList.innerHTML = '';
@@ -641,9 +713,11 @@
                             alreadyPaidBeforeThis = Math.max(0, paidAmount - currentPayment);
                         }
 
-                        const percentage = (grandTotal > 0) ? (alreadyPaidBeforeThis / grandTotal) * 100 : 0;
-                        const newPercentage = (grandTotal > 0) ? ((alreadyPaidBeforeThis + currentPayment) / grandTotal) * 100 : 0;
+                        const isRejected = (payment.status == 2 || dist.status == 3);
                         const isProcessed = dist.status != 1;
+
+                        const percentage = (grandTotal > 0) ? (alreadyPaidBeforeThis / grandTotal) * 100 : 0;
+                        const newPercentage = isRejected ? percentage : ((grandTotal > 0) ? ((alreadyPaidBeforeThis + currentPayment) / grandTotal) * 100 : 0);
                         const rowId = `payment-accordion-${index}`;
 
                         ordersList.innerHTML += `
@@ -678,7 +752,7 @@
                                         <h5 class="text-sm font-black text-indigo-700 mb-1">Order #${order.order_number}</h5>
                                         <p class="text-xs text-slate-600 mb-1">Order Total: Rs. ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                                         <p class="text-xs text-slate-600 mb-1">Already Paid: Rs. ${alreadyPaidBeforeThis.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                                        <p class="text-xs font-bold text-rose-600 mb-4">Remaining Balance: Rs. ${Math.max(0, grandTotal - alreadyPaidBeforeThis - currentPayment).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                        <p class="text-xs font-bold text-rose-600 mb-4">Remaining Balance: Rs. ${Math.max(0, grandTotal - alreadyPaidBeforeThis - (isRejected ? 0 : currentPayment)).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                                         
                                         <div class="relative w-full bg-slate-200 rounded-full h-2 shadow-inner">
                                             <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, percentage)}%"></div>
@@ -686,7 +760,7 @@
                                         </div>
                                         
                                         <div class="flex justify-between items-center mt-2">
-                                            <span class="text-[10px] text-indigo-600 font-black italic tracking-wide">${isProcessed ? '* This payment is processed' : '* Includes this pending payment'}</span>
+                                            <span class="text-[10px] ${isRejected ? 'text-rose-600' : (isProcessed ? 'text-slate-500' : 'text-indigo-600')} font-black italic tracking-wide">${isRejected ? '* This payment was rejected' : (isProcessed ? '* This payment is processed' : '* Includes this pending payment')}</span>
                                             <span class="text-[10px] font-black text-slate-400 uppercase">${Math.round(newPercentage)}% Completed</span>
                                         </div>
                                     </div>
@@ -759,6 +833,60 @@
                     } else {
                         Swal.fire('Error', data.message, 'error');
                     }
+                });
+            }
+        });
+    }
+
+    function rejectPayment(paymentId) {
+        Swal.fire({
+            title: 'Reject Agent Payment?',
+            text: "Please enter the reason for rejecting this payment:",
+            input: 'text',
+            inputPlaceholder: 'Reason for rejection...',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Yes, Reject It',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to specify a reason!'
+                }
+            },
+            showLoaderOnConfirm: true,
+            preConfirm: (reason) => {
+                return fetch('/api/agent-payments/reject', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ 
+                        agent_payment_id: paymentId,
+                        rejection_reason: reason
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.message || 'Request failed'); });
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Request failed: ${error.message || error}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result && result.isConfirmed) {
+                Swal.fire({
+                    title: 'Rejected!',
+                    text: 'The payment has been rejected.',
+                    icon: 'success',
+                    confirmButtonColor: '#4f46e5'
+                }).then(() => {
+                    window.location.reload();
                 });
             }
         });

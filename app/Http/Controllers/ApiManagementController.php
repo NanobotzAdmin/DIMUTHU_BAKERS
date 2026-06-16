@@ -1298,9 +1298,18 @@ class ApiManagementController extends Controller
         try {
             $agentId = $this->getAgentId();
 
+            $returnedToBakeryIds = \App\Models\AdCreditNoteHasProduct::whereNotNull('return_stock_id')->pluck('return_stock_id');
+
             // Join with ad_customer_has_business to get the business link ID
             // and filter by the current agent
-            $customers = \App\Models\AdCustomerHasBusiness::with('customer:id,name,phone,address')
+            $customers = \App\Models\AdCustomerHasBusiness::with([
+                    'customer:id,name,phone,address',
+                    'route',
+                    'returnStocks' => function ($q) use ($returnedToBakeryIds) {
+                        $q->whereNotIn('id', $returnedToBakeryIds)
+                          ->whereRaw('quantity > credit_note_added_qty');
+                    }
+                ])
                 ->where('agent_id', $agentId)
                 ->when($this->getSupervisorId(), function ($q, $supervisorId) {
                     return $q->where('sm_superviser_id', $supervisorId);
@@ -1323,6 +1332,12 @@ class ApiManagementController extends Controller
                         'contact_phone' => $item->contact_person_phone ?: ($item->customer->phone ?? ''),
                         'image' => $item->customer_image ? asset($item->customer_image) : null,
                         'last_order_date' => $lastOrderDate ? \Carbon\Carbon::parse($lastOrderDate)->format('Y-m-d') : null,
+                        'route' => $item->route ? [
+                            'id' => $item->route->id,
+                            'route_name' => $item->route->route_name,
+                            'route_code' => $item->route->route_code,
+                        ] : null,
+                        'return_count' => $item->returnStocks->count(),
                     ];
                 });
 

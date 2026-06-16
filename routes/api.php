@@ -71,10 +71,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/order-request', [ApiGRNController::class , 'index']);
     Route::get('/order-request/products', [ApiGRNController::class , 'getProducts']);
     Route::post('/order-request/create', [ApiGRNController::class , 'createOrderRequest']);
+    Route::post('/order-request/validate-date', [ApiGRNController::class, 'validateOrderDate']);
+    Route::get('/holidays', [ApiGRNController::class, 'getHolidays']);
     Route::post('/order-request/{id}/payment', [ApiGRNController::class , 'addPayment']);
     Route::post('/order-request/bulk-payment', [ApiGRNController::class , 'addBulkPayment']);
     Route::get('/order-request/{id}', [ApiGRNController::class , 'show']);
     Route::post('/order-request/{id}/confirm', [ApiGRNController::class , 'confirmOrder']);
+    Route::get('/agent/payments', [ApiGRNController::class, 'getAgentPayments']);
 
     // Order Management Workflow Routes - Agents only handle completion via mobile
     Route::post('/order-request/complete', [DistributorAndSalesManagementController::class , 'completeOrder']);

@@ -92,6 +92,7 @@
                 'icon' => 'check-circle',
             ],
             'cancelled' => ['color' => 'bg-red-100 text-red-700 border-red-300', 'label' => 'Cancelled', 'icon' => 'x'],
+            'rejected' => ['color' => 'bg-red-100 text-red-700 border-red-300', 'label' => 'Rejected', 'icon' => 'x-circle'],
             'on-hold' => [
                 'color' => 'bg-orange-100 text-orange-700 border-orange-300',
                 'label' => 'On Hold',
@@ -165,7 +166,7 @@
             </div>
 
             {{-- SUMMARY CARDS --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                 {{-- Total --}}
                 <div
                     class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-purple-500">
@@ -258,6 +259,25 @@
                     <h3 class="text-gray-600 mb-1 text-sm font-medium">Completed</h3>
                     <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['completed'] ?? 0 }}</p>
                     <p class="text-sm text-gray-500 font-medium">Delivered successfully</p>
+                </div>
+
+                {{-- Rejected --}}
+                <div
+                    class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-red-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="15" y1="9" x2="9" y2="15" />
+                                <line x1="9" y1="9" x2="15" y2="15" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-100">Rejected</span>
+                    </div>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Rejected</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['rejected'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Orders rejected</p>
                 </div>
             </div>
 
@@ -352,6 +372,12 @@
                     <span>Completed</span>
                     <span
                         class="px-1.5 py-0.5 bg-gray-200 rounded text-xs ml-1">{{ $summary['ordersByStatus']['completed'] ?? 0 }}</span>
+                </button>
+                <button onclick="filterData('status', 'rejected', this)"
+                    class="filter-btn flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    <span>Rejected</span>
+                    <span
+                        class="px-1.5 py-0.5 bg-gray-200 rounded text-xs ml-1">{{ $summary['ordersByStatus']['rejected'] ?? 0 }}</span>
                 </button>
             </div>
 
@@ -783,6 +809,9 @@
                 payment_records: orderData.payment_records || [], // Payment records
                 agent_info: orderData.agent_info || null, // New agent details
                 notes: orderData.notes || '', // Order notes
+                rejectedByName: orderData.rejectedByName || null,
+                rejectedAt: orderData.rejectedAt || null,
+                rejectionReason: orderData.rejectionReason || null,
             };
 
             // Create a temporary button element to pass the data
