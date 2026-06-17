@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
+use App\Models\PlnDepartment;
 use App\Models\UmBranch;
 use App\Models\UmBranchType;
-use App\Models\PlnDepartment;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
 
 class AdminSettingsController extends Controller
 {
@@ -34,7 +33,7 @@ class AdminSettingsController extends Controller
                 'logos.primary' => 'primary_logo',
                 'logos.white' => 'white_logo',
                 'logos.login' => 'login_logo',
-                'logos.favicon' => 'favicon'
+                'logos.favicon' => 'favicon',
             ];
 
             // Exclude image fields from the data that will be merged into JSON
@@ -51,25 +50,25 @@ class AdminSettingsController extends Controller
             foreach ($imageFields as $jsonKey => $requestKey) {
                 if ($request->hasFile($requestKey)) {
                     $file = $request->file($requestKey);
-                    $filename = $requestKey . '_' . time() . '.' . $file->getClientOriginalExtension();
+                    $filename = $requestKey.'_'.time().'.'.$file->getClientOriginalExtension();
                     $destinationPath = public_path('images/systemImage');
-                    
-                    if (!File::exists($destinationPath)) {
+
+                    if (! File::exists($destinationPath)) {
                         File::makeDirectory($destinationPath, 0755, true);
                     }
-                    
+
                     $file->move($destinationPath, $filename);
-                    
+
                     // Update the data array for deep nested key
                     $keys = explode('.', $jsonKey);
                     $temp = &$data;
                     foreach ($keys as $key) {
-                        if (!isset($temp[$key])) {
+                        if (! isset($temp[$key])) {
                             $temp[$key] = [];
                         }
                         $temp = &$temp[$key];
                     }
-                    $data['logos'][explode('.', $jsonKey)[1]] = 'images/systemImage/' . $filename;
+                    $data['logos'][explode('.', $jsonKey)[1]] = 'images/systemImage/'.$filename;
                 }
             }
 
@@ -81,19 +80,21 @@ class AdminSettingsController extends Controller
 
             return back()->with('success', 'Settings updated successfully!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to update settings: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update settings: '.$e->getMessage());
         }
     }
 
     public function fetchBranchTypes()
     {
         $types = UmBranchType::where('status', 1)->get();
+
         return response()->json($types);
     }
 
     public function fetchDepartments()
     {
         $departments = PlnDepartment::where('status', 1)->get();
+
         return response()->json($departments);
     }
 
@@ -139,7 +140,7 @@ class AdminSettingsController extends Controller
         $request->validate([
             'branch_id' => 'required', // Removed exists check to allow -1
             'department_ids' => 'array',
-            'department_ids.*' => 'exists:pln_departments,id'
+            'department_ids.*' => 'exists:pln_departments,id',
         ]);
 
         if ($request->branch_id == -1) {
@@ -163,17 +164,17 @@ class AdminSettingsController extends Controller
             foreach ($toInsert as $deptId) {
                 $insertData[] = [
                     'um_branch_id' => null,
-                    'department_id' => $deptId
+                    'department_id' => $deptId,
                 ];
             }
 
-            if (!empty($insertData)) {
+            if (! empty($insertData)) {
                 \Illuminate\Support\Facades\DB::table('um_branch_has_department')->insert($insertData);
             }
         } else {
             // Check existence manually since we removed 'exists' validation
             $branch = UmBranch::find($request->branch_id);
-            if (!$branch) {
+            if (! $branch) {
                 return response()->json(['errors' => ['branch_id' => ['Invalid branch selected']]], 422);
             }
             $branch->departments()->sync($request->department_ids ?? []);
@@ -201,7 +202,7 @@ class AdminSettingsController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $branch = new UmBranch();
+        $branch = new UmBranch;
         $branch->code = $request->code;
         $branch->name = $request->name;
         $branch->um_branch_type_id = $request->type_id;
@@ -237,7 +238,7 @@ class AdminSettingsController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $branchType = new UmBranchType();
+        $branchType = new UmBranchType;
         $branchType->name = $request->name;
         $branchType->icon = $request->icon;
         $branchType->status = 1; // Active by default
@@ -245,6 +246,7 @@ class AdminSettingsController extends Controller
 
         return response()->json(['message' => 'Branch Type added successfully', 'branchType' => $branchType], 201);
     }
+
     public function setDefaultRaw(Request $request)
     {
         $branchId = $request->input('id');
@@ -257,6 +259,7 @@ class AdminSettingsController extends Controller
         if ($branch) {
             $branch->is_default = 1;
             $branch->save();
+
             return response()->json(['message' => 'Default branch updated successfully']);
         }
 
@@ -267,7 +270,7 @@ class AdminSettingsController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:um_branch,id',
-            'status' => 'required|boolean'
+            'status' => 'required|boolean',
         ]);
 
         $branch = UmBranch::find($request->id);
@@ -281,17 +284,10 @@ class AdminSettingsController extends Controller
     {
         try {
             $processes = \App\CommonVariables::$businessProcesses;
-<<<<<<< HEAD
-            // Only load users who have a valid email address
-            $users = \App\Models\UmUser::where('is_active', 1)
-                ->whereNotNull('email')
-                ->where('email', '!=', '')
-=======
             // Only load users who have a valid email format in their email column and exclude roles 8 and 10
             $users = \App\Models\UmUser::where('is_active', 1)
                 ->where('email', 'like', '%@%')
                 ->whereNotIn('user_role_id', [8, 10])
->>>>>>> dev
                 ->select('id', 'first_name', 'last_name', 'user_name', 'email')
                 ->get();
             $configs = \App\Models\EmProcessHasEmailAddress::with('user:id,first_name,last_name,user_name,email')->get();
@@ -300,12 +296,12 @@ class AdminSettingsController extends Controller
                 'status' => true,
                 'processes' => $processes,
                 'users' => $users,
-                'configs' => $configs
+                'configs' => $configs,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to load process email configurations: ' . $e->getMessage()
+                'message' => 'Failed to load process email configurations: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -317,14 +313,14 @@ class AdminSettingsController extends Controller
             'process_id' => 'required|integer',
             'um_user_id' => 'required|integer',
             'email_address' => 'required|string|max:150',
-            'status' => 'nullable'
+            'status' => 'nullable',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -350,12 +346,12 @@ class AdminSettingsController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Configuration saved successfully',
-                'data' => $config->load('user:id,first_name,last_name,user_name,email')
+                'data' => $config->load('user:id,first_name,last_name,user_name,email'),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to save configuration: ' . $e->getMessage()
+                'message' => 'Failed to save configuration: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -368,12 +364,12 @@ class AdminSettingsController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Configuration deleted successfully'
+                'message' => 'Configuration deleted successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to delete configuration: ' . $e->getMessage()
+                'message' => 'Failed to delete configuration: '.$e->getMessage(),
             ], 500);
         }
     }

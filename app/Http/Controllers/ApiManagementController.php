@@ -1218,17 +1218,11 @@ class ApiManagementController extends Controller
                         ->where('quantity', '>', 0)
                         ->get();
 
-<<<<<<< HEAD
-                    if (! $branchStock || $branchStock->quantity < $requestedQty) {
-                        $productName = PmProductItem::find($productItemId)->product_name ?? 'Product';
-                        throw new \Exception("Insufficient stock for $productName. Available: ".($branchStock->quantity ?? 0));
-=======
                     $totalAvailableQty = $branchStocks->sum('quantity');
 
                     if ($totalAvailableQty < $requestedQty) {
                         $productName = PmProductItem::find($productItemId)->product_name ?? 'Product';
                         throw new \Exception("Insufficient stock for $productName. Available: $totalAvailableQty");
->>>>>>> dev
                     }
 
                     $remainingQtyToDeduct = $requestedQty;
@@ -1236,8 +1230,9 @@ class ApiManagementController extends Controller
 
                     // Reduce Branch Stock across available records
                     foreach ($branchStocks as $stockRecord) {
-                        if ($remainingQtyToDeduct <= 0)
+                        if ($remainingQtyToDeduct <= 0) {
                             break;
+                        }
 
                         $qtyToDeduct = min($stockRecord->quantity, $remainingQtyToDeduct);
                         $stockRecord->decrement('quantity', $qtyToDeduct);
