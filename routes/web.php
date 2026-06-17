@@ -389,6 +389,7 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::post('/production/start-batch', [ProductionManagementController::class, 'startBatch'])->name('production.startBatch');
     Route::post('/production/complete-step', [ProductionManagementController::class, 'completeStep'])->name('production.completeStep');
     Route::post('/production/complete-batch', [ProductionManagementController::class, 'completeBatch'])->name('production.completeBatch');
+
 });
 
 // Branch Selection, Password Force Change
@@ -409,11 +410,30 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/orders/create', [AgentWebController::class, 'createOrder'])->name('orders.create');
         Route::get('/payments', [AgentWebController::class, 'payments'])->name('payments');
         Route::get('/daily-loads', [AgentWebController::class, 'dailyLoads'])->name('daily-loads');
+        Route::get('/daily-loads/create', [AgentWebController::class, 'createDailyLoadView'])->name('daily-loads.create');
+        Route::get('/daily-loads/create-data', [AgentWebController::class, 'getCreateDailyLoadData'])->name('daily-loads.create-data');
+        Route::post('/daily-loads/store', [AgentWebController::class, 'storeDailyLoad'])->name('daily-loads.store');
+        Route::get('/daily-loads/{id}', [AgentWebController::class, 'showDailyLoad'])->name('daily-loads.show');
+        Route::post('/daily-loads/{id}/update-status', [AgentWebController::class, 'updateDailyLoadStatus'])->name('daily-loads.update-status');
+        Route::post('/daily-loads/{id}/finish', [AgentWebController::class, 'finishDailyLoad'])->name('daily-loads.finish');
         Route::get('/daily-summary', [AgentWebController::class, 'dailySummary'])->name('daily-summary');
         Route::get('/stock', [AgentWebController::class, 'stock'])->name('stock');
         Route::get('/guide-videos', [AgentWebController::class, 'guideVideos'])->name('guide-videos');
         Route::get('/bakery-returns', [AgentWebController::class, 'bakeryReturns'])->name('bakery-returns');
-        
+
+        // Drivers, Supervisors, and Routes under Agent Portal
+        Route::get('/drivers', [AgentWebController::class, 'driversIndex'])->name('drivers.index-panel');
+        Route::post('/drivers/store', [AgentWebController::class, 'storeDriver'])->name('drivers.store-panel');
+        Route::post('/drivers/{id}/update', [AgentWebController::class, 'updateDriver'])->name('drivers.update-panel');
+        Route::post('/drivers/{id}/toggle-status', [AgentWebController::class, 'toggleDriverStatus'])->name('drivers.toggleStatus-panel');
+
+        Route::get('/supervisors', [AgentWebController::class, 'supervisorsIndex'])->name('supervisors.index-panel');
+        Route::post('/supervisors/store', [AgentWebController::class, 'storeSupervisor'])->name('supervisors.store-panel');
+        Route::post('/supervisors/{id}/update', [AgentWebController::class, 'updateSupervisor'])->name('supervisors.update-panel');
+        Route::post('/supervisors/{id}/toggle-status', [AgentWebController::class, 'toggleSupervisorStatus'])->name('supervisors.toggleStatus-panel');
+
+        Route::get('/route-management', [AgentWebController::class, 'routeManageIndex'])->name('routeManagement.index-panel');
+
         // Order Request AJAX API endpoints
         Route::get('/api/orders', [\App\Http\Controllers\ApiGRNController::class, 'index'])->name('api.orders.index');
         Route::get('/api/products', [\App\Http\Controllers\ApiGRNController::class, 'getProducts'])->name('api.products');
