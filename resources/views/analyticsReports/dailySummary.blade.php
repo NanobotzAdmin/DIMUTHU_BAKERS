@@ -602,6 +602,7 @@
                     let rowsHtml = customer.items.map(item => `
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="py-2.5 px-3 text-slate-500 font-medium">#${item.invoice_number}</td>
+                            <td class="py-2.5 px-3 text-slate-500">${item.invoice_date || 'N/A'}</td>
                             <td class="py-2.5 px-3 font-semibold text-slate-800">${item.product_name}</td>
                             <td class="py-2.5 px-3 text-center text-slate-700">${item.quantity}</td>
                             <td class="py-2.5 px-3 text-right text-slate-600">${formatCurrency(item.unit_price)}</td>
@@ -622,6 +623,7 @@
                                 <thead>
                                     <tr class="text-slate-500 uppercase border-b border-slate-200 font-bold">
                                         <th class="pb-2 px-3">Invoice</th>
+                                        <th class="pb-2 px-3">Invoice Date</th>
                                         <th class="pb-2 px-3">Product</th>
                                         <th class="pb-2 px-3 text-center">Qty</th>
                                         <th class="pb-2 px-3 text-right">Unit Price</th>

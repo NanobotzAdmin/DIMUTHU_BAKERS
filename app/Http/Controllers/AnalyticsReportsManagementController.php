@@ -141,6 +141,7 @@ class AnalyticsReportsManagementController extends Controller
                     'total_price' => (float)$ret->total_price,
                     'reason' => $ret->reason ?? 'N/A',
                     'invoice_number' => $ret->newInvoice->invoice_number ?? 'N/A',
+                    'invoice_date' => $ret->newInvoice && $ret->newInvoice->created_at ? $ret->newInvoice->created_at->format('Y-m-d') : 'N/A',
                 ];
                 $customerReturns[$businessId]['total_value'] += (float)$ret->total_price;
             }
