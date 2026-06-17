@@ -34,4 +34,9 @@ class AdCubusinessHasReturnProductItem extends Model
     {
         return $this->belongsTo(PmProductItem::class, 'pm_product_item_id');
     }
+
+    public function newInvoice()
+    {
+        return $this->belongsTo(AdCubusinessHasInvoice::class, 'ad_new_invoice_id');
+    }
 }

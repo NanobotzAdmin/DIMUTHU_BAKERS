@@ -50,7 +50,16 @@ class AnalyticsReportsManagementController extends Controller
     public function getWebDailySummary(Request $request)
     {
         try {
-            $date = $request->query('date', date('Y-m-d'));
+            $startDate = $request->query('start_date');
+            $endDate = $request->query('end_date');
+            
+            if (!$startDate) {
+                $startDate = $request->query('date', date('Y-m-d'));
+            }
+            if (!$endDate) {
+                $endDate = $request->query('date', $startDate);
+            }
+            
             $agentId = $request->query('agent_id');
             $loadId = $request->query('load_id');
             
@@ -66,7 +75,7 @@ class AnalyticsReportsManagementController extends Controller
             }
             
             // 1. Sales Summary
-            $invoicesQuery = AdCubusinessHasInvoice::whereDate('created_at', $date);
+            $invoicesQuery = AdCubusinessHasInvoice::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
             
             if ($loadId) {
                 $invoicesQuery->where('ad_daily_load_id', $loadId);
@@ -84,7 +93,7 @@ class AnalyticsReportsManagementController extends Controller
             $invoices = $invoicesQuery->with(['business', 'items.product'])->get();
 
             // 1. Cost - Total value of Order Requests
-            $costQuery = \App\Models\StmOrderRequest::whereDate('created_at', $date);
+            $costQuery = \App\Models\StmOrderRequest::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
             if ($agentId) {
                 $costQuery->where('agent_id', $agentId);
             }
@@ -104,12 +113,41 @@ class AnalyticsReportsManagementController extends Controller
             // 3. Returns
             $invoiceIds = $invoices->pluck('id');
             
-            $returns = \App\Models\AdCubusinessHasReturnProductItem::whereIn('ad_new_invoice_id', $invoiceIds)->get();
+            $returns = \App\Models\AdCubusinessHasReturnProductItem::whereIn('ad_new_invoice_id', $invoiceIds)
+                ->with(['product', 'newInvoice.business'])
+                ->get();
 
             $totalReturnsValue = $returns->sum('total_price');
 
+            // Group returns customer-wise
+            $customerReturns = [];
+            foreach ($returns as $ret) {
+                $business = $ret->newInvoice->business ?? null;
+                $businessName = $business ? $business->business_name : 'Walk-in Customer';
+                $businessId = $business ? $business->id : 0;
+
+                if (!isset($customerReturns[$businessId])) {
+                    $customerReturns[$businessId] = [
+                        'business_name' => $businessName,
+                        'total_value' => 0,
+                        'items' => []
+                    ];
+                }
+
+                $customerReturns[$businessId]['items'][] = [
+                    'product_name' => $ret->product->product_name ?? 'N/A',
+                    'quantity' => (float)$ret->return_quantity,
+                    'unit_price' => (float)$ret->unit_price,
+                    'total_price' => (float)$ret->total_price,
+                    'reason' => $ret->reason ?? 'N/A',
+                    'invoice_number' => $ret->newInvoice->invoice_number ?? 'N/A',
+                ];
+                $customerReturns[$businessId]['total_value'] += (float)$ret->total_price;
+            }
+            $customerReturns = array_values($customerReturns);
+
             // 4. Payment Breakdown & Credit
-            $paymentsQuery = AdCubusinessInvoicePayments::whereDate('created_at', $date);
+            $paymentsQuery = AdCubusinessInvoicePayments::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
             
             if ($loadId) {
                 // filter payments by the invoices associated with this load
@@ -134,7 +172,7 @@ class AnalyticsReportsManagementController extends Controller
             ];
 
             // 4. Daily Loads for this date
-            $loadsQuery = clone AdDailyLoad::whereDate('load_date', $date);
+            $loadsQuery = clone AdDailyLoad::whereBetween('load_date', [$startDate, $endDate]);
             
             if ($loadId) {
                 $loadsQuery->where('id', $loadId);
@@ -192,7 +230,8 @@ class AnalyticsReportsManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'data' => [
-                    'date' => $date,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
                     'summary' => [
                         'total_sales' => (float)$totalSales,
                         'total_cost' => (float)$totalCost,
@@ -202,7 +241,8 @@ class AnalyticsReportsManagementController extends Controller
                     'returns' => [
                         'total_value' => (float)$totalReturnsValue,
                         'count' => $returns->count(),
-                        'profit_impact' => (float)$returnProfitLoss
+                        'profit_impact' => (float)$returnProfitLoss,
+                        'customer_returns' => $customerReturns
                     ],
                     'profit' => [
                         'net_profit' => (float)$netProfit,
