@@ -3,34 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\AdAgent;
-use App\Models\CmCustomer;
+use App\Models\AdAgentMonthlyTarget;
+use App\Models\AdCreditNote;
+use App\Models\AdCreditNoteHasProduct;
+use App\Models\AdCubusinessHasInvoice;
+use App\Models\AdCubusinessHasProductItem;
+use App\Models\AdCubusinessHasReturnProductItem;
+use App\Models\AdCubusinessInvoicePayments;
+use App\Models\AdCubusinessInvoicePaymentsHasInvoice;
+use App\Models\AdCustomerHasBusiness;
 use App\Models\AdDailyLoad;
+use App\Models\AdDailyLoadHasCustomer;
 use App\Models\AdDailyLoadItem;
+use App\Models\AdReturnProductStock;
 use App\Models\AdRoute;
 use App\Models\DmDriver;
 use App\Models\PmProductItem;
 use App\Models\SmSuperviser;
+use App\Models\StmBarcode;
+use App\Models\StmBarcodesHistory;
 use App\Models\StmBranchStock;
+use App\Models\UmUser;
 use App\Models\VmVehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use App\Models\StmBarcode;
-use App\Models\StmBarcodesHistory;
-use App\Models\AdCubusinessHasInvoice;
-use App\Models\AdCubusinessInvoicePayments;
-use App\Models\AdCustomerHasBusiness;
-use App\Models\AdCubusinessHasProductItem;
-use App\Models\AdDailyLoadHasCustomer;
-use App\Models\AdCubusinessHasReturnProductItem;
-use App\Models\AdCubusinessInvoicePaymentsHasInvoice;
-use App\Models\AdAgentMonthlyTarget;
-use App\Models\UmUser;
-use App\Models\AdCreditNote;
-use App\Models\AdCreditNoteHasProduct;
-use App\Models\AdReturnProductStock;
-use Illuminate\Support\Facades\Hash;
 
 class ApiManagementController extends Controller
 {
@@ -66,14 +65,15 @@ class ApiManagementController extends Controller
                 });
             }
             $drivers = $query->get();
+
             return response()->json([
                 'status' => true,
-                'data' => $drivers
+                'data' => $drivers,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch drivers'
+                'message' => 'Failed to fetch drivers',
             ], 500);
         }
     }
@@ -91,7 +91,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -109,13 +109,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Driver created successfully',
-                'data' => $driver
+                'data' => $driver,
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Driver Creation Failed: ' . $e->getMessage());
+            Log::error('Driver Creation Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create driver'
+                'message' => 'Failed to create driver',
             ], 500);
         }
     }
@@ -133,7 +134,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -141,10 +142,10 @@ class ApiManagementController extends Controller
             $agentId = $this->getAgentId();
             $driver = DmDriver::where('id', $id)->where('agent_id', $agentId)->first();
 
-            if (!$driver) {
+            if (! $driver) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Driver not found'
+                    'message' => 'Driver not found',
                 ], 404);
             }
 
@@ -158,13 +159,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Driver updated successfully',
-                'data' => $driver
+                'data' => $driver,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Driver Update Failed: ' . $e->getMessage());
+            Log::error('Driver Update Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update driver'
+                'message' => 'Failed to update driver',
             ], 500);
         }
     }
@@ -181,14 +183,15 @@ class ApiManagementController extends Controller
                 });
             }
             $supervisors = $query->get();
+
             return response()->json([
                 'status' => true,
-                'data' => $supervisors
+                'data' => $supervisors,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch supervisors'
+                'message' => 'Failed to fetch supervisors',
             ], 500);
         }
     }
@@ -207,7 +210,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -220,7 +223,7 @@ class ApiManagementController extends Controller
             $baseUserName = $userName;
             $counter = 1;
             while (UmUser::where('user_name', $userName)->exists()) {
-                $userName = $baseUserName . $counter;
+                $userName = $baseUserName.$counter;
                 $counter++;
             }
 
@@ -249,13 +252,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Supervisor created successfully',
-                'data' => $supervisor
+                'data' => $supervisor,
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Supervisor Creation Failed: ' . $e->getMessage());
+            Log::error('Supervisor Creation Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create supervisor'
+                'message' => 'Failed to create supervisor',
             ], 500);
         }
     }
@@ -263,7 +267,7 @@ class ApiManagementController extends Controller
     public function updateSupervisor(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'superviser_code' => 'required|string|max:255|unique:sm_superviser,superviser_code,' . $id,
+            'superviser_code' => 'required|string|max:255|unique:sm_superviser,superviser_code,'.$id,
             'superviser_name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'nic_number' => 'nullable|string|max:20',
@@ -274,7 +278,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -282,10 +286,10 @@ class ApiManagementController extends Controller
             $agentId = $this->getAgentId();
             $supervisor = SmSuperviser::where('id', $id)->where('agent_id', $agentId)->first();
 
-            if (!$supervisor) {
+            if (! $supervisor) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Supervisor not found'
+                    'message' => 'Supervisor not found',
                 ], 404);
             }
 
@@ -300,13 +304,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Supervisor updated successfully',
-                'data' => $supervisor
+                'data' => $supervisor,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Supervisor Update Failed: ' . $e->getMessage());
+            Log::error('Supervisor Update Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update supervisor'
+                'message' => 'Failed to update supervisor',
             ], 500);
         }
     }
@@ -323,14 +328,15 @@ class ApiManagementController extends Controller
                 });
             }
             $vehicles = $query->get();
+
             return response()->json([
                 'status' => true,
-                'data' => $vehicles
+                'data' => $vehicles,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch vehicles'
+                'message' => 'Failed to fetch vehicles',
             ], 500);
         }
     }
@@ -354,10 +360,11 @@ class ApiManagementController extends Controller
 
         if ($validator->fails()) {
             Log::warning('Vehicle Creation Validation Failed', ['errors' => $validator->errors()->all(), 'request' => $request->all()]);
+
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -369,17 +376,17 @@ class ApiManagementController extends Controller
                 Log::info('Processing vehicle image', [
                     'name' => $file->getClientOriginalName(),
                     'size' => $file->getSize(),
-                    'mime' => $file->getMimeType()
+                    'mime' => $file->getMimeType(),
                 ]);
                 $path = public_path('uploads/vehicles');
 
-                if (!file_exists($path)) {
+                if (! file_exists($path)) {
                     mkdir($path, 0777, true);
                 }
 
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $filename = time().'_'.$file->getClientOriginalName();
                 $file->move($path, $filename);
-                $imagePath = 'uploads/vehicles/' . $filename;
+                $imagePath = 'uploads/vehicles/'.$filename;
             }
 
             $agentId = $this->getAgentId();
@@ -395,13 +402,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Vehicle created successfully',
-                'data' => $vehicle
+                'data' => $vehicle,
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Vehicle Creation Failed: ' . $e->getMessage());
+            Log::error('Vehicle Creation Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create vehicle: ' . $e->getMessage()
+                'message' => 'Failed to create vehicle: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -426,10 +434,11 @@ class ApiManagementController extends Controller
 
         if ($validator->fails()) {
             Log::warning('Vehicle Update Validation Failed', ['id' => $id, 'errors' => $validator->errors()->all(), 'request' => $request->all()]);
+
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -438,10 +447,10 @@ class ApiManagementController extends Controller
             $agentId = $this->getAgentId();
             $vehicle = VmVehicle::where('id', $id)->where('agent_id', $agentId)->first();
 
-            if (!$vehicle) {
+            if (! $vehicle) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Vehicle not found'
+                    'message' => 'Vehicle not found',
                 ], 404);
             }
 
@@ -450,17 +459,17 @@ class ApiManagementController extends Controller
                 Log::info('Processing updated vehicle image', [
                     'name' => $file->getClientOriginalName(),
                     'size' => $file->getSize(),
-                    'mime' => $file->getMimeType()
+                    'mime' => $file->getMimeType(),
                 ]);
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $filename = time().'_'.$file->getClientOriginalName();
                 $path = public_path('uploads/vehicles');
 
-                if (!file_exists($path)) {
+                if (! file_exists($path)) {
                     mkdir($path, 0777, true);
                 }
 
                 $file->move($path, $filename);
-                $vehicle->vehicle_image = 'uploads/vehicles/' . $filename;
+                $vehicle->vehicle_image = 'uploads/vehicles/'.$filename;
             }
 
             $vehicle->vehicle_number = $request->vehicle_number;
@@ -471,13 +480,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Vehicle updated successfully',
-                'data' => $vehicle
+                'data' => $vehicle,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Vehicle Update Failed: ' . $e->getMessage());
+            Log::error('Vehicle Update Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update vehicle: ' . $e->getMessage()
+                'message' => 'Failed to update vehicle: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -498,7 +508,7 @@ class ApiManagementController extends Controller
                 ->with([
                     'latestDailyLoad' => function ($q) {
                         $q->with(['supervisor', 'driver', 'vehicle'])->where('load_date', date('Y-m-d'));
-                    }
+                    },
                 ])
                 ->when($this->getSupervisorId(), function ($q, $supervisorId) {
                     return $q->where('sm_superviser_id', $supervisorId);
@@ -510,18 +520,20 @@ class ApiManagementController extends Controller
                     $route->driver_name = $load && $load->driver ? $load->driver->driver_name : null;
                     $route->vehicle_number = $load && $load->vehicle ? $load->vehicle->vehicle_number : null;
                     unset($route->latestDailyLoad);
+
                     return $route;
                 });
 
             return response()->json([
                 'status' => true,
-                'data' => $routes
+                'data' => $routes,
             ]);
         } catch (\Exception $e) {
-            Log::error('Routes Fetch Failed: ' . $e->getMessage());
+            Log::error('Routes Fetch Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch routes'
+                'message' => 'Failed to fetch routes',
             ], 500);
         }
     }
@@ -535,10 +547,10 @@ class ApiManagementController extends Controller
                 ->with(['customers.customer'])
                 ->first();
 
-            if (!$route) {
+            if (! $route) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Route not found'
+                    'message' => 'Route not found',
                 ], 404);
             }
 
@@ -571,7 +583,7 @@ class ApiManagementController extends Controller
                         'stop_sequence' => $biz->pivot->stop_sequence,
                         'distance_km' => $biz->pivot->distance_km,
                         'duration_minutes' => $biz->pivot->duration_minutes,
-                    ]
+                    ],
                 ];
             });
 
@@ -587,13 +599,14 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $data
+                'data' => $data,
             ]);
         } catch (\Exception $e) {
-            Log::error('Route Fetch Failed: ' . $e->getMessage());
+            Log::error('Route Fetch Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch route'
+                'message' => 'Failed to fetch route',
             ], 500);
         }
     }
@@ -611,7 +624,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -631,13 +644,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Route created successfully',
-                'data' => $route
+                'data' => $route,
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Route Creation Failed: ' . $e->getMessage());
+            Log::error('Route Creation Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create route'
+                'message' => 'Failed to create route',
             ], 500);
         }
     }
@@ -656,7 +670,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -664,10 +678,10 @@ class ApiManagementController extends Controller
             $agentId = $this->getAgentId();
             $route = AdRoute::where('id', $id)->where('agent_id', $agentId)->first();
 
-            if (!$route) {
+            if (! $route) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Route not found'
+                    'message' => 'Route not found',
                 ], 404);
             }
 
@@ -682,13 +696,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Route updated successfully',
-                'data' => $route
+                'data' => $route,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Route Update Failed: ' . $e->getMessage());
+            Log::error('Route Update Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update route'
+                'message' => 'Failed to update route',
             ], 500);
         }
     }
@@ -704,7 +719,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -712,10 +727,10 @@ class ApiManagementController extends Controller
             $agentId = $this->getAgentId();
             $route = AdRoute::where('id', $id)->where('agent_id', $agentId)->first();
 
-            if (!$route) {
+            if (! $route) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Route not found'
+                    'message' => 'Route not found',
                 ], 404);
             }
 
@@ -742,7 +757,7 @@ class ApiManagementController extends Controller
                             ]
                         );
                     }
-                    
+
                     // Remove customers from daily load that are no longer in the route
                     AdDailyLoadHasCustomer::where('daily_load_id', $dailyLoad->id)
                         ->whereNotIn('ad_customer_has_business_id', $request->customer_ids)
@@ -765,13 +780,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Route customers updated successfully',
-                'data' => $route
+                'data' => $route,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Route Customer Assignment Failed: ' . $e->getMessage());
+            Log::error('Route Customer Assignment Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to assign route customers'
+                'message' => 'Failed to assign route customers',
             ], 500);
         }
     }
@@ -806,13 +822,14 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $loads
+                'data' => $loads,
             ]);
         } catch (\Exception $e) {
-            Log::error('Daily Loads Fetch Failed: ' . $e->getMessage());
+            Log::error('Daily Loads Fetch Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch daily loads'
+                'message' => 'Failed to fetch daily loads',
             ], 500);
         }
     }
@@ -826,10 +843,10 @@ class ApiManagementController extends Controller
                 ->with(['route', 'supervisor', 'driver', 'vehicle', 'items.product'])
                 ->first();
 
-            if (!$load) {
+            if (! $load) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Daily load not found'
+                    'message' => 'Daily load not found',
                 ], 404);
             }
 
@@ -853,13 +870,14 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $load
+                'data' => $load,
             ]);
         } catch (\Exception $e) {
-            Log::error('Daily Load Fetch Failed: ' . $e->getMessage());
+            Log::error('Daily Load Fetch Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch daily load'
+                'message' => 'Failed to fetch daily load',
             ], 500);
         }
     }
@@ -884,7 +902,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -929,8 +947,9 @@ class ApiManagementController extends Controller
 
                         // 2. Reduce Branch Stock across available records
                         foreach ($branchStocks as $stockRecord) {
-                            if ($remainingQtyToDeduct <= 0)
+                            if ($remainingQtyToDeduct <= 0) {
                                 break;
+                            }
 
                             $qtyToDeduct = min($stockRecord->quantity, $remainingQtyToDeduct);
                             $stockRecord->decrement('quantity', $qtyToDeduct);
@@ -1006,14 +1025,15 @@ class ApiManagementController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => 'Daily load created successfully',
-                    'data' => $load
+                    'data' => $load,
                 ], 201);
             });
         } catch (\Exception $e) {
-            Log::error('Daily Load Creation Failed: ' . $e->getMessage());
+            Log::error('Daily Load Creation Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create daily load'
+                'message' => 'Failed to create daily load',
             ], 500);
         }
     }
@@ -1037,7 +1057,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -1045,10 +1065,10 @@ class ApiManagementController extends Controller
             $agentId = $this->getAgentId();
             $load = AdDailyLoad::where('id', $id)->where('agent_id', $agentId)->first();
 
-            if (!$load) {
+            if (! $load) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Daily load not found'
+                    'message' => 'Daily load not found',
                 ], 404);
             }
 
@@ -1061,7 +1081,7 @@ class ApiManagementController extends Controller
                 'starting_mileage' => $request->starting_mileage,
                 'notes' => $request->notes,
             ], function ($v) {
-                return !is_null($v);
+                return ! is_null($v);
             });
 
             if ($request->has('status')) {
@@ -1075,7 +1095,7 @@ class ApiManagementController extends Controller
                 // If marked as loaded, update load_status to 2 (Loaded) if it was 1 (Loading)
                 if ($request->is_mark_as_loaded && $load->load_status == 1) {
                     $updateData['load_status'] = 2;
-                    
+
                     if ($load->supervisor_id) {
                         $supervisor = \App\Models\SmSuperviser::find($load->supervisor_id);
                         if ($supervisor && $supervisor->user_id) {
@@ -1132,13 +1152,14 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Daily load updated successfully',
-                'data' => $load
+                'data' => $load,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Daily Load Update Failed: ' . $e->getMessage());
+            Log::error('Daily Load Update Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update daily load'
+                'message' => 'Failed to update daily load',
             ], 500);
         }
     }
@@ -1156,7 +1177,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -1165,10 +1186,10 @@ class ApiManagementController extends Controller
                 $agentId = $this->getAgentId();
                 $load = AdDailyLoad::where('id', $id)->where('agent_id', $agentId)->first();
 
-                if (!$load) {
+                if (! $load) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'Daily load not found'
+                        'message' => 'Daily load not found',
                     ], 404);
                 }
 
@@ -1195,9 +1216,9 @@ class ApiManagementController extends Controller
                         ->where('pm_product_item_id', $productItemId)
                         ->first();
 
-                    if (!$branchStock || $branchStock->quantity < $requestedQty) {
+                    if (! $branchStock || $branchStock->quantity < $requestedQty) {
                         $productName = PmProductItem::find($productItemId)->product_name ?? 'Product';
-                        throw new \Exception("Insufficient stock for $productName. Available: " . ($branchStock->quantity ?? 0));
+                        throw new \Exception("Insufficient stock for $productName. Available: ".($branchStock->quantity ?? 0));
                     }
 
                     $availableQty = $branchStock->quantity;
@@ -1238,14 +1259,15 @@ class ApiManagementController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => 'Daily load items updated successfully',
-                    'data' => $load
+                    'data' => $load,
                 ], 200);
             });
         } catch (\Exception $e) {
-            Log::error('Daily Load Items Update Failed: ' . $e->getMessage());
+            Log::error('Daily Load Items Update Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update daily load items'
+                'message' => 'Failed to update daily load items',
             ], 500);
         }
     }
@@ -1280,13 +1302,14 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $products
+                'data' => $products,
             ]);
         } catch (\Exception $e) {
-            Log::error('Product Items Fetch Failed: ' . $e->getMessage());
+            Log::error('Product Items Fetch Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch product items'
+                'message' => 'Failed to fetch product items',
             ], 500);
         }
     }
@@ -1303,13 +1326,13 @@ class ApiManagementController extends Controller
             // Join with ad_customer_has_business to get the business link ID
             // and filter by the current agent
             $customers = \App\Models\AdCustomerHasBusiness::with([
-                    'customer:id,name,phone,address',
-                    'route',
-                    'returnStocks' => function ($q) use ($returnedToBakeryIds) {
-                        $q->whereNotIn('id', $returnedToBakeryIds)
-                          ->whereRaw('quantity > credit_note_added_qty');
-                    }
-                ])
+                'customer:id,name,phone,address',
+                'route',
+                'returnStocks' => function ($q) use ($returnedToBakeryIds) {
+                    $q->whereNotIn('id', $returnedToBakeryIds)
+                        ->whereRaw('quantity > credit_note_added_qty');
+                },
+            ])
                 ->where('agent_id', $agentId)
                 ->when($this->getSupervisorId(), function ($q, $supervisorId) {
                     return $q->where('sm_superviser_id', $supervisorId);
@@ -1343,13 +1366,14 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $customers
+                'data' => $customers,
             ]);
         } catch (\Exception $e) {
-            Log::error('Customers Fetch Failed: ' . $e->getMessage());
+            Log::error('Customers Fetch Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch customers'
+                'message' => 'Failed to fetch customers',
             ], 500);
         }
     }
@@ -1368,7 +1392,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -1376,10 +1400,10 @@ class ApiManagementController extends Controller
             $agentId = $this->getAgentId();
             $route = AdRoute::where('id', $id)->where('agent_id', $agentId)->first();
 
-            if (!$route) {
+            if (! $route) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Route not found'
+                    'message' => 'Route not found',
                 ], 404);
             }
 
@@ -1414,7 +1438,7 @@ class ApiManagementController extends Controller
                                 ]
                             );
                         }
-                        
+
                         // Remove customers from daily load that are no longer in the route
                         AdDailyLoadHasCustomer::where('daily_load_id', $dailyLoad->id)
                             ->whereNotIn('ad_customer_has_business_id', $customerIds)
@@ -1432,7 +1456,7 @@ class ApiManagementController extends Controller
                 }
 
                 // Nullify route_id and stop_sequence for detached customers
-                if (!empty($changes['detached'])) {
+                if (! empty($changes['detached'])) {
                     AdCustomerHasBusiness::whereIn('id', $changes['detached'])
                         ->update([
                             'route_id' => null,
@@ -1453,7 +1477,7 @@ class ApiManagementController extends Controller
                             'stop_sequence' => $biz->pivot->stop_sequence,
                             'distance_km' => $biz->pivot->distance_km,
                             'duration_minutes' => $biz->pivot->duration_minutes,
-                        ]
+                        ],
                     ];
                 });
                 $route->customers = $route->assigned_customers;
@@ -1462,14 +1486,15 @@ class ApiManagementController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => 'Route customers updated successfully',
-                    'data' => $route
+                    'data' => $route,
                 ], 200);
             });
         } catch (\Exception $e) {
-            Log::error('Route Customers Sync Failed: ' . $e->getMessage());
+            Log::error('Route Customers Sync Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update route customers'
+                'message' => 'Failed to update route customers',
             ], 500);
         }
     }
@@ -1478,7 +1503,7 @@ class ApiManagementController extends Controller
     {
         try {
             $supervisorId = $this->getSupervisorId();
-            if (!$supervisorId) {
+            if (! $supervisorId) {
                 return response()->json(['status' => false, 'message' => 'Supervisor not found'], 403);
             }
 
@@ -1486,7 +1511,7 @@ class ApiManagementController extends Controller
                 ->where('supervisor_id', $supervisorId)
                 ->first();
 
-            if (!$dailyLoad) {
+            if (! $dailyLoad) {
                 return response()->json(['status' => false, 'message' => 'Daily load not found'], 404);
             }
 
@@ -1521,10 +1546,11 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Trip started successfully'
+                'message' => 'Trip started successfully',
             ]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Start trip error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Start trip error: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to start trip'], 500);
         }
     }
@@ -1536,7 +1562,7 @@ class ApiManagementController extends Controller
     {
         try {
             $agentId = $this->getAgentId();
-            if (!$agentId) {
+            if (! $agentId) {
                 return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
             }
 
@@ -1588,7 +1614,7 @@ class ApiManagementController extends Controller
                         'amount' => (float) $invoice->net_price,
                         'time' => $invoice->created_at->format('h:i A'),
                         'date' => $invoice->created_at->format('Y-m-d'),
-                        'status' => 'Order placed'
+                        'status' => 'Order placed',
                     ];
                 });
 
@@ -1612,12 +1638,13 @@ class ApiManagementController extends Controller
                         'credit_period_days' => $agent ? (int) $agent->credit_period_days : 0,
                         'agent_type' => $agent ? (int) $agent->agent_type : 0,
                     ],
-                    'recent_visits' => $recentVisits
-                ]
+                    'recent_visits' => $recentVisits,
+                ],
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Fetch agent dashboard error: ' . $e->getMessage());
+            Log::error('Fetch agent dashboard error: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to fetch dashboard data'], 500);
         }
     }
@@ -1626,7 +1653,7 @@ class ApiManagementController extends Controller
     {
         try {
             $supervisorId = $this->getSupervisorId();
-            if (!$supervisorId) {
+            if (! $supervisorId) {
                 return response()->json(['status' => false, 'message' => 'Supervisor not found'], 403);
             }
 
@@ -1700,10 +1727,10 @@ class ApiManagementController extends Controller
                 'achieved' => (float) $achieved,
                 'visits' => [
                     'completed' => $completedVisits,
-                    'total' => $totalVisits
+                    'total' => $totalVisits,
                 ],
                 'collection' => (float) $collection,
-                'returns' => 0 // Mocked for now
+                'returns' => 0, // Mocked for now
             ];
 
             // Total unique customers assigned to all routes of this supervisor
@@ -1723,12 +1750,13 @@ class ApiManagementController extends Controller
                     'quickActions' => [
                         'load_count' => (int) $loadCount,
                         'route_count' => $activeLoad ? 1 : 0,
-                        'customer_count' => $totalCustomerCount
-                    ]
-                ]
+                        'customer_count' => $totalCustomerCount,
+                    ],
+                ],
             ]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('fetch supervisor dashboard: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('fetch supervisor dashboard: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to fetch dashboard data'], 500);
         }
     }
@@ -1737,7 +1765,7 @@ class ApiManagementController extends Controller
     {
         try {
             $supervisorId = $this->getSupervisorId();
-            if (!$supervisorId) {
+            if (! $supervisorId) {
                 return response()->json(['status' => false, 'message' => 'Supervisor not found'], 403);
             }
 
@@ -1748,7 +1776,7 @@ class ApiManagementController extends Controller
                 ->with(['route'])
                 ->first();
 
-            if (!$activeLoad) {
+            if (! $activeLoad) {
                 return response()->json(['status' => false, 'message' => 'No active daily load found'], 404);
             }
 
@@ -1756,7 +1784,7 @@ class ApiManagementController extends Controller
                 'total' => 0,
                 'completed' => 0,
                 'pending' => 0,
-                'skipped' => 0
+                'skipped' => 0,
             ];
 
             $customers = [];
@@ -1788,11 +1816,11 @@ class ApiManagementController extends Controller
                         'lastOrder' => 0, // Mocked for now
                         'status' => $dlc->status == 0 ? 'pending' : ($dlc->status == 1 ? 'completed' : 'skipped'),
                         'sequence' => $dlc->stop_sequence,
-                        'distance' => ($dlc->distance_km ?? 0) . ' km',
+                        'distance' => ($dlc->distance_km ?? 0).' km',
                         'estimatedTime' => '10 min', // Mocked estimation
                     ];
                 }
-            } else if ($activeLoad->route) {
+            } elseif ($activeLoad->route) {
                 // Trip not started, preview from route template
                 $routeCustomers = \Illuminate\Support\Facades\DB::table('ad_route_has_customers')
                     ->join('ad_customer_has_business', 'ad_route_has_customers.ad_customer_has_business_id', '=', 'ad_customer_has_business.id')
@@ -1830,7 +1858,7 @@ class ApiManagementController extends Controller
                         'lastOrder' => 0,
                         'status' => 'pending',
                         'sequence' => $rc->stop_sequence ?? 0,
-                        'distance' => ($rc->distance_km ?? 0) . ' km',
+                        'distance' => ($rc->distance_km ?? 0).' km',
                         'estimatedTime' => '10 min',
                     ];
                 }
@@ -1842,12 +1870,13 @@ class ApiManagementController extends Controller
                     'dailyLoadId' => $activeLoad->id,
                     'loadStatus' => $activeLoad->load_status,
                     'routeStats' => $routeStats,
-                    'customers' => $customers
-                ]
+                    'customers' => $customers,
+                ],
             ]);
 
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('fetch supervisor route error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('fetch supervisor route error: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to fetch route data'], 500);
         }
     }
@@ -1859,10 +1888,10 @@ class ApiManagementController extends Controller
                 ->where('id', $id)
                 ->first();
 
-            if (!$business) {
+            if (! $business) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Customer business details not found'
+                    'message' => 'Customer business details not found',
                 ], 404);
             }
 
@@ -1966,13 +1995,14 @@ class ApiManagementController extends Controller
                                 }),
                             ];
                         }),
-                ]
+                ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Fetch Customer Detail Failed: ' . $e->getMessage());
+            Log::error('Fetch Customer Detail Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch customer details'
+                'message' => 'Failed to fetch customer details',
             ], 500);
         }
     }
@@ -1988,12 +2018,12 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $invoices
+                'data' => $invoices,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch customer invoices'
+                'message' => 'Failed to fetch customer invoices',
             ], 500);
         }
     }
@@ -2012,12 +2042,12 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $returns
+                'data' => $returns,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch customer returns'
+                'message' => 'Failed to fetch customer returns',
             ], 500);
         }
     }
@@ -2046,12 +2076,12 @@ class ApiManagementController extends Controller
                         'reason' => $rItem->reason,
                         'old_invoice_number' => $rItem->invoice->invoice_number ?? 'N/A',
                     ];
-                })
+                }),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to fetch invoice items'
+                'message' => 'Failed to fetch invoice items',
             ], 500);
         }
     }
@@ -2084,12 +2114,12 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $supervisorId = $this->getSupervisorId();
-        if (!$supervisorId) {
+        if (! $supervisorId) {
             return response()->json(['status' => false, 'message' => 'Supervisor not found'], 403);
         }
 
@@ -2099,7 +2129,7 @@ class ApiManagementController extends Controller
             ->latest()
             ->first();
 
-        if (!$dailyLoad) {
+        if (! $dailyLoad) {
             return response()->json(['status' => false, 'message' => 'No active daily load found'], 404);
         }
 
@@ -2123,7 +2153,7 @@ class ApiManagementController extends Controller
 
             $netPrice = $subtotal - $discountAmount - $returnPrice;
 
-            $invoiceNumber = 'B2B-' . date('Ymd') . '-' . str_pad(AdCubusinessHasInvoice::count() + 1, 4, '0', STR_PAD_LEFT);
+            $invoiceNumber = 'B2B-'.date('Ymd').'-'.str_pad(AdCubusinessHasInvoice::count() + 1, 4, '0', STR_PAD_LEFT);
 
             // Create Invoice with 0 paid first
             $invoice = AdCubusinessHasInvoice::create([
@@ -2148,8 +2178,8 @@ class ApiManagementController extends Controller
                     ->where('product_item_id', $itemData['product_item_id'])
                     ->first();
 
-                if (!$dailyLoadItem || $dailyLoadItem->available_quantity < $itemData['quantity']) {
-                    throw new \Exception("Insufficient stock for product ID: " . $itemData['product_item_id']);
+                if (! $dailyLoadItem || $dailyLoadItem->available_quantity < $itemData['quantity']) {
+                    throw new \Exception('Insufficient stock for product ID: '.$itemData['product_item_id']);
                 }
 
                 // Create Invoice Item
@@ -2185,7 +2215,7 @@ class ApiManagementController extends Controller
                         'barcode_id' => $barcode->id,
                         'created_by' => auth()->id(),
                         'action' => 'Sold',
-                        'description' => 'Sold via B2B Invoice: ' . $invoiceNumber,
+                        'description' => 'Sold via B2B Invoice: '.$invoiceNumber,
                     ]);
                 }
             }
@@ -2227,7 +2257,7 @@ class ApiManagementController extends Controller
                             'barcode_id' => $barcode->id,
                             'created_by' => auth()->id(),
                             'action' => 'Returned',
-                            'description' => 'Returned from Invoice: ' . $returnItem['previous_invoice_id'] . '. Reason: ' . ($returnItem['reason'] ?? 'N/A'),
+                            'description' => 'Returned from Invoice: '.$returnItem['previous_invoice_id'].'. Reason: '.($returnItem['reason'] ?? 'N/A'),
                         ]);
                     }
 
@@ -2248,7 +2278,7 @@ class ApiManagementController extends Controller
                         'updated_by' => auth()->id(),
                     ]);
 
-                    /* 
+                    /*
                     // REMOVED: No longer adding returns to normal sellable stock
                     if (isset($returnItem['stm_branch_stock_id'])) {
                         StmBranchStock::where('id', $returnItem['stm_branch_stock_id'])
@@ -2272,10 +2302,14 @@ class ApiManagementController extends Controller
             if ($request->has('payments') && is_array($request->payments)) {
                 foreach ($request->payments as $paymentData) {
                     $paymentType = 1; // Default Cash
-                    if ($paymentData['type'] == 'cheque') $paymentType = 2;
-                    if ($paymentData['type'] == 'bank_transfer') $paymentType = 3;
+                    if ($paymentData['type'] == 'cheque') {
+                        $paymentType = 2;
+                    }
+                    if ($paymentData['type'] == 'bank_transfer') {
+                        $paymentType = 3;
+                    }
 
-                    $receiptNumber = 'REC-' . date('Ymd') . '-' . str_pad(AdCubusinessInvoicePayments::count() + 1, 4, '0', STR_PAD_LEFT);
+                    $receiptNumber = 'REC-'.date('Ymd').'-'.str_pad(AdCubusinessInvoicePayments::count() + 1, 4, '0', STR_PAD_LEFT);
 
                     // Create Master Payment Record
                     $masterPayment = AdCubusinessInvoicePayments::create([
@@ -2332,16 +2366,17 @@ class ApiManagementController extends Controller
                 'message' => 'Invoice created successfully',
                 'data' => [
                     'invoice_id' => $invoice->id,
-                    'invoice_number' => $invoice->invoice_number
-                ]
+                    'invoice_number' => $invoice->invoice_number,
+                ],
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Create B2B Invoice Failed: ' . $e->getMessage());
+            Log::error('Create B2B Invoice Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create invoice: ' . $e->getMessage()
+                'message' => 'Failed to create invoice: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2367,7 +2402,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -2375,7 +2410,7 @@ class ApiManagementController extends Controller
             DB::beginTransaction();
 
             $supervisorId = $this->getSupervisorId();
-            if (!$supervisorId) {
+            if (! $supervisorId) {
                 return response()->json(['status' => false, 'message' => 'Supervisor not found'], 403);
             }
 
@@ -2385,7 +2420,7 @@ class ApiManagementController extends Controller
                 ->latest()
                 ->first();
 
-            if (!$dailyLoad) {
+            if (! $dailyLoad) {
                 return response()->json(['status' => false, 'message' => 'No active daily load found'], 404);
             }
 
@@ -2465,17 +2500,18 @@ class ApiManagementController extends Controller
                 'message' => 'Return processed successfully and applied to original invoices',
                 'data' => [
                     'invoice_id' => null,
-                    'invoice_number' => 'N/A (Applied to: ' . implode(', ', array_unique($updatedInvoiceNumbers)) . ')',
-                    'refund_amount' => $totalRefundAmount
-                ]
+                    'invoice_number' => 'N/A (Applied to: '.implode(', ', array_unique($updatedInvoiceNumbers)).')',
+                    'refund_amount' => $totalRefundAmount,
+                ],
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Process Standalone Return Failed: ' . $e->getMessage());
+            Log::error('Process Standalone Return Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to process return: ' . $e->getMessage()
+                'message' => 'Failed to process return: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2498,7 +2534,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -2511,7 +2547,7 @@ class ApiManagementController extends Controller
             $paymentType = $paymentTypeMap[$request->payment_type] ?? 1;
 
             // NEW STRUCTURE: Create 1 Master Payment for the entire collection in the existing table
-            $masterReceiptNumber = 'COLL-' . date('Ymd') . '-' . str_pad(AdCubusinessInvoicePayments::count() + 1, 4, '0', STR_PAD_LEFT);
+            $masterReceiptNumber = 'COLL-'.date('Ymd').'-'.str_pad(AdCubusinessInvoicePayments::count() + 1, 4, '0', STR_PAD_LEFT);
             $masterPayment = AdCubusinessInvoicePayments::create([
                 'receipt_number' => $masterReceiptNumber,
                 'payment_type' => $paymentType,
@@ -2534,8 +2570,9 @@ class ApiManagementController extends Controller
                 ->get();
 
             foreach ($invoices as $invoice) {
-                if ($remainingAmount <= 0)
+                if ($remainingAmount <= 0) {
                     break;
+                }
 
                 $dueAmount = $invoice->net_price - $invoice->total_amount_paid;
                 $paymentForThisInvoice = min($remainingAmount, $dueAmount);
@@ -2575,15 +2612,16 @@ class ApiManagementController extends Controller
                     'total_collected' => $totalAmount,
                     'applied_amount' => $totalAmount - $remainingAmount,
                     'excess_amount' => $remainingAmount,
-                ]
+                ],
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Collect Payment Failed: ' . $e->getMessage());
+            Log::error('Collect Payment Failed: '.$e->getMessage());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to collect payment: ' . $e->getMessage()
+                'message' => 'Failed to collect payment: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2595,7 +2633,7 @@ class ApiManagementController extends Controller
     {
         try {
             $supervisorId = $this->getSupervisorId();
-            if (!$supervisorId) {
+            if (! $supervisorId) {
                 return response()->json(['status' => false, 'message' => 'Supervisor not found'], 403);
             }
 
@@ -2605,16 +2643,17 @@ class ApiManagementController extends Controller
                 ->with(['route.customers.customer', 'vehicle', 'driver', 'items.product', 'returns.product'])
                 ->first();
 
-            if (!$activeLoad) {
+            if (! $activeLoad) {
                 return response()->json(['status' => false, 'message' => 'No active daily load found'], 404);
             }
 
             return response()->json([
                 'status' => true,
-                'data' => $activeLoad
+                'data' => $activeLoad,
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Active Daily Load Details Failed: ' . $e->getMessage());
+            Log::error('Get Active Daily Load Details Failed: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to fetch active load details'], 500);
         }
     }
@@ -2637,7 +2676,7 @@ class ApiManagementController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation Error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -2675,12 +2714,13 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Route completed successfully'
+                'message' => 'Route completed successfully',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Complete Route Failed: ' . $e->getMessage());
-            return response()->json(['status' => false, 'message' => 'Failed to complete route: ' . $e->getMessage()], 500);
+            Log::error('Complete Route Failed: '.$e->getMessage());
+
+            return response()->json(['status' => false, 'message' => 'Failed to complete route: '.$e->getMessage()], 500);
         }
     }
 
@@ -2694,7 +2734,7 @@ class ApiManagementController extends Controller
                 $agentId = $this->getAgentId();
                 $load = AdDailyLoad::where('id', $id)->where('agent_id', $agentId)->first();
 
-                if (!$load) {
+                if (! $load) {
                     return response()->json(['status' => false, 'message' => 'Daily load not found'], 404);
                 }
 
@@ -2755,14 +2795,16 @@ class ApiManagementController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => 'Daily load finished and resources released successfully',
-                    'data' => $load
+                    'data' => $load,
                 ]);
             });
         } catch (\Exception $e) {
-            Log::error('Finish Daily Load Failed: ' . $e->getMessage());
-            return response()->json(['status' => false, 'message' => 'Failed to finish daily load: ' . $e->getMessage()], 500);
+            Log::error('Finish Daily Load Failed: '.$e->getMessage());
+
+            return response()->json(['status' => false, 'message' => 'Failed to finish daily load: '.$e->getMessage()], 500);
         }
     }
+
     /**
      * Get returns list for the current agent or supervisor.
      */
@@ -2778,13 +2820,13 @@ class ApiManagementController extends Controller
             if ($agentId) {
                 // Agent sees all returns for their routes
                 $routeIds = AdRoute::where('agent_id', $agentId)->pluck('id');
-                $query->whereHas('dailyLoad', function($q) use ($routeIds) {
+                $query->whereHas('dailyLoad', function ($q) use ($routeIds) {
                     $q->whereIn('route_id', $routeIds);
                 });
             } elseif ($supervisorId) {
                 // Supervisor sees all returns for their routes
                 $routeIds = AdRoute::where('sm_superviser_id', $supervisorId)->pluck('id');
-                $query->whereHas('dailyLoad', function($q) use ($routeIds) {
+                $query->whereHas('dailyLoad', function ($q) use ($routeIds) {
                     $q->whereIn('route_id', $routeIds);
                 });
             } else {
@@ -2795,10 +2837,11 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $returns
+                'data' => $returns,
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Returns Failed: ' . $e->getMessage());
+            Log::error('Get Returns Failed: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to fetch returns'], 500);
         }
     }
@@ -2815,13 +2858,15 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $returns
+                'data' => $returns,
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Daily Load Returns Failed: ' . $e->getMessage());
+            Log::error('Get Daily Load Returns Failed: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to fetch load returns'], 500);
         }
     }
+
     /**
      * Get daily sales summary for an agent.
      */
@@ -2831,32 +2876,32 @@ class ApiManagementController extends Controller
             $date = $request->query('date', date('Y-m-d'));
             $agentId = $this->getAgentId();
             $loadId = $request->query('load_id');
-            
-            if (!$agentId) {
+
+            if (! $agentId) {
                 return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
             }
 
             // Get all routes for this agent
             $routeIds = AdRoute::where('agent_id', $agentId)->pluck('id');
             $userId = auth()->id();
-            
+
             // 1. Sales Summary - Include both route-based and creator-based invoices
             $invoicesQuery = AdCubusinessHasInvoice::whereDate('created_at', $date);
-            
+
             if ($loadId) {
                 $invoicesQuery->where('ad_daily_load_id', $loadId);
             } else {
-                $invoicesQuery->where(function($query) use ($routeIds, $userId) {
-                    $query->whereHas('business', function($q) use ($routeIds) {
+                $invoicesQuery->where(function ($query) use ($routeIds, $userId) {
+                    $query->whereHas('business', function ($q) use ($routeIds) {
                         $q->whereIn('route_id', $routeIds);
                     })
-                    ->orWhere('created_by', $userId);
+                        ->orWhere('created_by', $userId);
                 });
             }
 
             $invoices = $invoicesQuery->with(['business', 'items.product'])->get();
 
-            Log::info("Daily Summary for Agent $agentId on $date: Found " . $invoices->count() . " invoices. Routes: " . implode(',', $routeIds->toArray()));
+            Log::info("Daily Summary for Agent $agentId on $date: Found ".$invoices->count().' invoices. Routes: '.implode(',', $routeIds->toArray()));
 
             // 1. Cost - Total value of Order Requests for this agent on this date
             // Note: Cost might not reflect individual load perfectly if load_id is provided
@@ -2878,7 +2923,7 @@ class ApiManagementController extends Controller
             // 3. Returns - Customer returned total using AdCubusinessHasReturnProductItem
             // Get all invoice IDs created today to find their returns
             $invoiceIds = $invoices->pluck('id');
-            
+
             $returns = \App\Models\AdCubusinessHasReturnProductItem::whereIn('ad_new_invoice_id', $invoiceIds)
                 ->get();
 
@@ -2916,7 +2961,7 @@ class ApiManagementController extends Controller
             }
             $loads = $loadsQuery->with(['route', 'vehicle', 'driver'])
                 ->get()
-                ->map(function($load) {
+                ->map(function ($load) {
                     return [
                         'id' => $load->id,
                         'route_name' => $load->route->route_name,
@@ -2931,9 +2976,9 @@ class ApiManagementController extends Controller
                 foreach ($invoice->items as $item) {
                     $salesItems[] = [
                         'product_name' => $item->product->product_name ?? 'N/A',
-                        'quantity' => (float)$item->quantity,
-                        'unit_price' => (float)$item->unit_price,
-                        'total_price' => (float)$item->total_price,
+                        'quantity' => (float) $item->quantity,
+                        'unit_price' => (float) $item->unit_price,
+                        'total_price' => (float) $item->total_price,
                     ];
                 }
 
@@ -2942,9 +2987,9 @@ class ApiManagementController extends Controller
                 foreach ($invoiceReturns as $ret) {
                     $returnItems[] = [
                         'product_name' => $ret->product->product_name ?? 'N/A',
-                        'quantity' => (float)$ret->return_quantity,
-                        'unit_price' => (float)$ret->unit_price,
-                        'total_price' => (float)$ret->total_price,
+                        'quantity' => (float) $ret->return_quantity,
+                        'unit_price' => (float) $ret->unit_price,
+                        'total_price' => (float) $ret->total_price,
                     ];
                 }
 
@@ -2952,8 +2997,8 @@ class ApiManagementController extends Controller
                     'invoice_id' => $invoice->id,
                     'invoice_number' => $invoice->invoice_number,
                     'business_name' => $invoice->business->business_name ?? 'Walk-in Customer',
-                    'sales_amount' => (float)$invoice->net_price,
-                    'return_amount' => (float)$invoiceReturns->sum('total_price'),
+                    'sales_amount' => (float) $invoice->net_price,
+                    'return_amount' => (float) $invoiceReturns->sum('total_price'),
                     'sales_items' => $salesItems,
                     'return_items' => $returnItems,
                 ];
@@ -2964,28 +3009,29 @@ class ApiManagementController extends Controller
                 'data' => [
                     'date' => $date,
                     'summary' => [
-                        'total_sales' => (float)$totalSales,
-                        'total_cost' => (float)$totalCost,
-                        'gross_profit' => (float)$grossProfit,
-                        'item_count' => (float)$itemCount,
+                        'total_sales' => (float) $totalSales,
+                        'total_cost' => (float) $totalCost,
+                        'gross_profit' => (float) $grossProfit,
+                        'item_count' => (float) $itemCount,
                     ],
                     'returns' => [
-                        'total_value' => (float)$totalReturnsValue,
+                        'total_value' => (float) $totalReturnsValue,
                         'count' => $returns->count(),
-                        'profit_impact' => (float)$returnProfitLoss
+                        'profit_impact' => (float) $returnProfitLoss,
                     ],
                     'profit' => [
-                        'net_profit' => (float)$netProfit,
-                        'margin_percentage' => $totalSales > 0 ? round(($netProfit / $totalSales) * 100, 2) : 0
+                        'net_profit' => (float) $netProfit,
+                        'margin_percentage' => $totalSales > 0 ? round(($netProfit / $totalSales) * 100, 2) : 0,
                     ],
                     'payments' => $paymentBreakdown,
                     'loads' => $loads,
-                    'load_transactions' => $loadTransactions
-                ]
+                    'load_transactions' => $loadTransactions,
+                ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Daily Sales Summary Failed: ' . $e->getMessage());
-            return response()->json(['status' => false, 'message' => 'Failed to fetch summary: ' . $e->getMessage()], 500);
+            Log::error('Get Daily Sales Summary Failed: '.$e->getMessage());
+
+            return response()->json(['status' => false, 'message' => 'Failed to fetch summary: '.$e->getMessage()], 500);
         }
     }
 
@@ -2996,7 +3042,7 @@ class ApiManagementController extends Controller
     {
         try {
             $agentId = $this->getAgentId();
-            if (!$agentId) {
+            if (! $agentId) {
                 return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
             }
 
@@ -3021,10 +3067,10 @@ class ApiManagementController extends Controller
 
             // 2. Return Stock (from ad_return_product_stocks) - filter those already returned to bakery
             $returnedToBakeryIds = AdCreditNoteHasProduct::whereNotNull('return_stock_id')->pluck('return_stock_id');
-            
-            $returnStockQuery = AdReturnProductStock::whereHas('dailyLoad.route', function($q) use ($agentId) {
-                    $q->where('agent_id', $agentId);
-                })
+
+            $returnStockQuery = AdReturnProductStock::whereHas('dailyLoad.route', function ($q) use ($agentId) {
+                $q->where('agent_id', $agentId);
+            })
                 ->whereNotIn('id', $returnedToBakeryIds)
                 ->whereRaw('quantity > credit_note_added_qty'); // Only show items with remaining quantity
 
@@ -3043,7 +3089,7 @@ class ApiManagementController extends Controller
                         'quantity' => $item->quantity,
                         'stm_stock_id' => $item->stm_stock_id,
                         'branch_stock_id' => $item->stm_branch_stock_id,
-                        'distributor_price' => $item->unit_price, 
+                        'distributor_price' => $item->unit_price,
                         'wholesale_price' => $item->product->wholesale_price ?? 0,
                         'retail_price' => $item->product->selling_price ?? 0,
                         'reason' => $item->reason,
@@ -3054,11 +3100,12 @@ class ApiManagementController extends Controller
                 'status' => true,
                 'data' => [
                     'physical' => $physicalStock,
-                    'returns' => $returnStock
-                ]
+                    'returns' => $returnStock,
+                ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Available For Bakery Return Failed: ' . $e->getMessage());
+            Log::error('Get Available For Bakery Return Failed: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to fetch available items'], 500);
         }
     }
@@ -3069,11 +3116,11 @@ class ApiManagementController extends Controller
     public function createBakeryReturn(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'note_type' => 'required|integer|in:1,2', 
+            'note_type' => 'required|integer|in:1,2',
             'ad_customer_has_business_id' => 'nullable|exists:ad_customer_has_business,id',
             'reason' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.id' => 'required|integer', 
+            'items.*.id' => 'required|integer',
             'items.*.product_id' => 'required|exists:pm_product_item,id',
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.distributor_price' => 'required|numeric',
@@ -3090,11 +3137,11 @@ class ApiManagementController extends Controller
             DB::beginTransaction();
 
             $agentId = $this->getAgentId();
-            if (!$agentId) {
+            if (! $agentId) {
                 return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
             }
 
-            $creditNoteNumber = 'CN-' . date('Ymd') . '-' . str_pad(AdCreditNote::count() + 1, 4, '0', STR_PAD_LEFT);
+            $creditNoteNumber = 'CN-'.date('Ymd').'-'.str_pad(AdCreditNote::count() + 1, 4, '0', STR_PAD_LEFT);
 
             $totalAmount = 0;
             foreach ($request->items as $item) {
@@ -3108,7 +3155,7 @@ class ApiManagementController extends Controller
                 'note_type' => $request->note_type,
                 'ad_customer_has_business_id' => $request->ad_customer_has_business_id,
                 'total_amount' => $totalAmount,
-                'status' => 0, 
+                'status' => 0,
                 'reason' => $request->reason,
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),
@@ -3145,7 +3192,7 @@ class ApiManagementController extends Controller
                     $stock = StmBranchStock::find($itemData['id']);
                     if ($stock) {
                         if ($stock->quantity < $itemData['quantity']) {
-                            throw new \Exception("Insufficient stock for product ID: " . $itemData['product_id']);
+                            throw new \Exception('Insufficient stock for product ID: '.$itemData['product_id']);
                         }
                         $stock->decrement('quantity', $itemData['quantity']);
                     }
@@ -3157,20 +3204,58 @@ class ApiManagementController extends Controller
                         $returnStock->increment('credit_note_added_qty', $itemData['quantity']);
                     }
                 }
+
+                // Update related barcodes to is_return = 1 and write barcode history
+                $resolvedBranchStockId = null;
+                if ($request->note_type == 1) {
+                    $resolvedBranchStockId = $itemData['id'];
+                } elseif ($request->note_type == 2) {
+                    $returnStockTemp = AdReturnProductStock::find($itemData['id']);
+                    if ($returnStockTemp) {
+                        $resolvedBranchStockId = $returnStockTemp->stm_branch_stock_id;
+                    }
+                }
+
+                $barcodesQuery = \App\Models\StmBarcode::where('pm_product_item_id', $itemData['product_id'])
+                    ->where('is_return', false);
+
+                if ($resolvedBranchStockId) {
+                    $barcodesQuery->where('stm_branch_stock_id', $resolvedBranchStockId);
+                } else {
+                    $barcodesQuery->where('agent_id', $agentId);
+                }
+
+                $barcodesToUpdate = $barcodesQuery->limit((int) $itemData['quantity'])->get();
+
+                foreach ($barcodesToUpdate as $barcode) {
+                    $barcode->update([
+                        'is_return' => true,
+                    ]);
+
+                    \App\Models\StmBarcodesHistory::create([
+                        'barcode_id' => $barcode->id,
+                        'created_by' => auth()->id(),
+                        'action' => 'RETURNED_TO_BAKERY',
+                        'description' => 'Returned to bakery via Credit Note #'.$creditNote->credit_note_number,
+                    ]);
+                }
             }
 
             DB::commit();
 
+            $this->sendCreditNoteEmailNotification($creditNote);
+
             return response()->json([
                 'status' => true,
                 'message' => 'Bakery return request created successfully',
-                'data' => $creditNote
+                'data' => $creditNote,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Create Bakery Return Failed: ' . $e.getMessage());
-            return response()->json(['status' => false, 'message' => 'Failed to create return: ' . $e.getMessage()], 500);
+            Log::error('Create Bakery Return Failed: '.$e->getMessage());
+
+            return response()->json(['status' => false, 'message' => 'Failed to create return: '.$e->getMessage()], 500);
         }
     }
 
@@ -3181,7 +3266,7 @@ class ApiManagementController extends Controller
     {
         try {
             $agentId = $this->getAgentId();
-            if (!$agentId) {
+            if (! $agentId) {
                 return response()->json(['status' => false, 'message' => 'Agent not found'], 403);
             }
 
@@ -3199,11 +3284,175 @@ class ApiManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $notes
+                'data' => $notes,
             ]);
         } catch (\Exception $e) {
-            Log::error('Get Credit Notes Failed: ' . $e->getMessage());
+            Log::error('Get Credit Notes Failed: '.$e->getMessage());
+
             return response()->json(['status' => false, 'message' => 'Failed to fetch credit notes'], 500);
+        }
+    }
+
+    private function sendCreditNoteEmailNotification($creditNote)
+    {
+        try {
+            $recipients = \App\Models\EmProcessHasEmailAddress::where('process_id', 3)
+                ->where('status', 1)
+                ->get();
+
+            if ($recipients->isNotEmpty()) {
+                $agent = $creditNote->agent;
+                $agentName = $agent ? $agent->agent_name : ('Agent #'.$creditNote->agent_id);
+                $creditNoteNumber = $creditNote->credit_note_number;
+
+                // Retrieve logo from system settings
+                $logoUrl = asset('images/logo.png');
+                $systemConfigPath = public_path('system_config.json');
+                if (file_exists($systemConfigPath)) {
+                    $systemSettings = json_decode(file_get_contents($systemConfigPath), true);
+                    if (! empty($systemSettings['logos']['primary'])) {
+                        $logoUrl = asset($systemSettings['logos']['primary']);
+                    }
+                }
+
+                // Construct items HTML
+                $itemsHtml = '';
+                $creditNote->load('products.product');
+                foreach ($creditNote->products as $item) {
+                    $productName = $item->product->product_name ?? 'Unknown Product';
+                    $itemsHtml .= '<tr>
+                        <td style="padding: 14px 16px; border-bottom: 1px solid #f1f3f7; color: #333333; font-weight: 500;">'.htmlspecialchars($productName).'</td>
+                        <td style="padding: 14px 16px; border-bottom: 1px solid #f1f3f7; text-align: right; color: #495057; font-weight: bold;">'.number_format($item->qty, 2).'</td>
+                        <td style="padding: 14px 16px; border-bottom: 1px solid #f1f3f7; text-align: right; color: #495057;">Rs. '.number_format($item->distributor_price, 2).'</td>
+                        <td style="padding: 14px 16px; border-bottom: 1px solid #f1f3f7; text-align: right; color: #1a1a1a; font-weight: 600;">Rs. '.number_format($item->total, 2).'</td>
+                    </tr>';
+                }
+
+                $notesSection = ! empty($creditNote->reason)
+                    ? '<div style="margin-top: 25px; padding: 18px; background: #faf8f5; border-left: 4px solid #b89755; border-radius: 4px; font-style: italic; color: #5a4b31; font-size: 14px; line-height: 1.5;"><strong>Reason/Notes:</strong> '.htmlspecialchars($creditNote->reason).'</div>'
+                    : '';
+
+                $emailContent = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Credit Note Request Received</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: \'Inter\', sans-serif; color: #495057; background-color: #f6f8fb; margin: 0; padding: 40px 20px; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #eef2f6; }
+        .header { background: linear-gradient(135deg, #52381f, #2e1d0f); padding: 35px 30px; border-bottom: 4px solid #b89755; position: relative; }
+        .header-content { display: flex; align-items: center; justify-content: center; gap: 20px; text-align: left; }
+        .header img { max-height: 80px; width: auto; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.15)); margin: 0; }
+        .header-text-container { text-align: left; }
+        .header h1 { margin: 0; font-family: \'Cinzel\', serif; font-size: 24px; font-weight: 600; color: #ffffff; letter-spacing: 1px; text-transform: uppercase; line-height: 1.2; }
+        .header p { color: #b89755; margin: 5px 0 0 0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+        .content { padding: 40px 35px; }
+        .status-badge { display: inline-block; padding: 6px 14px; background-color: #fff9db; border: 1px solid #ffe066; color: #8a6d3b; font-weight: 600; font-size: 12px; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; }
+        .intro-title { font-family: \'Cinzel\', serif; font-size: 20px; font-weight: 600; color: #2e1d0f; margin-top: 0; margin-bottom: 10px; }
+        .intro-p { font-size: 15px; color: #6c757d; line-height: 1.6; margin-bottom: 30px; }
+        .order-meta { display: table; width: 100%; margin-bottom: 30px; border-bottom: 1px solid #eef2f6; padding-bottom: 25px; }
+        .meta-col { display: table-cell; width: 50%; vertical-align: top; }
+        .meta-label { color: #adb5bd; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+        .meta-val { color: #2e1d0f; font-size: 15px; font-weight: 600; }
+        .table-container { border: 1px solid #eef2f6; border-radius: 8px; overflow: hidden; margin: 25px 0; }
+        .table { width: 100%; border-collapse: collapse; margin: 0; }
+        .table th { text-align: left; padding: 14px 16px; background-color: #f8fafc; border-bottom: 1px solid #eef2f6; color: #868e96; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .total-row { font-weight: bold; background-color: #fffaf0; }
+        .total-label { font-family: \'Inter\', sans-serif; font-size: 14px; color: #2e1d0f; font-weight: 700; }
+        .total-value { font-family: \'Inter\', sans-serif; font-size: 18px; color: #2e1d0f; font-weight: 700; }
+        .footer { background: #f8fafc; text-align: center; padding: 30px; font-size: 12px; color: #868e96; border-top: 1px solid #eef2f6; line-height: 1.6; }
+        .footer strong { color: #495057; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <img src="'.htmlspecialchars($logoUrl).'" alt="DIMUTHU BAKEHOUSE">
+                <div class="header-text-container">
+                    <h1>Dimuthu Bake House (Pvt) Ltd.</h1>
+                    <p>Artisanal Excellence</p>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <span class="status-badge">Pending Approval</span>
+            <h2 class="intro-title">New Credit Note Request</h2>
+            <p class="intro-p">A new credit note request has been successfully submitted and is now awaiting verification. Please review the details below.</p>
+            
+            <div class="order-meta">
+                <div class="meta-col">
+                    <div class="meta-label">Submitted By Agent</div>
+                    <div class="meta-val">'.htmlspecialchars($agentName).'</div>
+                </div>
+                <div class="meta-col" style="padding-left: 20px;">
+                    <div class="meta-label">Return Date</div>
+                    <div class="meta-val">'.htmlspecialchars($creditNote->credit_note_date).'</div>
+                </div>
+            </div>
+
+            <div class="order-meta" style="border-bottom: none; padding-bottom: 0; margin-bottom: 10px;">
+                <div class="meta-col">
+                    <div class="meta-label">Credit Note Number</div>
+                    <div class="meta-val" style="color: #b89755; font-family: monospace; font-size: 16px;">'.htmlspecialchars($creditNoteNumber).'</div>
+                </div>
+                <div class="meta-col" style="padding-left: 20px;">
+                    <div class="meta-label">Submission Date</div>
+                    <div class="meta-val">'.now()->format('F d, Y - h:i A').'</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="padding: 14px 16px;">Product Item</th>
+                            <th style="padding: 14px 16px; text-align: right;">Qty</th>
+                            <th style="padding: 14px 16px; text-align: right;">Distributor Price</th>
+                            <th style="padding: 14px 16px; text-align: right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        '.$itemsHtml.'
+                        <tr class="total-row">
+                            <td colspan="3" class="total-label" style="padding: 18px 16px; border-top: 2px solid #eef2f6; text-align: right;">Total Credit Amount:</td>
+                            <td class="total-value" style="padding: 18px 16px; border-top: 2px solid #eef2f6; text-align: right;">Rs. '.number_format($creditNote->total_amount, 2).'</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            '.$notesSection.'
+
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
+                <a href="'.url('/agent-financial-management').'" target="_blank" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #b89755, #8a6d3b); color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(184, 151, 85, 0.25); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">View Credit Notes</a>
+            </div>
+        </div>
+        <div class="footer">
+            &copy; '.date('Y').' <strong>Dimuthu Bakehouse (Pvt) Ltd.</strong><br>
+            527, Thewatta Road, Ragama, Sri Lanka.<br>
+            <span style="font-size: 11px; margin-top: 10px; display: block; color: #adb5bd;">This is an automated notification. Please do not reply directly to this email.</span>
+        </div>
+    </div>
+</body>
+</html>';
+
+                foreach ($recipients as $recipient) {
+                    \App\Models\EmEmailSend::create([
+                        'email_address' => $recipient->email_address,
+                        'process_id' => 3,
+                        'email_subject' => 'New Credit Note Request '.$creditNoteNumber.' Submitted',
+                        'email_content' => $emailContent,
+                        'status' => 0, // Pending
+                        'created_by' => auth()->id(),
+                        'created_at' => now(),
+                    ]);
+                }
+            }
+        } catch (\Exception $ex) {
+            Log::error('Credit Note Email Queueing Failed: '.$ex->getMessage());
         }
     }
 }

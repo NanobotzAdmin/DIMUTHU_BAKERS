@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminSettingsController;
 use App\Http\Controllers\AdvancedPlannerController;
 use App\Http\Controllers\AgentDistributionManagementController;
+use App\Http\Controllers\AgentWebController;
 use App\Http\Controllers\AiAssistantManagementController;
 use App\Http\Controllers\AnalyticsReportsManagementController;
 use App\Http\Controllers\AuthController;
@@ -397,6 +398,37 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/force-password-change', [AuthController::class, 'forcePasswordChangeIndex'])->name('password.force_change');
     Route::post('/force-password-change', [AuthController::class, 'forcePasswordChangeStore'])->name('password.force_change.submit');
+
+    // Agent Portal Web Interface Routes
+    Route::prefix('agent-panel')->name('agent-panel.')->group(function () {
+        Route::get('/', [AgentWebController::class, 'dashboard'])->name('dashboard');
+        Route::get('/customers', [AgentWebController::class, 'customers'])->name('customers');
+        Route::get('/customers/{id}/detail', [AgentWebController::class, 'customerDetail'])->name('customers.detail');
+        Route::get('/invoices/{invoiceId}/items', [AgentWebController::class, 'invoiceItems'])->name('invoices.items');
+        Route::get('/orders', [AgentWebController::class, 'orders'])->name('orders');
+        Route::get('/orders/create', [AgentWebController::class, 'createOrder'])->name('orders.create');
+        Route::get('/payments', [AgentWebController::class, 'payments'])->name('payments');
+        Route::get('/daily-loads', [AgentWebController::class, 'dailyLoads'])->name('daily-loads');
+        Route::get('/daily-summary', [AgentWebController::class, 'dailySummary'])->name('daily-summary');
+        Route::get('/stock', [AgentWebController::class, 'stock'])->name('stock');
+        Route::get('/guide-videos', [AgentWebController::class, 'guideVideos'])->name('guide-videos');
+        Route::get('/bakery-returns', [AgentWebController::class, 'bakeryReturns'])->name('bakery-returns');
+        
+        // Order Request AJAX API endpoints
+        Route::get('/api/orders', [\App\Http\Controllers\ApiGRNController::class, 'index'])->name('api.orders.index');
+        Route::get('/api/products', [\App\Http\Controllers\ApiGRNController::class, 'getProducts'])->name('api.products');
+        Route::post('/api/orders/create', [\App\Http\Controllers\ApiGRNController::class, 'createOrderRequest'])->name('api.orders.create');
+        Route::post('/api/orders/validate-date', [\App\Http\Controllers\ApiGRNController::class, 'validateOrderDate'])->name('api.orders.validate-date');
+        Route::get('/api/holidays', [\App\Http\Controllers\ApiGRNController::class, 'getHolidays'])->name('api.holidays');
+        Route::get('/api/orders/{id}', [\App\Http\Controllers\ApiGRNController::class, 'show'])->name('api.orders.show');
+        Route::post('/api/orders/{id}/payment', [\App\Http\Controllers\ApiGRNController::class, 'addPayment'])->name('api.orders.payment');
+        Route::post('/api/orders/bulk-payment', [\App\Http\Controllers\ApiGRNController::class, 'addBulkPayment'])->name('api.orders.bulk-payment');
+
+        // Bakery Returns AJAX API endpoints
+        Route::get('/api/bakery-returns', [\App\Http\Controllers\ApiManagementController::class, 'getCreditNotes'])->name('api.bakery-returns');
+        Route::get('/api/bakery-returns/available', [\App\Http\Controllers\ApiManagementController::class, 'getAvailableForBakeryReturn'])->name('api.bakery-returns.available');
+        Route::post('/api/bakery-returns/create', [\App\Http\Controllers\ApiManagementController::class, 'createBakeryReturn'])->name('api.bakery-returns.create');
+    });
 });
 
 Route::middleware('guest')->group(function () {

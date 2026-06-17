@@ -146,11 +146,19 @@
             <!-- Navigation -->
             <div class="flex-1 overflow-y-auto py-4">
                 <nav class="space-y-1 px-2">
-                    <a href="{{ url('/adminDashboard') }}"
-                        class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ Request::is('adminDashboard') ? 'sidebar-link-active' : 'sidebar-link-hover' }}">
-                        <i class="bi bi-grid-fill w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
-                        <span class="sidebar-text ml-3 truncate">Dashboard</span>
-                    </a>
+                    @if (Auth::user()->user_role_id == 1 || Auth::user()->user_role_id == 7)
+                        <a href="{{ url('/adminDashboard') }}"
+                            class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ Request::is('adminDashboard') ? 'sidebar-link-active' : 'sidebar-link-hover' }}">
+                            <i class="bi bi-grid-fill w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
+                            <span class="sidebar-text ml-3 truncate">Dashboard</span>
+                        </a>
+                    @elseif (Auth::user()->user_role_id == 8)
+                        <a href="{{ url('/agent-panel') }}"
+                            class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {{ Request::is('userDashboard') ? 'sidebar-link-active' : 'sidebar-link-hover' }}">
+                            <i class="bi bi-grid-fill w-5 h-5 text-[1rem] min-w-[1.25rem] text-center sidebar-icon"></i>
+                            <span class="sidebar-text ml-3 truncate">Dashboard</span>
+                        </a>
+                    @endif
                     @if (isset($sidebarTopics))
                         @foreach ($sidebarTopics as $topic)
                             @php
