@@ -71,6 +71,13 @@ $roles - Collection of Role models (or array with permissions)
                 </div>
 
                 <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                    <input type="text" name="username" id="username" required
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
+                        placeholder="johndoe">
+                </div>
+
+                <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                     <input type="email" name="email" id="email" required
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
@@ -89,7 +96,7 @@ $roles - Collection of Role models (or array with permissions)
                     <select name="user_role_id" id="user_role_id"
                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2">
                         @foreach($roles as $role)
-                            @if($role->id == 1 && Auth::user()->user_role_id != 1)
+                            @if($role->id == 1)
                                 @continue
                             @endif
                             <option value="{{ $role->id }}">{{ $role->user_role_name }}</option>
@@ -140,7 +147,7 @@ $roles - Collection of Role models (or array with permissions)
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($users as $user)
-                        @if($user->user_role_id == 1 && Auth::user()->user_role_id != 1)
+                        @if($user->user_role_id == 1)
                             @continue
                         @endif
                         <tr class="hover:bg-gray-50">
@@ -158,7 +165,8 @@ $roles - Collection of Role models (or array with permissions)
                             </td>
                             <td class="px-4 py-3">
                                 <div class="text-sm">
-                                    <div class="text-gray-900">{{ $user->user_name }}</div>
+                                    <div class="text-gray-900 font-medium">{{ $user->user_name }}</div>
+                                    <div class="text-gray-500">{{ $user->email }}</div>
                                     <div class="text-gray-500">{{ $user->contact_no }}</div>
                                 </div>
                             </td>
@@ -215,15 +223,17 @@ $roles - Collection of Role models (or array with permissions)
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     {{-- Manage Assignments Button --}}
-                                    <button type="button"
-                                        onclick='openAdminAssignmentsModal({{ $user->id }}, @json($user->first_name))'
-                                        class="p-1 rounded-md hover:bg-gray-100 text-blue-600" title="Manage Assignments">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                                            </path>
-                                        </svg>
-                                    </button>
+                                    @if(Auth::user()->hasPermission('branch_assign'))
+                                        <button type="button"
+                                            onclick='openAdminAssignmentsModal({{ $user->id }}, @json($user->first_name))'
+                                            class="p-1 rounded-md hover:bg-gray-100 text-blue-600" title="Manage Assignments">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    @endif
 
                                     {{-- Edit Button --}}
                                     <button type="button" onclick="editUser({{ $user->id }})"
@@ -236,7 +246,8 @@ $roles - Collection of Role models (or array with permissions)
                                     </button>
 
                                     {{-- Reset Password Button --}}
-                                    <button type="button" onclick="confirmResetPassword({{ $user->id }}, '{{ $user->first_name }}')"
+                                    <button type="button"
+                                        onclick="confirmResetPassword({{ $user->id }}, '{{ $user->first_name }}')"
                                         class="p-1 rounded-md hover:bg-gray-100 text-orange-600" title="Reset Password">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -288,72 +299,74 @@ $roles - Collection of Role models (or array with permissions)
     </div>
 
     {{-- Role Permissions Reference --}}
-    <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Role Permissions Reference</h3>
-            <button onclick="toggleUserRoleForm(true)"
-                class="inline-flex items-center px-3 py-1.5 border border-[#D4A017] rounded-md shadow-sm text-sm font-medium text-[#D4A017] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4A017]">
-                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Add Role
-            </button>
-        </div>
+    @if(Auth::user()->hasPermission('user_role_management'))
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Role Permissions Reference</h3>
+                <button onclick="toggleUserRoleForm(true)"
+                    class="inline-flex items-center px-3 py-1.5 border border-[#D4A017] rounded-md shadow-sm text-sm font-medium text-[#D4A017] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4A017]">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Role
+                </button>
+            </div>
 
-        {{-- Add Role Form (Hidden by default) --}}
-        <div id="add-role-form" class="hidden mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <form id="role-form" onsubmit="event.preventDefault(); saveUserRole();">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="user_role_name" class="block text-sm font-medium text-gray-700 mb-1">Role Name
-                            *</label>
-                        <input type="text" name="user_role_name" id="user_role_name" required
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
-                            placeholder="e.g. Supervisor">
+            {{-- Add Role Form (Hidden by default) --}}
+            <div id="add-role-form" class="hidden mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <form id="role-form" onsubmit="event.preventDefault(); saveUserRole();">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="user_role_name" class="block text-sm font-medium text-gray-700 mb-1">Role Name
+                                *</label>
+                            <input type="text" name="user_role_name" id="user_role_name" required
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
+                                placeholder="e.g. Supervisor">
+                        </div>
+                        <div>
+                            <label for="description"
+                                class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <input type="text" name="description" id="description"
+                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
+                                placeholder="Role description...">
+                        </div>
                     </div>
-                    <div>
-                        <label for="description"
-                            class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <input type="text" name="description" id="description"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-[#D4A017] focus:ring-[#D4A017] sm:text-sm p-2"
-                            placeholder="Role description...">
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="toggleUserRoleForm(false)"
+                            class="px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#D4A017] hover:bg-[#B8860B]">
+                            Save Role
+                        </button>
                     </div>
-                </div>
-                <div class="flex justify-end gap-2">
-                    <button type="button" onclick="toggleUserRoleForm(false)"
-                        class="px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                        class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#D4A017] hover:bg-[#B8860B]">
-                        Save Role
-                    </button>
-                </div>
-            </form>
-        </div>
+                </form>
+            </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @foreach($roles as $role)
-                @if($role->id == 1 && Auth::user()->user_role_id != 1)
-                    @continue
-                @endif
-                <div class="border border-gray-200 rounded-lg p-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <svg class="w-5 h-5 {{ $role->id === 'super_admin' ? 'text-purple-600' : 'text-gray-600' }}"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                            </path>
-                        </svg>
-                        <h4 class="font-semibold text-gray-900">{{ $role->user_role_name }}</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach($roles as $role)
+                    @if($role->id == 1)
+                        @continue
+                    @endif
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 {{ $role->id === 'super_admin' ? 'text-purple-600' : 'text-gray-600' }}"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                </path>
+                            </svg>
+                            <h4 class="font-semibold text-gray-900">{{ $role->user_role_name }}</h4>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">{{ $role->remark1 }}</p>
+                        {{-- Permissions display removed as it's not available in PmUserRole model --}}
                     </div>
-                    <p class="text-sm text-gray-600 mb-3">{{ $role->remark1 }}</p>
-                    {{-- Permissions display removed as it's not available in PmUserRole model --}}
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </div>
-    </div>
+    @endif
 </div>
 
 {{-- Assignments Modal (Slide-Over) --}}
@@ -533,6 +546,13 @@ $roles - Collection of Role models (or array with permissions)
                 // Remove hidden PATCH method if exists
                 const existingMethod = formEl.querySelector('input[name="_method"]');
                 if (existingMethod) existingMethod.remove();
+
+                // Enable username input
+                const usernameInput = document.getElementById('username');
+                if (usernameInput) {
+                    usernameInput.removeAttribute('readonly');
+                    usernameInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                }
             }
         } else {
             form.classList.add('hidden');
@@ -558,25 +578,20 @@ $roles - Collection of Role models (or array with permissions)
                     // Update Form Action
                     formEl.action = `/user-management/${id}/update`; // Corrected route
 
-                    // Add PATCH method field
-                    let methodInput = formEl.querySelector('input[name="_method"]');
-                    if (!methodInput) {
-                        methodInput = document.createElement('input');
-                        methodInput.type = 'hidden';
-                        methodInput.name = '_method';
-                        methodInput.value = 'POST'; // Controller update method expects POST usually, but let's check web.php. 
-                        // web.php: Route::post('/user-management/{id}/update', ...). So POST is correct. No need for PATCH/PUT unless using Resource controller defaults.
-                        // Wait, previous code plan said PATCH? Let's check route definition again.
-                        // Route::post('/user-management/{id}/update', ...). So it is POST. 
-                        // I will NOT add _method field.
-                    }
-
                     // Populate fields
                     document.getElementById('first_name').value = user.first_name;
                     document.getElementById('last_name').value = user.last_name;
-                    document.getElementById('email').value = user.user_name; // Mapped email -> user_name
+                    document.getElementById('username').value = user.user_name; // Set username field
+                    document.getElementById('email').value = user.email || ''; // Set email field
                     document.getElementById('contact_no').value = user.contact_no;
                     document.getElementById('user_role_id').value = user.user_role_id;
+
+                    // Make username read-only during edit
+                    const usernameInput = document.getElementById('username');
+                    if (usernameInput) {
+                        usernameInput.setAttribute('readonly', 'true');
+                        usernameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                    }
 
                     // Update UI
                     formContainer.querySelector('h3').textContent = 'Edit User';

@@ -6,6 +6,95 @@
     $rules = $settings->notifications->rules ?? [];
 @endphp
 
+<style>
+    /* Select2 Custom Styles to match Tailwind/Golden Theme */
+    .select2-container--default .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #D1D5DB !important;
+        /* border-gray-300 */
+        border-radius: 0.375rem !important;
+        /* rounded-md */
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        background-color: #FFFFFF !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        /* shadow-sm */
+        display: flex;
+        align-items: center;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #1F2937 !important;
+        /* text-gray-900 */
+        font-size: 0.875rem !important;
+        /* sm:text-sm */
+        padding-left: 8px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+        color: #9CA3AF !important;
+        /* text-gray-400 placeholder */
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 8px !important;
+    }
+
+    /* Adjust the clear 'x' button styling */
+    .select2-container--default .select2-selection--single .select2-selection__clear {
+        margin-right: 24px !important;
+        color: #EF4444 !important;
+        font-weight: bold;
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+
+    /* Focus state */
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #D4A017 !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.2) !important;
+    }
+
+    /* Dropdown Container */
+    .select2-dropdown {
+        border: 1px solid #E5E7EB !important;
+        border-radius: 0.375rem !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        border: 1px solid #D1D5DB !important;
+        border-radius: 0.375rem !important;
+        padding: 6px 10px !important;
+        font-size: 0.875rem !important;
+        outline: none !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+        border-color: #D4A017 !important;
+        box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.2) !important;
+    }
+
+    /* Dropdown Options */
+    .select2-container--default .select2-results__option {
+        padding: 8px 12px !important;
+        font-size: 0.875rem !important;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #D4A017 !important;
+        color: #FFFFFF !important;
+    }
+
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #F3F4F6 !important;
+        color: #1F2937 !important;
+    }
+</style>
+
 <form id="notifications-settings-form" action="" method="POST" class="space-y-6">
     @csrf
     @method('PUT')
@@ -580,6 +669,17 @@
             availableUsers.forEach(user => {
                 userSelect.innerHTML += `<option value="${user.id}" data-email="${user.email}">${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)} (${escapeHtml(user.email)})</option>`;
             });
+
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                if ($(userSelect).data('select2')) {
+                    $(userSelect).select2('destroy');
+                }
+                $(userSelect).select2({
+                    placeholder: "-- Choose User --",
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
         }
 
         function renderConfiguredRecipients() {
@@ -919,7 +1019,12 @@
                         }
 
                         // Reset dropdown selection
-                        if (userSelect) userSelect.value = '';
+                        if (userSelect) {
+                            userSelect.value = '';
+                            if (typeof $ !== 'undefined' && $.fn.select2) {
+                                $(userSelect).val('').trigger('change');
+                            }
+                        }
 
                         // Reload and select the same process
                         loadProcessEmails(true);
