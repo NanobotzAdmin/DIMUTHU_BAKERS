@@ -373,6 +373,30 @@
         x: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
     };
 
+    function disableButton(btn) {
+        if (!btn) return;
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    function enableButton(btn) {
+        if (!btn) return;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
+    function disableAllOrderModalButtons() {
+        disableButton(document.getElementById('btn-order-approve'));
+        disableButton(document.getElementById('btn-order-reject'));
+        disableButton(document.getElementById('btn-order-dispatch'));
+    }
+
+    function enableAllOrderModalButtons() {
+        enableButton(document.getElementById('btn-order-approve'));
+        enableButton(document.getElementById('btn-order-reject'));
+        enableButton(document.getElementById('btn-order-dispatch'));
+    }
+
     function getModalChannelConfig(channel) {
         const configs = {
             'pos-pickup': {
@@ -761,16 +785,16 @@
         // 1. Status 0 (Pending Approval) -> Show Approve Button (Transitions to 1) and Reject Button (Transitions to 2)
         if (order.status === 'pending-approval') {
             footerActionsHtml +=
-                `<button onclick="approveOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.check} Approve Order</button>`;
+                `<button id="btn-order-approve" onclick="approveOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.check} Approve Order</button>`;
 
             footerActionsHtml +=
-                `<button onclick="rejectOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.x} Reject Order</button>`;
+                `<button id="btn-order-reject" onclick="rejectOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.x} Reject Order</button>`;
         }
 
         // 2. Status 1 (Approved) -> Show Dispatch Button (Transitions to 5)
         if (order.status === 'approved') {
             footerActionsHtml +=
-                `<button onclick="dispatchOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-orange-600 hover:bg-orange-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.truck} Dispatch Order</button>`;
+                `<button id="btn-order-dispatch" onclick="dispatchOrder('${order.id}')" class="h-10 md:h-11 px-4 md:px-6 bg-orange-600 hover:bg-orange-700 text-white rounded-xl flex items-center justify-center gap-2 transition-colors font-medium text-sm md:text-base">${modalIcons.truck} Dispatch Order</button>`;
         }
 
         // 3. Status 5 (Dispatched) -> Completed is handled via mobile app only
@@ -929,6 +953,7 @@
             confirmButtonText: 'Yes, Dispatch it!'
         }).then((result) => {
             if (result.isConfirmed) {
+                disableAllOrderModalButtons();
                 // Call API
                 fetch('{{ route('orderManagement.dispatchOrder') }}', { // Need to define route
                     method: 'POST',
@@ -943,6 +968,7 @@
                 })
                     .then(response => {
                         if (!response.ok) {
+                            enableAllOrderModalButtons();
                             return response.text().then(text => {
                                 throw new Error(text)
                             });
@@ -959,6 +985,7 @@
                                 location.reload();
                             });
                         } else {
+                            enableAllOrderModalButtons();
                             Swal.fire(
                                 'Error!',
                                 data.message || 'Something went wrong.',
@@ -967,6 +994,7 @@
                         }
                     })
                     .catch(error => {
+                        enableAllOrderModalButtons();
                         console.error('Dispatch Error:', error);
                         // Try to extract message if it's JSON string in error
                         let msg = 'Server error occurred.';
@@ -1001,6 +1029,7 @@
             confirmButtonText: 'Yes, Confirm it!'
         }).then((result) => {
             if (result.isConfirmed) {
+                disableAllOrderModalButtons();
                 // Call API
                 fetch('{{ route('orderManagement.confirmDispatch') }}', {
                     method: 'POST',
@@ -1023,6 +1052,7 @@
                                 location.reload();
                             });
                         } else {
+                            enableAllOrderModalButtons();
                             Swal.fire(
                                 'Error!',
                                 data.message || 'Something went wrong.',
@@ -1031,6 +1061,7 @@
                         }
                     })
                     .catch(error => {
+                        enableAllOrderModalButtons();
                         console.error(error);
                         Swal.fire(
                             'Error!',
@@ -1054,6 +1085,7 @@
             confirmButtonText: 'Yes, Complete it!'
         }).then((result) => {
             if (result.isConfirmed) {
+                disableAllOrderModalButtons();
                 // Call API
                 fetch('{{ route('orderManagement.completeOrder') }}', {
                     method: 'POST',
@@ -1076,6 +1108,7 @@
                                 location.reload();
                             });
                         } else {
+                            enableAllOrderModalButtons();
                             Swal.fire(
                                 'Error!',
                                 data.message || 'Something went wrong.',
@@ -1084,6 +1117,7 @@
                         }
                     })
                     .catch(error => {
+                        enableAllOrderModalButtons();
                         console.error(error);
                         Swal.fire(
                             'Error!',
@@ -1115,6 +1149,7 @@
             confirmButtonText: 'Yes, Approve it!',
             showLoaderOnConfirm: true,
             preConfirm: () => {
+                disableAllOrderModalButtons();
                 return fetch('{{ route('orderManagement.approveOrder') }}', {
                     method: 'POST',
                     headers: {
@@ -1128,11 +1163,13 @@
                 })
                 .then(response => {
                     if (!response.ok) {
+                        enableAllOrderModalButtons();
                         return response.json().then(json => { throw new Error(json.message || 'Server error'); });
                     }
                     return response.json();
                 })
                 .catch(error => {
+                    enableAllOrderModalButtons();
                     Swal.showValidationMessage(`Request failed: ${error}`);
                 });
             },
@@ -1148,6 +1185,7 @@
                     location.reload();
                 });
             } else if (result.isConfirmed && !result.value.success) {
+                enableAllOrderModalButtons();
                 Swal.fire('Error', result.value.message || 'Approval failed', 'error');
             }
         });
@@ -1173,6 +1211,7 @@
             },
             showLoaderOnConfirm: true,
             preConfirm: (reason) => {
+                disableAllOrderModalButtons();
                 return fetch('{{ route('orderManagement.rejectOrder') }}', {
                     method: 'POST',
                     headers: {
@@ -1186,11 +1225,13 @@
                 })
                 .then(response => {
                     if (!response.ok) {
+                        enableAllOrderModalButtons();
                         return response.json().then(json => { throw new Error(json.message || 'Server error'); });
                     }
                     return response.json();
                 })
                 .catch(error => {
+                    enableAllOrderModalButtons();
                     Swal.showValidationMessage(`Request failed: ${error}`);
                 });
             },
@@ -1206,6 +1247,7 @@
                     location.reload();
                 });
             } else if (result.isConfirmed && !result.value.success) {
+                enableAllOrderModalButtons();
                 Swal.fire('Error', result.value.message || 'Rejection failed', 'error');
             }
         });
@@ -1223,6 +1265,7 @@
             confirmButtonText: 'Yes, Approve it!'
         }).then((result) => {
             if (result.isConfirmed) {
+                disableAllOrderModalButtons();
                 fetch('{{ route('orderManagement.approvePayment') }}', {
                     method: 'POST',
                     headers: {
@@ -1245,10 +1288,12 @@
                             location.reload();
                         });
                     } else {
+                        enableAllOrderModalButtons();
                         Swal.fire('Error', data.message || 'Something went wrong', 'error');
                     }
                 })
                 .catch(error => {
+                    enableAllOrderModalButtons();
                     console.error(error);
                     Swal.fire('Error', 'Server communication error', 'error');
                 });

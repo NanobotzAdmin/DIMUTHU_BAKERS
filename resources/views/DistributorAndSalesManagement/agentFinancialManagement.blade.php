@@ -548,10 +548,10 @@
             <div class="bg-white border-t border-slate-100 px-8 py-5">
                 <div id="cnActionSection" class="flex flex-col md:flex-row gap-4">
                      @if(Auth::user()->hasPermission('can_approve_credit_note'))
-                    <button onclick="approveNote()" class="flex-1 h-12 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">
+                    <button id="btn-cn-approve" onclick="approveNote()" class="flex-1 h-12 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">
                         Approve Credit Note
                     </button>
-                    <button onclick="showCnRejectInput()" class="flex-1 h-12 bg-white text-rose-600 border-2 border-rose-200 rounded-xl font-bold hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-95">
+                    <button id="btn-cn-reject-trigger" onclick="showCnRejectInput()" class="flex-1 h-12 bg-white text-rose-600 border-2 border-rose-200 rounded-xl font-bold hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-95">
                         Reject Request
                     </button>
                     @endif
@@ -561,8 +561,8 @@
                     <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Reason for Rejection</label>
                     <textarea id="cnRejectReasonInput" rows="3" class="w-full p-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 mb-4 transition-all text-sm font-medium" placeholder="Enter why this request is being rejected..."></textarea>
                     <div class="flex gap-3">
-                        <button onclick="rejectNote()" class="flex-1 h-12 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 active:scale-95">Confirm Reject</button>
-                        <button onclick="hideCnRejectInput()" class="px-8 h-12 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all active:scale-95">Cancel</button>
+                        <button id="btn-cn-reject-confirm" onclick="rejectNote()" class="flex-1 h-12 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 active:scale-95">Confirm Reject</button>
+                        <button id="btn-cn-reject-cancel" onclick="hideCnRejectInput()" class="px-8 h-12 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all active:scale-95">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -578,6 +578,19 @@
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <script>
+    // Helper functions to disable/enable buttons and update visuals during requests
+    function disableButton(btn) {
+        if (!btn) return;
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    function enableButton(btn) {
+        if (!btn) return;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
     // ==========================================
     // AGENT PAYMENTS LOGIC
     // ==========================================
@@ -833,6 +846,11 @@
             }
         }).then((result) => {
             if (result.isConfirmed) {
+                const btnApprove = document.getElementById('btn-approve-all');
+                const btnReject = document.getElementById('btn-reject-payment');
+                disableButton(btnApprove);
+                disableButton(btnReject);
+
                 fetch('/api/agent-payments/approve-bulk', {
                     method: 'POST',
                     headers: {
@@ -851,8 +869,15 @@
                             confirmButtonColor: '#4f46e5'
                         }).then(() => window.location.reload());
                     } else {
+                        enableButton(btnApprove);
+                        enableButton(btnReject);
                         Swal.fire('Error', data.message, 'error');
                     }
+                })
+                .catch(err => {
+                    enableButton(btnApprove);
+                    enableButton(btnReject);
+                    Swal.fire('Error', 'An internal error occurred.', 'error');
                 });
             }
         });
@@ -876,6 +901,11 @@
             },
             showLoaderOnConfirm: true,
             preConfirm: (reason) => {
+                const btnApprove = document.getElementById('btn-approve-all');
+                const btnReject = document.getElementById('btn-reject-payment');
+                disableButton(btnApprove);
+                disableButton(btnReject);
+
                 return fetch('/api/agent-payments/reject', {
                     method: 'POST',
                     headers: {
@@ -889,11 +919,15 @@
                 })
                 .then(response => {
                     if (!response.ok) {
+                        enableButton(btnApprove);
+                        enableButton(btnReject);
                         return response.json().then(err => { throw new Error(err.message || 'Request failed'); });
                     }
                     return response.json();
                 })
                 .catch(error => {
+                    enableButton(btnApprove);
+                    enableButton(btnReject);
                     Swal.showValidationMessage(`Request failed: ${error.message || error}`);
                 });
             },
@@ -1061,6 +1095,16 @@
         const url = action === 'approve' ? `/credit-note/approve/${selectedCnId}` : `/credit-note/reject/${selectedCnId}`;
         const data = reason ? { reason: reason } : {};
 
+        const btnApprove = document.getElementById('btn-cn-approve');
+        const btnRejectTrigger = document.getElementById('btn-cn-reject-trigger');
+        const btnRejectConfirm = document.getElementById('btn-cn-reject-confirm');
+        const btnRejectCancel = document.getElementById('btn-cn-reject-cancel');
+
+        disableButton(btnApprove);
+        disableButton(btnRejectTrigger);
+        disableButton(btnRejectConfirm);
+        disableButton(btnRejectCancel);
+
         fetch(url, {
             method: 'POST',
             headers: {
@@ -1079,8 +1123,19 @@
                     confirmButtonColor: '#059669'
                 }).then(() => window.location.reload());
             } else {
+                enableButton(btnApprove);
+                enableButton(btnRejectTrigger);
+                enableButton(btnRejectConfirm);
+                enableButton(btnRejectCancel);
                 Swal.fire('Error', data.message, 'error');
             }
+        })
+        .catch(err => {
+            enableButton(btnApprove);
+            enableButton(btnRejectTrigger);
+            enableButton(btnRejectConfirm);
+            enableButton(btnRejectCancel);
+            Swal.fire('Error', 'An internal error occurred.', 'error');
         });
     }
 </script>

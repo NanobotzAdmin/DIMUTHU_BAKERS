@@ -97,7 +97,7 @@ class NotificationService
     }
 
     /**
-     * Send a push notification to an Expo Push Token.
+     * Send a push notification to a Firebase FCM Device Token.
      *
      * @param string $token
      * @param string $title
@@ -107,32 +107,138 @@ class NotificationService
      */
     public function sendToToken($token, $title, $body, $data = [])
     {
-        // Expo Push API endpoint
-        $url = 'https://exp.host/--/api/v2/push/send';
-        $payload = [[
-            'to' => $token,
-            'title' => $title,
-            'body' => $body,
-            'data' => (object) $data,
-            'sound' => 'default',
-            'priority' => 'high',
-            'channelId' => 'default'
-        ]];
+        $accessToken = $this->getFcmAccessToken();
+        if (!$accessToken) {
+            Log::error("Unable to send push notification: FCM access token could not be generated.");
+            return false;
+        }
+
+        $relPath = env('FIREBASE_CREDENTIALS_PATH', 'storage/app/firebase-credentials.json');
+        $credentialsPath = base_path($relPath);
+        if (!file_exists($credentialsPath)) {
+            Log::error("Firebase credentials file missing, cannot fetch project ID.");
+            return false;
+        }
+        $json = json_decode(file_get_contents($credentialsPath), true);
+        $projectId = $json['project_id'] ?? null;
+
+        if (!$projectId) {
+            Log::error("FCM Project ID is missing from credentials file.");
+            return false;
+        }
+
+        $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
+
+        $formattedData = [];
+        foreach ($data as $key => $value) {
+            $formattedData[$key] = is_array($value) ? json_encode($value) : (string) $value;
+        }
+
+        $payload = [
+            'message' => [
+                'token' => $token,
+                'notification' => [
+                    'title' => $title,
+                    'body' => $body,
+                ],
+                'data' => (object) $formattedData,
+                'android' => [
+                    'priority' => 'high',
+                    'notification' => [
+                        'sound' => 'default',
+                    ],
+                ],
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'sound' => 'default',
+                        ],
+                    ],
+                ],
+            ],
+        ];
 
         try {
-            Log::info("Sending Expo push notification", ["payload" => $payload]);
-            $response = Http::withoutVerifying()->asJson()->post('https://exp.host/--/api/v2/push/send', $payload);
+            Log::info("Sending FCM push notification", ["payload" => $payload]);
+            $response = Http::withoutVerifying()
+                ->withToken($accessToken)
+                ->asJson()
+                ->post($url, $payload);
 
             if ($response->successful()) {
-                Log::info("Push notification sent successfully to token: {$token}");
+                Log::info("Push notification sent successfully via FCM to token: {$token}");
                 return true;
             } else {
-                Log::error("Failed to send push notification. Payload: " . json_encode($payload) . " Response: " . $response->body());
+                Log::error("Failed to send FCM push notification. Response: " . $response->body());
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error("Error sending push notification: " . $e->getMessage());
+            Log::error("Error sending FCM push notification: " . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Generate OAuth2 Access Token for Firebase Cloud Messaging using Service Account credentials.
+     *
+     * @return string|null
+     */
+    private function getFcmAccessToken()
+    {
+        try {
+            $relPath = env('FIREBASE_CREDENTIALS_PATH', 'storage/app/firebase-credentials.json');
+            $credentialsPath = base_path($relPath);
+
+            if (!file_exists($credentialsPath)) {
+                Log::error("Firebase credentials file not found at: {$credentialsPath}");
+                return null;
+            }
+
+            $json = json_decode(file_get_contents($credentialsPath), true);
+            if (!$json || !isset($json['private_key']) || !isset($json['client_email']) || !isset($json['project_id'])) {
+                Log::error("Invalid Firebase credentials JSON format.");
+                return null;
+            }
+
+            $privateKey = $json['private_key'];
+            $clientEmail = $json['client_email'];
+
+            $header = json_encode(['alg' => 'RS256', 'typ' => 'JWT']);
+            $now = time();
+            $payload = json_encode([
+                'iss' => $clientEmail,
+                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+                'aud' => 'https://oauth2.googleapis.com/token',
+                'exp' => $now + 3600,
+                'iat' => $now
+            ]);
+
+            $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
+            $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+
+            $signature = '';
+            if (!openssl_sign($base64UrlHeader . "." . $base64UrlPayload, $signature, $privateKey, 'SHA256')) {
+                Log::error("Failed to sign JWT with private key using OpenSSL.");
+                return null;
+            }
+            $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+
+            $jwt = $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
+
+            $response = Http::withoutVerifying()->asForm()->post('https://oauth2.googleapis.com/token', [
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $jwt
+            ]);
+
+            if ($response->successful()) {
+                return $response->json()['access_token'];
+            }
+
+            Log::error('Failed to obtain Google OAuth token: ' . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Exception while obtaining Firebase access token: ' . $e->getMessage());
+            return null;
         }
     }
 }
