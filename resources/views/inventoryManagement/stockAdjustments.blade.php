@@ -477,12 +477,12 @@
                                     </div>
                                     <div class="text-sm text-gray-600 mt-1">
                                         Created by {{ $adj->createdBy }} on
-                                        {{ \Carbon\Carbon::parse($adj->createdAt)->format('d/m/Y, H:i:s') }}
+                                        {{ \Carbon\Carbon::parse($adj->createdAt)->tz('Asia/Colombo')->format('d/m/Y, H:i:s') }}
                                     </div>
                                     @if(isset($adj->approvedBy))
                                         <div class="text-sm text-green-600 mt-1 flex items-center gap-1">
                                             <i class="bi bi-check2"></i> Approved by {{ $adj->approvedBy }} on
-                                            {{ \Carbon\Carbon::parse($adj->approvedAt)->format('d/m/Y, H:i:s') }}
+                                            {{ \Carbon\Carbon::parse($adj->approvedAt)->tz('Asia/Colombo')->format('d/m/Y, H:i:s') }}
                                         </div>
                                     @endif
                                     @if(isset($adj->rejectedBy))
@@ -1243,7 +1243,7 @@
 
             // Populate basic info
             document.getElementById('view-adj-number').textContent = adj.adjustmentNumber;
-            document.getElementById('view-adj-date').textContent = new Date(adj.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            document.getElementById('view-adj-date').textContent = new Date(adj.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Colombo' });
             document.getElementById('view-adj-location').textContent = adj.location;
 
             // Category Badge
@@ -1335,7 +1335,7 @@
             // Populate Header
             document.getElementById('exec-cc-number').textContent = cc.countNumber;
             document.getElementById('exec-cc-location').textContent = cc.location;
-            document.getElementById('exec-cc-date').textContent = new Date(cc.scheduledDate).toLocaleDateString('en-GB');
+            document.getElementById('exec-cc-date').textContent = new Date(cc.scheduledDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' });
             document.getElementById('exec-cc-assigned').textContent = cc.assignedTo;
             document.getElementById('exec-cc-progress').textContent = `${cc.itemsCounted} / ${cc.itemsToCount}`;
 
@@ -1425,7 +1425,7 @@
             // Populate Header
             document.getElementById('exec-st-number').textContent = st.takeNumber;
             document.getElementById('exec-st-location').textContent = st.location;
-            document.getElementById('exec-st-date').textContent = new Date(st.plannedDate).toLocaleDateString('en-GB');
+            document.getElementById('exec-st-date').textContent = new Date(st.plannedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' });
             document.getElementById('exec-st-team').textContent = st.assignedUsers.length + ' assigned';
             document.getElementById('exec-st-progress').textContent = `${st.countedItems} / ${st.totalItems}`;
 

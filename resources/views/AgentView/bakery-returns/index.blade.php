@@ -397,7 +397,7 @@
                         <div class="flex justify-between items-start mb-3">
                             <div>
                                 <h4 class="text-sm font-extrabold text-slate-800 font-mono">${note.credit_note_number}</h4>
-                                <span class="text-[10px] text-slate-400 font-medium">${new Date(note.credit_note_date).toLocaleDateString()}</span>
+                                <span class="text-[10px] text-slate-400 font-medium">${new Date(note.credit_note_date).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' })}</span>
                             </div>
                             ${statusBadge}
                         </div>
@@ -426,7 +426,7 @@
         if (!note) return;
 
         $('#detailNoteNumber').text(note.credit_note_number);
-        $('#detailNoteDate').text('Date: ' + new Date(note.credit_note_date).toLocaleDateString());
+        $('#detailNoteDate').text('Date: ' + new Date(note.credit_note_date).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }));
 
         // Status Badge
         const sb = $('#detailStatusBadge');
@@ -484,7 +484,7 @@
                         <span class="absolute left-[-21px] top-1 w-2.5 h-2.5 rounded-full bg-slate-400 border-2 border-white shadow-sm"></span>
                         <div class="flex items-center gap-1.5 mb-0.5">
                             <span class="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[10px]">${h.action}</span>
-                            <span class="text-[10px] text-slate-400 font-medium">${new Date(h.created_at).toLocaleString()}</span>
+                            <span class="text-[10px] text-slate-400 font-medium">${new Date(h.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' })}</span>
                         </div>
                         <p class="text-slate-500 text-[10px]">Performed by: <strong>${user}</strong></p>
                     </div>

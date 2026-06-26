@@ -178,7 +178,7 @@
                                 <div class="text-xs text-gray-500">{{ $note->agent->agent_code ?? '-' }}</div>
                             </td>
                             <td class="px-6 py-4 text-gray-600">
-                                {{ \Carbon\Carbon::parse($note->credit_note_date)->format('Y-m-d') }}
+                                {{ \Carbon\Carbon::parse($note->credit_note_date)->tz('Asia/Colombo')->format('Y-m-d') }}
                             </td>
                             <td class="px-6 py-4 font-bold text-gray-900">
                                 Rs {{ number_format($note->total_amount, 2) }}
@@ -390,7 +390,7 @@
                         if (typeof moment !== 'undefined') {
                             dateStr = moment(hist.created_at).format('YYYY-MM-DD HH:mm:ss');
                         } else {
-                            dateStr = new Date(hist.created_at).toLocaleString();
+                            dateStr = new Date(hist.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' });
                         }
                     } catch (e) {}
                     

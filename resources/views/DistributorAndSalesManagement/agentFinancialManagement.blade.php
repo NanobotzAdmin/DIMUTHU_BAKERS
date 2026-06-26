@@ -197,7 +197,7 @@
                     @forelse($payments as $payment)
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                                {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y h:i A') : $payment->created_at->format('M d, Y') }}
+                                {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->tz('Asia/Colombo')->format('M d, Y h:i A') : $payment->created_at->tz('Asia/Colombo')->format('M d, Y') }}
                             </td>
                             <td class="px-6 py-4 text-sm font-bold text-slate-800 whitespace-nowrap">
                                 {{ $payment->agent->agent_name ?? 'N/A' }}
@@ -297,7 +297,7 @@
                                 <div class="font-bold text-slate-800">{{ $note->agent->agent_name ?? 'Unknown' }}</div>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                                {{ \Carbon\Carbon::parse($note->credit_note_date)->format('M d, Y') }}
+                                {{ \Carbon\Carbon::parse($note->credit_note_date)->tz('Asia/Colombo')->format('M d, Y') }}
                             </td>
                             <td class="px-6 py-4 text-sm font-black text-indigo-700 whitespace-nowrap">
                                 Rs. {{ number_format($note->total_amount, 2) }}

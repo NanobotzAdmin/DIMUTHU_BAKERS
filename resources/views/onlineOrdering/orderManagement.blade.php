@@ -136,7 +136,7 @@
                                         <span class="text-gray-500 block">Pickup:</span>
                                         <div class="font-medium text-gray-900">{{ $order->pickup->outletName }}</div>
                                         <div class="text-gray-600">
-                                            {{ \Carbon\Carbon::parse($order->pickup->scheduledDate)->format('d/m/Y') }} 
+                                            {{ \Carbon\Carbon::parse($order->pickup->scheduledDate)->tz('Asia/Colombo')->format('d/m/Y') }} 
                                             {{ $order->pickup->scheduledTime }}
                                         </div>
                                     </div>
@@ -148,7 +148,7 @@
                                 </div>
                                 
                                 <div class="text-xs text-gray-500 mt-3">
-                                    Ordered {{ \Carbon\Carbon::parse($order->createdAt)->format('d/m/Y h:i A') }}
+                                    Ordered {{ \Carbon\Carbon::parse($order->createdAt)->tz('Asia/Colombo')->format('d/m/Y h:i A') }}
                                 </div>
                             </div>
 
@@ -397,7 +397,7 @@
                     <h3 class="font-semibold text-sm text-gray-900 mb-2">Pickup Information</h3>
                     <div class="bg-gray-50 p-4 rounded-lg text-sm border border-gray-100">
                         <div class="mb-1"><span class="text-gray-500 w-16 inline-block">Outlet:</span> <span class="font-medium">${order.pickup.outletName}</span></div>
-                        <div class="mb-1"><span class="text-gray-500 w-16 inline-block">Date:</span> <span class="font-medium">${new Date(order.pickup.scheduledDate).toLocaleDateString()}</span></div>
+                        <div class="mb-1"><span class="text-gray-500 w-16 inline-block">Date:</span> <span class="font-medium">${new Date(order.pickup.scheduledDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' })}</span></div>
                         <div><span class="text-gray-500 w-16 inline-block">Time:</span> <span class="font-medium">${order.pickup.scheduledTime}</span></div>
                     </div>
                 </div>

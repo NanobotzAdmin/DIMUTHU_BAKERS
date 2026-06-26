@@ -1628,8 +1628,8 @@ class ApiManagementController extends Controller
                         'id' => $invoice->id,
                         'customer_name' => $invoice->business->business_name ?: ($invoice->business->customer->name ?? 'N/A'),
                         'amount' => (float) $invoice->net_price,
-                        'time' => $invoice->created_at->format('h:i A'),
-                        'date' => $invoice->created_at->format('Y-m-d'),
+                        'time' => $invoice->created_at->tz('Asia/Colombo')->format('h:i A'),
+                        'date' => $invoice->created_at->tz('Asia/Colombo')->format('Y-m-d'),
                         'status' => 'Order placed',
                     ];
                 });
@@ -3416,7 +3416,7 @@ class ApiManagementController extends Controller
                 </div>
                 <div class="meta-col" style="padding-left: 20px;">
                     <div class="meta-label">Submission Date</div>
-                    <div class="meta-val">'.now()->format('F d, Y - h:i A').'</div>
+                    <div class="meta-val">'.now()->tz('Asia/Colombo')->format('F d, Y - h:i A').'</div>
                 </div>
             </div>
 

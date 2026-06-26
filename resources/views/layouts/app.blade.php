@@ -374,9 +374,9 @@
                 if (/^\d+$/.test(str)) {
                     date = new Date(parseInt(str));
                 } else {
-                    // Force UTC parsing by appending Z if no timezone offset exists
+                    // Since backend now sends formatted dates in Asia/Colombo time, assume +05:30 if no timezone is provided
                     if (!str.includes('T') && !str.includes('Z') && !/[-+]\d{2}:?\d{2}$/.test(str)) {
-                        str = str.replace(' ', 'T') + 'Z';
+                        str = str.replace(' ', 'T') + '+05:30';
                     }
                     date = new Date(str);
                 }

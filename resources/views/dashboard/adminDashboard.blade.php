@@ -370,7 +370,7 @@
                                     </span>
                                 </td>
                                 <td class="text-right">
-                                    <span class="text-slate-400 text-[11px]">{{ $order->created_at->diffForHumans() }}</span>
+                                    <span class="text-slate-400 text-[11px]">{{ $order->created_at->tz('Asia/Colombo')->diffForHumans() }}</span>
                                 </td>
                             </tr>
                         @empty

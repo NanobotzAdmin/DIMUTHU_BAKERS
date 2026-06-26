@@ -341,7 +341,7 @@
                                                 <line x1="8" x2="8" y1="2" y2="6" />
                                                 <line x1="3" x2="21" y1="10" y2="10" />
                                             </svg>
-                                            <span>Created: {{ \Carbon\Carbon::parse($order->created_at)->format('Y-m-d') }}</span>
+                                            <span>Created: {{ \Carbon\Carbon::parse($order->created_at)->tz('Asia/Colombo')->format('Y-m-d') }}</span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
@@ -633,7 +633,7 @@
             const itemsCount = order.items.length;
             const grandTotal = formatNumber(order.grand_total);
             const paymentTerms = String(order.payment_terms || '').replace('credit-', '');
-            const createdDate = new Date(order.created_at).toISOString().split('T')[0];
+            const createdDate = new Date(order.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
             const deliveryDate = order.expected_delivery_date;
 
             let itemsHtml = '';
@@ -911,7 +911,7 @@
             // Header Stats
             document.getElementById('detailModalGrandTotalMain').textContent = 'Rs ' + formatNumber(order.grand_total);
             document.getElementById('detailModalItemsCount').textContent = order.items.length;
-            document.getElementById('detailModalCreated').textContent = new Date(order.created_at).toISOString().split('T')[0];
+            document.getElementById('detailModalCreated').textContent = new Date(order.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
             document.getElementById('detailModalExpected').textContent = order.expected_delivery_date;
             document.getElementById('detailModalPayment').textContent = (order.payment_terms || '').replace('credit-', '') + ' days';
 
@@ -1026,7 +1026,7 @@
 
                     // Fallbacks if properties are missing
                     const action = entry.action || 'Updated';
-                    const dateStr = entry.created_at ? new Date(entry.created_at).toLocaleString() : 'N/A';
+                    const dateStr = entry.created_at ? new Date(entry.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) : 'N/A';
                     const details = entry.details || '';
                     const user = entry.user_name || 'System';
                     const role = entry.role || 'User';

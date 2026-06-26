@@ -197,7 +197,7 @@
                                 <h3 class="text-lg text-gray-900 font-semibold">${order.orderNumber}</h3>
                                 <span class="px-2 py-1 text-xs rounded-lg border font-medium ${getStatusColorClass(order.status)}">${order.status.toUpperCase()}</span>
                             </div>
-                            <p class="text-sm text-gray-600 mt-1">${new Date(order.createdAt).toLocaleTimeString()} • ${order.pickup.scheduledTime}</p>
+                            <p class="text-sm text-gray-600 mt-1">${new Date(order.createdAt).toLocaleTimeString('en-GB', { timeZone: 'Asia/Colombo' })} • ${order.pickup.scheduledTime}</p>
                         </div>
                         <div class="text-right">
                             <div class="text-2xl text-gray-900 font-bold">Rs ${order.summary.total.toFixed(2)}</div>

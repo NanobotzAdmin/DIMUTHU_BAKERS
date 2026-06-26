@@ -33,7 +33,7 @@
         </span>
         @if($delivery->scheduledDate)
             <span class="text-xs text-gray-500">
-                {{ \Carbon\Carbon::parse($delivery->scheduledDate)->format('M d') }}
+                {{ \Carbon\Carbon::parse($delivery->scheduledDate)->tz('Asia/Colombo')->format('M d') }}
             </span>
         @endif
     </div>

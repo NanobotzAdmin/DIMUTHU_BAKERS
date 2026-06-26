@@ -190,7 +190,7 @@
                                 <p class="text-sm font-medium text-gray-900">{{ $activity['description'] }}</p>
                                 <p class="text-xs text-gray-500 mt-1">
                                     by {{ $activity['user'] }} •
-                                    {{ \Carbon\Carbon::parse($activity['timestamp'])->format('d/m/Y h:i A') }}
+                                    {{ \Carbon\Carbon::parse($activity['timestamp'])->tz('Asia/Colombo')->format('d/m/Y h:i A') }}
                                 </p>
                             </div>
                             @if(isset($activity['value']))

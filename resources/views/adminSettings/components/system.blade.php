@@ -90,7 +90,7 @@
                     @if(!empty($settings->backup->last_backup))
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Last Backup</label>
-                            <input type="text" value="{{ \Carbon\Carbon::parse($settings->backup->last_backup)->format('Y-m-d H:i:s') }}" disabled 
+                            <input type="text" value="{{ \Carbon\Carbon::parse($settings->backup->last_backup)->tz('Asia/Colombo')->format('Y-m-d H:i:s') }}" disabled 
                                 class="w-full rounded-md border-gray-200 bg-gray-50 text-gray-500 shadow-sm sm:text-sm cursor-not-allowed">
                         </div>
                     @endif

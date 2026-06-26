@@ -312,10 +312,10 @@
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                                                     {{ $batch['batchNumber'] }}</td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {{ \Carbon\Carbon::parse($batch['receivedDate'])->format('d/m/Y') }}</td>
+                                                    {{ \Carbon\Carbon::parse($batch['receivedDate'])->tz('Asia/Colombo')->format('d/m/Y') }}</td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     @if($batch['expiryDate'])
-                                                        {{ \Carbon\Carbon::parse($batch['expiryDate'])->format('d/m/Y') }}
+                                                        {{ \Carbon\Carbon::parse($batch['expiryDate'])->tz('Asia/Colombo')->format('d/m/Y') }}
                                                     @elseif($batch['expirePeriod'])
                                                         {{ $batch['expirePeriod'] }} days
                                                     @else

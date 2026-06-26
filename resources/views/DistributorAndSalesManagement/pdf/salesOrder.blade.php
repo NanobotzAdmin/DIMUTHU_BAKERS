@@ -278,7 +278,7 @@
                 <div class="section-title" style="color: #ef4444; border: none; margin-bottom: 4px;">Rejection Information</div>
                 <div style="font-weight: bold; color: #b91c1c;">Reason: {{ $order->rejection_reason }}</div>
                 @if($order->rejectedByUser)
-                    <div style="font-size: 11px; color: #7f1d1d; margin-top: 2px;">Rejected by {{ $order->rejectedByUser->name }} on {{ \Carbon\Carbon::parse($order->rejected_at)->format('Y-m-d H:i') }}</div>
+                    <div style="font-size: 11px; color: #7f1d1d; margin-top: 2px;">Rejected by {{ $order->rejectedByUser->name }} on {{ \Carbon\Carbon::parse($order->rejected_at)->tz('Asia/Colombo')->format('Y-m-d H:i') }}</div>
                 @endif
             </div>
         @endif

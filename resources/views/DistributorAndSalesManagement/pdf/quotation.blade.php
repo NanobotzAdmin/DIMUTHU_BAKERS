@@ -198,7 +198,7 @@
                         <tr>
                             <td class="info-label text-right">Valid Until:</td>
                             <td class="info-value">
-                                {{ \Carbon\Carbon::parse($quotation->valid_until)->format('M d, Y') }}
+                                {{ \Carbon\Carbon::parse($quotation->valid_until)->tz('Asia/Colombo')->format('M d, Y') }}
                             </td>
                         </tr>
                     </table>

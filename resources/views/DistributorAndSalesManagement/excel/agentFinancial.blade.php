@@ -73,7 +73,7 @@
         </tr>
         @forelse($payments as $payment)
         <tr>
-            <td style="border: 1px solid #e2e8f0;">{{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('Y-m-d H:i') : $payment->created_at->format('Y-m-d') }}</td>
+            <td style="border: 1px solid #e2e8f0;">{{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->tz('Asia/Colombo')->format('Y-m-d H:i') : $payment->created_at->tz('Asia/Colombo')->format('Y-m-d') }}</td>
             <td style="border: 1px solid #e2e8f0;">{{ $payment->agent->agent_name ?? 'N/A' }}</td>
             <td style="border: 1px solid #e2e8f0;">
                 @php
@@ -127,7 +127,7 @@
         <tr>
             <td style="border: 1px solid #e2e8f0;">{{ $note->credit_note_number }}</td>
             <td style="border: 1px solid #e2e8f0;">{{ $note->agent->agent_name ?? 'Unknown' }}</td>
-            <td style="border: 1px solid #e2e8f0;">{{ \Carbon\Carbon::parse($note->credit_note_date)->format('Y-m-d') }}</td>
+            <td style="border: 1px solid #e2e8f0;">{{ \Carbon\Carbon::parse($note->credit_note_date)->tz('Asia/Colombo')->format('Y-m-d') }}</td>
             <td style="border: 1px solid #e2e8f0;">{{ $note->note_type == 1 ? 'Physical Return' : 'Customer Return' }}</td>
             <td style="border: 1px solid #e2e8f0;">{{ $note->total_amount }}</td>
             <td style="border: 1px solid #e2e8f0;">

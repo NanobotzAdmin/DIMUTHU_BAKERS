@@ -477,7 +477,7 @@
             if (completedInfo) {
                 if(currentTask.completedAt) {
                     completedInfo.classList.remove('hidden');
-                    setText('taskCompletedAt', new Date(currentTask.completedAt).toLocaleString());
+                    setText('taskCompletedAt', new Date(currentTask.completedAt).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }));
                     
                     const byWrapper = document.getElementById('taskCompletedByWrapper');
                     if (byWrapper) {

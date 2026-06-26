@@ -144,7 +144,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                         <span class="flex items-center gap-1.5">
                                             <i class="bi bi-calendar-event text-slate-400"></i>
-                                            {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('Y-m-d h:i A') : 'N/A' }}
+                                            {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->tz('Asia/Colombo')->format('Y-m-d h:i A') : 'N/A' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 font-mono">
@@ -413,8 +413,13 @@
         // Helper: format datetime
         window.formatDateTimeGMT = function (dateStr) {
             if (!dateStr) return '-';
-            const d = new Date(dateStr);
-            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            let str = String(dateStr).trim();
+            if (!str.includes('T') && !str.includes('Z') && !/[-+]\d{2}:?\d{2}$/.test(str)) {
+                str = str.replace(' ', 'T') + '+05:30';
+            }
+            const d = new Date(str);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('en-US', { timeZone: 'Asia/Colombo' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Colombo' });
         };
 
         // --- 1. DETAILS MODAL ---
@@ -653,7 +658,7 @@
                                     <input type="checkbox" name="credit_notes" value="${cn.id}" onchange="onCreditNoteToggle()" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
                                     <div>
                                         <span class="text-xs font-bold text-slate-900">${cn.credit_note_number}</span>
-                                        <span class="text-[10px] text-slate-400 block">Date: ${new Date(cn.credit_note_date).toLocaleDateString()}</span>
+                                        <span class="text-[10px] text-slate-400 block">Date: ${new Date(cn.credit_note_date).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' })}</span>
                                     </div>
                                 </div>
                                 <span class="text-xs font-bold text-indigo-600">Rs. ${parseFloat(cn.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>

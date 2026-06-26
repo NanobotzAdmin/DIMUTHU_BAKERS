@@ -168,7 +168,7 @@
         <tbody>
             @foreach($payments as $payment)
             <tr>
-                <td>{{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y h:i A') : $payment->created_at->format('M d, Y') }}</td>
+                <td>{{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->tz('Asia/Colombo')->format('M d, Y h:i A') : $payment->created_at->tz('Asia/Colombo')->format('M d, Y') }}</td>
                 <td class="font-bold">{{ $payment->agent->agent_name ?? 'N/A' }}</td>
                 <td>
                     @php
@@ -229,7 +229,7 @@
             <tr>
                 <td class="font-bold">{{ $note->credit_note_number }}</td>
                 <td>{{ $note->agent->agent_name ?? 'Unknown' }}</td>
-                <td>{{ \Carbon\Carbon::parse($note->credit_note_date)->format('M d, Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($note->credit_note_date)->tz('Asia/Colombo')->format('M d, Y') }}</td>
                 <td>{{ $note->note_type == 1 ? 'Physical Return' : 'Customer Return' }}</td>
                 <td class="text-right font-bold" style="color: #4338ca;">Rs. {{ number_format($note->total_amount, 2) }}</td>
                 <td class="text-right">
