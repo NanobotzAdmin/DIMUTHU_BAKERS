@@ -10,24 +10,30 @@
     /* Select2 Custom Styles to match Tailwind/Golden Theme */
     .select2-container--default .select2-selection--single {
         height: 38px !important;
-        border: 1px solid #D1D5DB !important; /* border-gray-300 */
-        border-radius: 0.375rem !important; /* rounded-md */
+        border: 1px solid #D1D5DB !important;
+        /* border-gray-300 */
+        border-radius: 0.375rem !important;
+        /* rounded-md */
         padding-top: 4px !important;
         padding-bottom: 4px !important;
         background-color: #FFFFFF !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* shadow-sm */
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        /* shadow-sm */
         display: flex;
         align-items: center;
     }
 
     .select2-container--default .select2-selection--single .select2-selection__rendered {
-        color: #1F2937 !important; /* text-gray-900 */
-        font-size: 0.875rem !important; /* sm:text-sm */
+        color: #1F2937 !important;
+        /* text-gray-900 */
+        font-size: 0.875rem !important;
+        /* sm:text-sm */
         padding-left: 8px !important;
     }
 
     .select2-container--default .select2-selection--single .select2-selection__placeholder {
-        color: #9CA3AF !important; /* text-gray-400 placeholder */
+        color: #9CA3AF !important;
+        /* text-gray-400 placeholder */
     }
 
     .select2-container--default .select2-selection--single .select2-selection__arrow {

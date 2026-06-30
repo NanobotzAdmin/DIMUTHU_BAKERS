@@ -20,7 +20,7 @@
                     </div>
                     <div class="mt-2 flex items-center text-sm text-gray-500">
                         <i class="bi bi-calendar3 mr-1.5 h-5 w-5 text-gray-400"></i>
-                        Requested on {{ \Carbon\Carbon::parse($payment->created_at)->format('M d, Y h:i A') }}
+                        Requested on {{ \Carbon\Carbon::parse($payment->created_at)->tz('Asia/Colombo')->format('M d, Y h:i A') }}
                     </div>
                 </div>
             </div>

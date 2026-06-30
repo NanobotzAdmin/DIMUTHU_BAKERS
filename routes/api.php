@@ -71,10 +71,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/order-request', [ApiGRNController::class , 'index']);
     Route::get('/order-request/products', [ApiGRNController::class , 'getProducts']);
     Route::post('/order-request/create', [ApiGRNController::class , 'createOrderRequest']);
+    Route::post('/order-request/validate-date', [ApiGRNController::class, 'validateOrderDate']);
+    Route::get('/holidays', [ApiGRNController::class, 'getHolidays']);
     Route::post('/order-request/{id}/payment', [ApiGRNController::class , 'addPayment']);
     Route::post('/order-request/bulk-payment', [ApiGRNController::class , 'addBulkPayment']);
     Route::get('/order-request/{id}', [ApiGRNController::class , 'show']);
     Route::post('/order-request/{id}/confirm', [ApiGRNController::class , 'confirmOrder']);
+    Route::get('/agent/payments', [ApiGRNController::class, 'getAgentPayments']);
 
     // Order Management Workflow Routes - Agents only handle completion via mobile
     Route::post('/order-request/complete', [DistributorAndSalesManagementController::class , 'completeOrder']);
@@ -105,4 +108,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/available-for-bakery-return', [ApiManagementController::class, 'getAvailableForBakeryReturn']);
     Route::post('/create-bakery-return', [ApiManagementController::class, 'createBakeryReturn']);
     Route::get('/credit-notes', [ApiManagementController::class, 'getCreditNotes']);
+
+    // Notifications
+    Route::get('/notifications', [ApiUserController::class, 'getNotifications']);
+    Route::post('/notifications/mark-read', [ApiUserController::class, 'markNotificationsRead']);
+    Route::get('/notifications/unread-count', [ApiUserController::class, 'getUnreadCount']);
+
+    // Help & Support Guide Videos
+    Route::get('/guide-videos', [ApiUserController::class, 'getGuideVideos']);
 });

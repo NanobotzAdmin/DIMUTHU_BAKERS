@@ -18,6 +18,9 @@ class AdAgentPayment extends Model
         'payment_date',
         'status',
         'created_by',
+        'rejected_at',
+        'rejected_by',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -25,6 +28,7 @@ class AdAgentPayment extends Model
         'payment_date' => 'datetime',
         'status' => 'integer',
         'payment_method' => 'integer',
+        'rejected_at' => 'datetime',
     ];
 
     /**
@@ -52,6 +56,14 @@ class AdAgentPayment extends Model
     }
 
     /**
+     * Get the user who rejected the payment.
+     */
+    public function rejectedByUser()
+    {
+        return $this->belongsTo(UmUser::class, 'rejected_by');
+    }
+
+    /**
      * Get the credit notes associated with this payment.
      */
     public function creditNotes()
@@ -59,4 +71,11 @@ class AdAgentPayment extends Model
         return $this->hasMany(AdCreditNote::class, 'ad_agent_payment_id');
     }
     
+    /**
+     * Get the history records for this payment.
+     */
+    public function history()
+    {
+        return $this->hasMany(AdAgentPaymentHistory::class, 'ad_agent_payment_id');
+    }
 }

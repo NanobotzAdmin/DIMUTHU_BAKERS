@@ -31,11 +31,15 @@ class StmOrderRequest extends Model
         'payment_reference',
         'paid_amount',
         'status',
+        'is_downloaded',
         'payment_completed',
         'grand_total',
         'notes',
         'created_by',
         'updated_by',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -43,6 +47,7 @@ class StmOrderRequest extends Model
         'end_date' => 'date',
         'delivery_date' => 'datetime',
         'grand_total' => 'decimal:2',
+        'rejected_at' => 'datetime',
     ];
 
     public function customer()
@@ -96,5 +101,10 @@ class StmOrderRequest extends Model
     public function updater()
     {
         return $this->belongsTo(UmUser::class, 'updated_by');
+    }
+
+    public function rejectedByUser()
+    {
+        return $this->belongsTo(UmUser::class, 'rejected_by');
     }
 }

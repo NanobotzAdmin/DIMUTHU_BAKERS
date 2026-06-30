@@ -301,9 +301,12 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-100">
-                <div id="bulk-approve-container">
+                <div id="bulk-approve-container" class="flex gap-3">
                     <button id="btn-approve-all" type="button" class="inline-flex items-center px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="bi bi-check2-all mr-2"></i> Approve All Related Orders
+                    </button>
+                    <button id="btn-reject-payment" type="button" class="inline-flex items-center px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg">
+                        <i class="bi bi-x-circle mr-2"></i> Reject Payment
                     </button>
                 </div>
                 <button type="button" onclick="closeModal()" class="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
@@ -373,6 +376,7 @@
                     if (payment.status == 0) {
                         bulkContainer.classList.remove('hidden');
                         document.getElementById('btn-approve-all').onclick = () => approveBulkPayments(payment.id);
+                        document.getElementById('btn-reject-payment').onclick = () => rejectPayment(payment.id);
                     } else {
                         bulkContainer.classList.add('hidden');
                     }
@@ -432,12 +436,14 @@
                             alreadyPaidBeforeThis = Math.max(0, paidAmount - currentPayment);
                         }
 
+                        const isRejected = (payment.status == 2 || dist.status == 3);
+                        const isProcessed = dist.status != 1; // Not Pending
+
                         // Percentage Calculations
                         const percentage = (grandTotal > 0) ? (alreadyPaidBeforeThis / grandTotal) * 100 : 0;
-                        const newPercentage = (grandTotal > 0) ? ((alreadyPaidBeforeThis + currentPayment) / grandTotal) * 100 : 0;
+                        const newPercentage = isRejected ? percentage : ((grandTotal > 0) ? ((alreadyPaidBeforeThis + currentPayment) / grandTotal) * 100 : 0);
 
                         const rowId = `accordion-${index}`;
-                        const isProcessed = dist.status != 1; // Not Pending
 
                         const row = `
                             <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="toggleAccordion('${rowId}')">
@@ -471,7 +477,7 @@
                                         <h5 class="text-sm font-black text-indigo-700 mb-1">Order #${order.order_number}</h5>
                                         <p class="text-xs text-gray-600 mb-1">Order Total: Rs. ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                                         <p class="text-xs text-gray-600 mb-1">Already Paid: Rs. ${alreadyPaidBeforeThis.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                                        <p class="text-xs font-bold text-red-600 mb-4">Remaining Balance: Rs. ${Math.max(0, grandTotal - alreadyPaidBeforeThis - currentPayment).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                        <p class="text-xs font-bold text-red-600 mb-4">Remaining Balance: Rs. ${Math.max(0, grandTotal - alreadyPaidBeforeThis - (isRejected ? 0 : currentPayment)).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                                         
                                         <div class="relative w-full bg-gray-200 rounded-full h-2 shadow-inner">
                                             <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, percentage)}%"></div>
@@ -479,7 +485,7 @@
                                         </div>
                                         
                                         <div class="flex justify-between items-center mt-2">
-                                            <span class="text-[10px] text-indigo-600 font-black italic tracking-wide">${isProcessed ? '* This payment is processed' : '* Includes this pending payment'}</span>
+                                            <span class="text-[10px] ${isRejected ? 'text-red-600' : (isProcessed ? 'text-gray-500' : 'text-indigo-600')} font-black italic tracking-wide">${isRejected ? '* This payment was rejected' : (isProcessed ? '* This payment is processed' : '* Includes this pending payment')}</span>
                                             <span class="text-[10px] font-black text-gray-400 uppercase">${Math.round(newPercentage)}% Completed</span>
                                         </div>
 
@@ -563,6 +569,55 @@
                 Swal.fire({
                     title: 'Approved!',
                     text: 'All related orders have been processed.',
+                    icon: 'success'
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        });
+    }
+
+    function rejectPayment(paymentId) {
+        Swal.fire({
+            title: 'Reject Agent Payment?',
+            text: "Please enter the reason for rejecting this payment:",
+            input: 'text',
+            inputPlaceholder: 'Reason for rejection...',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Yes, Reject It',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to specify a reason!'
+                }
+            },
+            showLoaderOnConfirm: true,
+            preConfirm: (reason) => {
+                return $.ajax({
+                    url: '/api/agent-payments/reject',
+                    type: 'POST',
+                    data: {
+                        agent_payment_id: paymentId,
+                        rejection_reason: reason,
+                        _token: '{{ csrf_token() }}'
+                    }
+                }).then(response => {
+                    if (!response.success) {
+                        throw new Error(response.message);
+                    }
+                    return response;
+                }).catch(error => {
+                    Swal.showValidationMessage(`Request failed: ${error}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Rejected!',
+                    text: 'The payment has been rejected.',
                     icon: 'success'
                 }).then(() => {
                     window.location.reload();

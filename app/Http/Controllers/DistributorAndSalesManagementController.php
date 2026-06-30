@@ -3,35 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\CommonVariables;
+use App\Models\AdAgent;
 use App\Models\AdAgentBalanceHistory;
+use App\Models\AdAgentPayment;
+use App\Models\AdCreditNote;
 use App\Models\CmCustomer;
 use App\Models\PmProductItem;
 use App\Models\StmOrderRequest;
 use App\Models\StmOrderRequestHasPayment;
 use App\Models\StmOrderRequestHasProduct;
+use App\Models\StmOrderRequestHistory;
 use App\Models\StmQuotation;
 use App\Models\StmQuotationHasProduct;
 use App\Models\StmStock;
-use App\Models\AdAgent;
-use App\Models\AdAgentPayment;
+use App\Models\StmStockTransfer;
+use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\StmOrderRequestHistory;
-use App\Models\StmStockTransfer;
-// use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use App\Models\AdCreditNote;
 
 class DistributorAndSalesManagementController extends Controller
 {
-    // protected $notificationService;
+    protected $notificationService;
 
-    // public function __construct(NotificationService $notificationService)
-    // {
-    //     $this->notificationService = $notificationService;
-    // }
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
 
     // Sales Overview
     public function salesOverviewIndex()
@@ -66,7 +66,7 @@ class DistributorAndSalesManagementController extends Controller
                 case 'value':
                     $query->orderBy('grand_total', 'desc');
                     break;
-                // case 'customer': $query->orderBy('customer.name'); break; // Needs join for strict sort
+                    // case 'customer': $query->orderBy('customer.name'); break; // Needs join for strict sort
                 default:
                     $query->orderBy('created_at', 'desc');
             }
@@ -129,7 +129,7 @@ class DistributorAndSalesManagementController extends Controller
                 $parts = explode('-', $last->quotation_number);
                 $num = intval(end($parts)) + 1;
             }
-            $quotationNumber = "{$prefix}-{$date}-" . str_pad($num, 4, '0', STR_PAD_LEFT);
+            $quotationNumber = "{$prefix}-{$date}-".str_pad($num, 4, '0', STR_PAD_LEFT);
 
             $grandTotal = collect($request->products)->sum(function ($p) {
                 return $p['quantity'] * $p['unit_price'];
@@ -175,19 +175,19 @@ class DistributorAndSalesManagementController extends Controller
             // Handle Logo Upload
             if ($request->hasFile('logo')) {
                 $file = $request->file('logo');
-                $filename = 'company_logo.' . $file->getClientOriginalExtension();
+                $filename = 'company_logo.'.$file->getClientOriginalExtension();
                 // Store in public/settings
                 $file->storeAs('settings', $filename, 'public');
-                $data['logo_path'] = 'storage/settings/' . $filename;
+                $data['logo_path'] = 'storage/settings/'.$filename;
             }
 
             // Define path
             $storagePath = storage_path('app/Settings');
-            if (!file_exists($storagePath)) {
+            if (! file_exists($storagePath)) {
                 mkdir($storagePath, 0755, true);
             }
 
-            $filePath = $storagePath . '/quotation-settings.json';
+            $filePath = $storagePath.'/quotation-settings.json';
 
             $currentSettings = [];
             if (file_exists($filePath)) {
@@ -221,24 +221,24 @@ class DistributorAndSalesManagementController extends Controller
             $systemConfigPath = public_path('system_config.json');
             if (file_exists($systemConfigPath)) {
                 $systemSettings = json_decode(file_get_contents($systemConfigPath), true) ?? [];
-                
-                if (empty($settings['company_name']) && !empty($systemSettings['business_name'])) {
+
+                if (empty($settings['company_name']) && ! empty($systemSettings['business_name'])) {
                     $settings['company_name'] = $systemSettings['business_name'];
                 }
-                if (empty($settings['logo_path']) && !empty($systemSettings['logos']['primary'])) {
+                if (empty($settings['logo_path']) && ! empty($systemSettings['logos']['primary'])) {
                     $settings['logo_path'] = $systemSettings['logos']['primary'];
                 }
-                if (empty($settings['address']) && !empty($systemSettings['address'])) {
+                if (empty($settings['address']) && ! empty($systemSettings['address'])) {
                     $addr = $systemSettings['address'];
                     $settings['address'] = implode(', ', array_filter([$addr['street'] ?? '', $addr['city'] ?? '', $addr['province'] ?? '', $addr['postal_code'] ?? '']));
                 }
-                if (empty($settings['phone']) && !empty($systemSettings['contact']['phone'])) {
+                if (empty($settings['phone']) && ! empty($systemSettings['contact']['phone'])) {
                     $settings['phone'] = $systemSettings['contact']['phone'];
                 }
-                if (empty($settings['mobile']) && !empty($systemSettings['contact']['mobile'])) {
+                if (empty($settings['mobile']) && ! empty($systemSettings['contact']['mobile'])) {
                     $settings['mobile'] = $systemSettings['contact']['mobile'];
                 }
-                if (empty($settings['email']) && !empty($systemSettings['contact']['email'])) {
+                if (empty($settings['email']) && ! empty($systemSettings['contact']['email'])) {
                     $settings['email'] = $systemSettings['contact']['email'];
                 }
             }
@@ -272,24 +272,24 @@ class DistributorAndSalesManagementController extends Controller
             $systemConfigPath = public_path('system_config.json');
             if (file_exists($systemConfigPath)) {
                 $systemSettings = json_decode(file_get_contents($systemConfigPath), true) ?? [];
-                
-                if (empty($settings['company_name']) && !empty($systemSettings['business_name'])) {
+
+                if (empty($settings['company_name']) && ! empty($systemSettings['business_name'])) {
                     $settings['company_name'] = $systemSettings['business_name'];
                 }
-                if (empty($settings['logo_path']) && !empty($systemSettings['logos']['primary'])) {
+                if (empty($settings['logo_path']) && ! empty($systemSettings['logos']['primary'])) {
                     $settings['logo_path'] = $systemSettings['logos']['primary'];
                 }
-                if (empty($settings['address']) && !empty($systemSettings['address'])) {
+                if (empty($settings['address']) && ! empty($systemSettings['address'])) {
                     $addr = $systemSettings['address'];
                     $settings['address'] = implode(', ', array_filter([$addr['street'] ?? '', $addr['city'] ?? '', $addr['province'] ?? '', $addr['postal_code'] ?? '']));
                 }
-                if (empty($settings['phone']) && !empty($systemSettings['contact']['phone'])) {
+                if (empty($settings['phone']) && ! empty($systemSettings['contact']['phone'])) {
                     $settings['phone'] = $systemSettings['contact']['phone'];
                 }
-                if (empty($settings['mobile']) && !empty($systemSettings['contact']['mobile'])) {
+                if (empty($settings['mobile']) && ! empty($systemSettings['contact']['mobile'])) {
                     $settings['mobile'] = $systemSettings['contact']['mobile'];
                 }
-                if (empty($settings['email']) && !empty($systemSettings['contact']['email'])) {
+                if (empty($settings['email']) && ! empty($systemSettings['contact']['email'])) {
                     $settings['email'] = $systemSettings['contact']['email'];
                 }
             }
@@ -301,10 +301,10 @@ class DistributorAndSalesManagementController extends Controller
 
             $pdf = Pdf::loadView('DistributorAndSalesManagement.pdf.quotation', compact('quotation', 'settings'));
 
-            return $pdf->download('Quotation-' . $quotation->quotation_number . '.pdf');
+            return $pdf->download('Quotation-'.$quotation->quotation_number.'.pdf');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+            return back()->with('error', 'Error generating PDF: '.$e->getMessage());
         }
     }
 
@@ -312,6 +312,65 @@ class DistributorAndSalesManagementController extends Controller
      * Print Dispatch Note for an Order
      */
     public function printDispatchNote($id)
+    {
+        try {
+            $order = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'payments', 'stockTransfers'])->findOrFail($id);
+
+            // Mark as downloaded
+            $order->update(['is_downloaded' => true]);
+
+            // Load Settings
+            $filePath = storage_path('app/Settings/quotation-settings.json');
+            $settings = [];
+            if (file_exists($filePath)) {
+                $content = file_get_contents($filePath);
+                $settings = json_decode($content, true) ?? [];
+            }
+
+            // Fallback to system_config.json
+            $systemConfigPath = public_path('system_config.json');
+            if (file_exists($systemConfigPath)) {
+                $systemSettings = json_decode(file_get_contents($systemConfigPath), true) ?? [];
+
+                if (empty($settings['company_name']) && ! empty($systemSettings['business_name'])) {
+                    $settings['company_name'] = $systemSettings['business_name'];
+                }
+                if (empty($settings['logo_path']) && ! empty($systemSettings['logos']['primary'])) {
+                    $settings['logo_path'] = $systemSettings['logos']['primary'];
+                }
+                if (empty($settings['address']) && ! empty($systemSettings['address'])) {
+                    $addr = $systemSettings['address'];
+                    $settings['address'] = implode(', ', array_filter([$addr['street'] ?? '', $addr['city'] ?? '', $addr['province'] ?? '', $addr['postal_code'] ?? '']));
+                }
+                if (empty($settings['phone']) && ! empty($systemSettings['contact']['phone'])) {
+                    $settings['phone'] = $systemSettings['contact']['phone'];
+                }
+                if (empty($settings['mobile']) && ! empty($systemSettings['contact']['mobile'])) {
+                    $settings['mobile'] = $systemSettings['contact']['mobile'];
+                }
+                if (empty($settings['email']) && ! empty($systemSettings['contact']['email'])) {
+                    $settings['email'] = $systemSettings['contact']['email'];
+                }
+            }
+
+            if (isset($settings['logo_path'])) {
+                $settings['logo_absolute_path'] = public_path($settings['logo_path']);
+                $settings['logo_url'] = asset($settings['logo_path']);
+            }
+
+            $pdf = Pdf::loadView('DistributorAndSalesManagement.pdf.dispatchNote', compact('order', 'settings'));
+
+            return $pdf->download('DispatchNote-'.$order->order_number.'.pdf');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating Dispatch Note: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Print or Download Sales Order PDF
+     */
+    public function printSalesOrder($id, \Illuminate\Http\Request $request)
     {
         try {
             $order = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'payments', 'stockTransfers'])->findOrFail($id);
@@ -328,24 +387,24 @@ class DistributorAndSalesManagementController extends Controller
             $systemConfigPath = public_path('system_config.json');
             if (file_exists($systemConfigPath)) {
                 $systemSettings = json_decode(file_get_contents($systemConfigPath), true) ?? [];
-                
-                if (empty($settings['company_name']) && !empty($systemSettings['business_name'])) {
+
+                if (empty($settings['company_name']) && ! empty($systemSettings['business_name'])) {
                     $settings['company_name'] = $systemSettings['business_name'];
                 }
-                if (empty($settings['logo_path']) && !empty($systemSettings['logos']['primary'])) {
+                if (empty($settings['logo_path']) && ! empty($systemSettings['logos']['primary'])) {
                     $settings['logo_path'] = $systemSettings['logos']['primary'];
                 }
-                if (empty($settings['address']) && !empty($systemSettings['address'])) {
+                if (empty($settings['address']) && ! empty($systemSettings['address'])) {
                     $addr = $systemSettings['address'];
                     $settings['address'] = implode(', ', array_filter([$addr['street'] ?? '', $addr['city'] ?? '', $addr['province'] ?? '', $addr['postal_code'] ?? '']));
                 }
-                if (empty($settings['phone']) && !empty($systemSettings['contact']['phone'])) {
+                if (empty($settings['phone']) && ! empty($systemSettings['contact']['phone'])) {
                     $settings['phone'] = $systemSettings['contact']['phone'];
                 }
-                if (empty($settings['mobile']) && !empty($systemSettings['contact']['mobile'])) {
+                if (empty($settings['mobile']) && ! empty($systemSettings['contact']['mobile'])) {
                     $settings['mobile'] = $systemSettings['contact']['mobile'];
                 }
-                if (empty($settings['email']) && !empty($systemSettings['contact']['email'])) {
+                if (empty($settings['email']) && ! empty($systemSettings['contact']['email'])) {
                     $settings['email'] = $systemSettings['contact']['email'];
                 }
             }
@@ -355,12 +414,17 @@ class DistributorAndSalesManagementController extends Controller
                 $settings['logo_url'] = asset($settings['logo_path']);
             }
 
-            $pdf = Pdf::loadView('DistributorAndSalesManagement.pdf.dispatchNote', compact('order', 'settings'));
+            $pdf = Pdf::loadView('DistributorAndSalesManagement.pdf.salesOrder', compact('order', 'settings'));
 
-            return $pdf->download('DispatchNote-' . $order->order_number . '.pdf');
+            $filename = 'SalesOrder-'.$order->order_number.'.pdf';
+            if ($request->query('action') === 'download') {
+                return $pdf->download($filename);
+            } else {
+                return $pdf->stream($filename);
+            }
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Error generating Dispatch Note: ' . $e->getMessage());
+            return back()->with('error', 'Error generating Sales Order: '.$e->getMessage());
         }
     }
 
@@ -373,7 +437,7 @@ class DistributorAndSalesManagementController extends Controller
         });
 
         // Fetch all orders with related data
-        $orders = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'history.user', 'payments'])
+        $orders = StmOrderRequest::with(['customer', 'orderProducts.productItem', 'agent', 'history.user', 'payments', 'rejectedByUser'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($order) use ($branches) {
@@ -415,11 +479,11 @@ class DistributorAndSalesManagementController extends Controller
                             2 => 'Commission Only',
                             3 => 'Credit Based',
                             default => 'General'
-                        }
+                        },
                     ] : null,
                     'delivery_type' => $order->delivery_type,
                     'delivery_type_text' => $order->delivery_type == CommonVariables::$deliveryTypePickup ? 'Pickup' : 'Delivery',
-                    'delivery_date' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('Y-m-d H:i') : '-',
+                    'delivery_date' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->tz('Asia/Colombo')->format('Y-m-d H:i') : '-',
                     'event_type' => $order->event_type,
                     'event_type_text' => match ($order->event_type) {
                         CommonVariables::$eventTypeWedding => 'Wedding',
@@ -446,8 +510,12 @@ class DistributorAndSalesManagementController extends Controller
                     'grand_total' => number_format((float) $order->grand_total, 2),
                     'status' => $statusSlug,
                     'status_int' => $order->status,
+                    'is_downloaded' => $order->is_downloaded ?? false,
                     'notes' => $order->notes ?? '',
-                    'created_at' => \Carbon\Carbon::parse($order->created_at)->format('Y-m-d H:i'),
+                    'rejectedByName' => $order->rejectedByUser ? $order->rejectedByUser->name : null,
+                    'rejectedAt' => $order->rejected_at ? \Carbon\Carbon::parse($order->rejected_at)->tz('Asia/Colombo')->format('Y-m-d H:i') : null,
+                    'rejectionReason' => $order->rejection_reason ?? null,
+                    'created_at' => \Carbon\Carbon::parse($order->created_at)->tz('Asia/Colombo')->format('Y-m-d H:i'),
                     'products' => $order->orderProducts->map(function ($op) {
                         return [
                             'product_item_id' => $op->pm_product_item_id,
@@ -478,9 +546,9 @@ class DistributorAndSalesManagementController extends Controller
                     'outletCode' => $order->agent ? $order->agent->agent_code : '',
                     'priority' => 'normal', // TODO: Add priority to DB if needed
                     'deliveryMethod' => $order->delivery_type == CommonVariables::$deliveryTypePickup ? 'pickup' : 'delivery',
-                    'pickupDate' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('Y-m-d') : '-',
-                    'pickupTime' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('H:i') : '-',
-                    'isRecurring' => !empty($order->recurrence_pattern),
+                    'pickupDate' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->tz('Asia/Colombo')->format('Y-m-d') : '-',
+                    'pickupTime' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->tz('Asia/Colombo')->format('H:i') : '-',
+                    'isRecurring' => ! empty($order->recurrence_pattern),
                     'instanceNumber' => 1, // Placeholder
                     'productionDeadline' => $order->end_date ? \Carbon\Carbon::parse($order->end_date)->format('Y-m-d') : '-',
                     // Audit Trail (History)
@@ -490,7 +558,7 @@ class DistributorAndSalesManagementController extends Controller
                             'description' => $h->description,
                             'status' => $h->status,
                             'user_name' => $h->user ? $h->user->name : 'System',
-                            'created_at' => \Carbon\Carbon::parse($h->created_at)->format('Y-m-d H:i'),
+                            'created_at' => \Carbon\Carbon::parse($h->created_at)->tz('Asia/Colombo')->format('Y-m-d H:i'),
                         ];
                     }),
                     // Payment Details
@@ -500,7 +568,7 @@ class DistributorAndSalesManagementController extends Controller
                             'amount' => number_format((float) $p->payment_amount, 2),
                             'method' => ucfirst(str_replace('_', ' ', $p->payment_method)),
                             'reference' => $p->payment_reference ?? '-',
-                            'date' => \Carbon\Carbon::parse($p->payment_date)->format('Y-m-d H:i'),
+                            'date' => \Carbon\Carbon::parse($p->payment_date)->tz('Asia/Colombo')->format('Y-m-d H:i'),
                             'status' => $p->status == 1 ? 'Pending' : ($p->status == 2 ? 'Active' : 'Cancelled'),
                             'status_raw' => $p->status,
                             'notes' => $p->notes ?? '',
@@ -550,7 +618,7 @@ class DistributorAndSalesManagementController extends Controller
         return response()->json($products->map(function ($product) {
             return [
                 'id' => $product->id,
-                'text' => $product->product_name . ' (' . ($product->reference_number ?? $product->bin_code) . ')',
+                'text' => $product->product_name.' ('.($product->reference_number ?? $product->bin_code).')',
                 'product_name' => $product->product_name,
                 'reference_number' => $product->reference_number ?? $product->bin_code,
                 'price' => number_format($product->price, 2),
@@ -581,7 +649,7 @@ class DistributorAndSalesManagementController extends Controller
         return response()->json($customers->map(function ($customer) {
             return [
                 'id' => $customer->id,
-                'text' => $customer->name . ($customer->phone ? ' - ' . $customer->phone : ''),
+                'text' => $customer->name.($customer->phone ? ' - '.$customer->phone : ''),
                 'name' => $customer->name,
                 'phone' => $customer->phone,
                 'email' => $customer->email,
@@ -618,7 +686,7 @@ class DistributorAndSalesManagementController extends Controller
         return response()->json($quotations->map(function ($q) {
             return [
                 'id' => $q->id,
-                'text' => $q->quotation_number . ' - ' . ($q->customer->name ?? 'Unknown'),
+                'text' => $q->quotation_number.' - '.($q->customer->name ?? 'Unknown'),
                 'customer' => $q->customer ? [
                     'id' => $q->customer->id,
                     'name' => $q->customer->name,
@@ -626,17 +694,17 @@ class DistributorAndSalesManagementController extends Controller
                     'address' => $q->customer->address,
                     'email' => $q->customer->email,
                     'type' => $q->customer->type,
-                    'text' => $q->customer->name . ' - ' . $q->customer->phone,
+                    'text' => $q->customer->name.' - '.$q->customer->phone,
                 ] : null,
                 'products' => $q->products->map(function ($p) {
                     return [
                         'product_item_id' => $p->pm_product_item_id,
-                        'product_name' => $p->productItem->product->product_name ?? 'Item #' . $p->pm_product_item_id,
+                        'product_name' => $p->productItem->product->product_name ?? 'Item #'.$p->pm_product_item_id,
                         'price' => $p->unit_price,
                         'quantity' => $p->quantity,
                         'unit_price' => $p->unit_price,
                         'id' => $p->pm_product_item_id,
-                        'name' => $p->productItem->product->product_name ?? 'Item #' . $p->pm_product_item_id,
+                        'name' => $p->productItem->product->product_name ?? 'Item #'.$p->pm_product_item_id,
                     ];
                 }),
             ];
@@ -669,7 +737,7 @@ class DistributorAndSalesManagementController extends Controller
                 'success' => true,
                 'customer' => [
                     'id' => $existingCustomer->id,
-                    'text' => $existingCustomer->name . ($existingCustomer->phone ? ' - ' . $existingCustomer->phone : ''),
+                    'text' => $existingCustomer->name.($existingCustomer->phone ? ' - '.$existingCustomer->phone : ''),
                     'name' => $existingCustomer->name,
                     'phone' => $existingCustomer->phone,
                     'email' => $existingCustomer->email,
@@ -690,7 +758,7 @@ class DistributorAndSalesManagementController extends Controller
             'success' => true,
             'customer' => [
                 'id' => $customer->id,
-                'text' => $customer->name . ($customer->phone ? ' - ' . $customer->phone : ''),
+                'text' => $customer->name.($customer->phone ? ' - '.$customer->phone : ''),
                 'name' => $customer->name,
                 'phone' => $customer->phone,
                 'email' => $customer->email,
@@ -706,11 +774,10 @@ class DistributorAndSalesManagementController extends Controller
     {
         \Illuminate\Support\Facades\Log::info('Order Store Request:', $request->all());
 
-        // Validation rules
         $rules = [
-            'order_type' => 'required|integer|in:' . CommonVariables::$orderTypePosPickup . ',' . CommonVariables::$orderTypeSpecialOrder . ',' . CommonVariables::$orderTypeScheduledProduction,
-            'delivery_type' => 'nullable|integer|in:' . CommonVariables::$deliveryTypePickup . ',' . CommonVariables::$deliveryTypeDelivery,
-            'delivery_date' => 'required|date',
+            'order_type' => 'required|integer|in:'.CommonVariables::$orderTypePosPickup.','.CommonVariables::$orderTypeSpecialOrder.','.CommonVariables::$orderTypeScheduledProduction,
+            'delivery_type' => 'nullable|integer|in:'.CommonVariables::$deliveryTypePickup.','.CommonVariables::$deliveryTypeDelivery,
+            'delivery_date' => 'nullable|date',
             // Allow integer ID or -1 for Warehouse
             'branch_id' => 'required|integer',
             'products' => 'required|array|min:1',
@@ -724,8 +791,8 @@ class DistributorAndSalesManagementController extends Controller
         // Conditional validation based on order type
         if ($request->order_type == CommonVariables::$orderTypeSpecialOrder) {
             $rules['customer_id'] = 'required|exists:cm_customer,id';
-            $rules['payment_details'] = 'nullable|integer|in:' . CommonVariables::$paymentMethodCash . ',' . CommonVariables::$paymentMethodCard . ',' . CommonVariables::$paymentMethodBankTransfer;
-            $rules['event_type'] = 'nullable|integer|in:' . CommonVariables::$eventTypeWedding . ',' . CommonVariables::$eventTypeBirthday . ',' . CommonVariables::$eventTypeCorporate;
+            $rules['payment_details'] = 'nullable|integer|in:'.CommonVariables::$paymentMethodCash.','.CommonVariables::$paymentMethodCard.','.CommonVariables::$paymentMethodBankTransfer;
+            $rules['event_type'] = 'nullable|integer|in:'.CommonVariables::$eventTypeWedding.','.CommonVariables::$eventTypeBirthday.','.CommonVariables::$eventTypeCorporate;
             $rules['guest_count'] = 'nullable|integer|min:1';
             $rules['payment_reference'] = 'nullable|string';
             $rules['paid_amount'] = 'nullable|numeric|min:0';
@@ -734,7 +801,7 @@ class DistributorAndSalesManagementController extends Controller
         if ($request->order_type == CommonVariables::$orderTypeScheduledProduction) {
             // recurrence validation
             if ($request->filled('recurrence_pattern')) {
-                $rules['recurrence_pattern'] = 'nullable|integer|in:' . CommonVariables::$recurrencePatternDaily . ',' . CommonVariables::$recurrencePatternWeekly . ',' . CommonVariables::$recurrencePatternMonthly;
+                $rules['recurrence_pattern'] = 'nullable|integer|in:'.CommonVariables::$recurrencePatternDaily.','.CommonVariables::$recurrencePatternWeekly.','.CommonVariables::$recurrencePatternMonthly;
                 $rules['end_date'] = 'required_with:recurrence_pattern|date|after:delivery_date';
             }
         }
@@ -755,42 +822,101 @@ class DistributorAndSalesManagementController extends Controller
             $isWarehouseInfo = (int) $request->branch_id === -1;
             $sourceBranchId = $isWarehouseInfo ? null : $request->branch_id;
 
+            // Check if today is holiday or Sunday
+            if (\App\Helpers\DeliveryDateHelper::isHolidayOrSunday(now())) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Today is a holiday or Sunday. Order placement is closed.',
+                ], 422);
+            }
+
             // 1. Calculate all order dates based on recurrence
             $orderDates = [];
-            $startDate = \Carbon\Carbon::parse($request->delivery_date);
-            // end_date might be just date, preserve time from start date if needed, or assume end of day.
-            // Actually end_date in DB is date.
-            $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date)->endOfDay() : null;
-            $recurrence = $request->recurrence_pattern;
 
-            if ($request->order_type == CommonVariables::$orderTypeScheduledProduction && $recurrence && $endDate) {
-                if ($recurrence == CommonVariables::$recurrencePatternDaily) {
-                    $current = $startDate->copy();
-                    while ($current->lte($endDate)) {
-                        $orderDates[] = $current->copy();
-                        $current->addDay();
-                    }
-                } elseif ($recurrence == CommonVariables::$recurrencePatternWeekly) {
-                    $current = $startDate->copy();
-                    while ($current->lte($endDate)) {
-                        $orderDates[] = $current->copy();
-                        $current->addWeek();
-                    }
-                } elseif ($recurrence == CommonVariables::$recurrencePatternMonthly) {
-                    // Use addMonthsNoOverflow to handle 31st -> 28th/30th transitions correctly
-                    $monthsToAdd = 0;
-                    while (true) {
-                        $nextDate = $startDate->copy()->addMonthsNoOverflow($monthsToAdd);
-                        if ($nextDate->gt($endDate)) {
-                            break;
+            if ($request->order_type == CommonVariables::$orderTypeScheduledProduction) {
+                $startDate = \Carbon\Carbon::parse($request->delivery_date);
+                $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date)->endOfDay() : null;
+                $recurrence = $request->recurrence_pattern;
+                $tempDates = [];
+
+                if ($recurrence && $endDate) {
+                    if ($recurrence == CommonVariables::$recurrencePatternDaily) {
+                        $current = $startDate->copy();
+                        while ($current->lte($endDate)) {
+                            $tempDates[] = $current->copy();
+                            $current->addDay();
                         }
-                        $orderDates[] = $nextDate;
-                        $monthsToAdd++;
+                    } elseif ($recurrence == CommonVariables::$recurrencePatternWeekly) {
+                        $current = $startDate->copy();
+                        while ($current->lte($endDate)) {
+                            $tempDates[] = $current->copy();
+                            $current->addWeek();
+                        }
+                    } elseif ($recurrence == CommonVariables::$recurrencePatternMonthly) {
+                        $monthsToAdd = 0;
+                        while (true) {
+                            $nextDate = $startDate->copy()->addMonthsNoOverflow($monthsToAdd);
+                            if ($nextDate->gt($endDate)) {
+                                break;
+                            }
+                            $tempDates[] = $nextDate;
+                            $monthsToAdd++;
+                        }
+                    }
+                } else {
+                    $tempDates[] = $startDate;
+                }
+
+                // Filter out holidays and Sundays for scheduled production
+                foreach ($tempDates as $date) {
+                    if (! \App\Helpers\DeliveryDateHelper::isHolidayOrSunday($date)) {
+                        $orderDates[] = $date;
                     }
                 }
+
+                if (empty($orderDates)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'All scheduled dates fall on holidays or Sundays.',
+                    ], 422);
+                }
             } else {
-                // Single order
-                $orderDates[] = $startDate;
+                // Single order - Validate and use user-selected delivery date
+                if (! $request->filled('delivery_date')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Delivery date is required.',
+                    ], 422);
+                }
+
+                $selectedDatetime = \Carbon\Carbon::parse($request->delivery_date);
+
+                // If today is holiday/Sunday, order placement is closed
+                if (\App\Helpers\DeliveryDateHelper::isHolidayOrSunday(now())) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Today is a holiday or Sunday. Order placement is closed.',
+                    ], 422);
+                }
+
+                // If selected date is holiday/Sunday, block it
+                if (\App\Helpers\DeliveryDateHelper::isHolidayOrSunday($selectedDatetime)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Delivery/Collection cannot be scheduled on Sundays or Holidays.',
+                    ], 422);
+                }
+
+                $minDelivery = \App\Helpers\DeliveryDateHelper::calculateDeliveryDate(now());
+
+                if ($selectedDatetime->lt($minDelivery)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Earliest possible delivery for this order is '.$minDelivery->tz('Asia/Colombo')->format('F d, Y at h:i A').'.',
+                    ], 422);
+                }
+
+                $orderDates[] = $selectedDatetime;
             }
 
             // 2. Prepare for Sequence Generation
@@ -892,16 +1018,17 @@ class DistributorAndSalesManagementController extends Controller
             // Return success with the first order loaded
             return response()->json([
                 'success' => true,
-                'message' => count($createdOrders) . ' Order(s) created successfully',
+                'message' => count($createdOrders).' Order(s) created successfully',
                 'order' => $createdOrders[0]->load(['customer', 'orderProducts.productItem']),
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order creation failed: ' . $e->getMessage());
+            Log::error('Order creation failed: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create order: ' . $e->getMessage(),
+                'message' => 'Failed to create order: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -945,16 +1072,22 @@ class DistributorAndSalesManagementController extends Controller
             $order->status = CommonVariables::$orderRequestApproved;
             $order->save();
 
-            /*
             // Send Push Notification to Agent
             if ($order->agent && $order->agent->user_id) {
-                $this->notificationService->sendPushNotification(
-                    $order->agent->user_id,
-                    'Order Approved',
-                    "Order #{$order->order_number} has been approved."
-                );
+                try {
+                    $this->notificationService->createAndSend(
+                        $order->agent->user_id,
+                        'Order Approved',
+                        "Order #{$order->order_number} has been approved.",
+                        'order_request',
+                        'approved',
+                        $order->id,
+                        ['order_number' => $order->order_number]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for order approval: '.$e->getMessage());
+                }
             }
-            */
 
             // Update Stock Transfer records
             StmStockTransfer::where('stm_order_request_id', $order->id)
@@ -987,7 +1120,7 @@ class DistributorAndSalesManagementController extends Controller
                     'amount' => $updateAmount,
                     'new_balance' => $newBalance,
                     'type' => 'Order Approved',
-                    'description' => 'Outstanding balance increased due to approved order #' . $order->order_number,
+                    'description' => 'Outstanding balance increased due to approved order #'.$order->order_number,
                     'created_by' => auth()->id(),
                 ]);
 
@@ -995,7 +1128,7 @@ class DistributorAndSalesManagementController extends Controller
                     'order_request_id' => $order->id,
                     'action' => 'Order Approved',
                     'status' => $order->status,
-                    'description' => 'Order request approved by ' . auth()->user()->name . '.',
+                    'description' => 'Order request approved by '.auth()->user()->name.'.',
                     'created_by' => auth()->id(),
                 ]);
 
@@ -1004,22 +1137,98 @@ class DistributorAndSalesManagementController extends Controller
                     'order_request_id' => $order->id,
                     'action' => 'Order Approved',
                     'status' => $order->status,
-                    'description' => 'Order request approved by ' . auth()->user()->name . '.',
+                    'description' => 'Order request approved by '.auth()->user()->name.'.',
                     'created_by' => auth()->id(),
                 ]);
             }
 
-
-
             DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Order approved successfully and moved to production planning!',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Order approval failed: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Failed to approve order: ' . $e->getMessage()], 500);
+            Log::error('Order approval failed: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Failed to approve order: '.$e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Reject the order request and transition to Rejected status.
+     */
+    public function rejectOrder(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:stm_order_requests,id',
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $order = StmOrderRequest::with(['orderProducts', 'agent'])->findOrFail($request->order_id);
+
+            if ($order->status != CommonVariables::$orderRequestPendingApproval) {
+                return response()->json(['success' => false, 'message' => 'Order is not in a pending state.'], 400);
+            }
+
+            $reason = $request->reason;
+
+            // Update order status to Rejected and set rejection metadata
+            $order->status = CommonVariables::$orderRequestRejected; // 2
+            $order->rejected_by = auth()->id();
+            $order->rejected_at = now();
+            $order->rejection_reason = $reason;
+            $order->save();
+
+            // Send Push Notification to Agent
+            if ($order->agent && $order->agent->user_id) {
+                try {
+                    $this->notificationService->createAndSend(
+                        $order->agent->user_id,
+                        'Order Rejected',
+                        "Order #{$order->order_number} has been rejected.",
+                        'order_request',
+                        'rejected',
+                        $order->id,
+                        ['order_number' => $order->order_number]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for order rejection: '.$e->getMessage());
+                }
+            }
+
+            // Update Stock Transfer records
+            StmStockTransfer::where('stm_order_request_id', $order->id)
+                ->update([
+                    'approved_quantity' => 0,
+                    'approved_date' => now(),
+                    'approved_by' => auth()->id(),
+                ]);
+
+            // Create Order Request History
+            StmOrderRequestHistory::create([
+                'order_request_id' => $order->id,
+                'action' => 'Order Rejected',
+                'status' => $order->status,
+                'description' => 'Order request rejected by '.auth()->user()->name.'. Reason: '.$reason,
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order rejected successfully!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order rejection failed: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Failed to reject order: '.$e->getMessage()], 500);
         }
     }
 
@@ -1057,7 +1266,7 @@ class DistributorAndSalesManagementController extends Controller
             $payment = StmOrderRequestHasPayment::with([
                 'orderRequest.agent',
                 'orderRequest.orderProducts.productItem',
-                'agentPayment' // New relationship
+                'agentPayment', // New relationship
             ])->findOrFail($id);
 
             return view('DistributorAndSalesManagement.paymentApproval', compact('payment'));
@@ -1095,7 +1304,7 @@ class DistributorAndSalesManagementController extends Controller
             }
 
             $order = $payment->orderRequest;
-            if (!$order) {
+            if (! $order) {
                 throw new \Exception('Associated order not found.');
             }
 
@@ -1111,7 +1320,7 @@ class DistributorAndSalesManagementController extends Controller
             // 0: Unpaid, 1: Partial, 2: Paid, 3: Credit
             if ($order->paid_amount >= $order->grand_total - 0.01) {
                 $order->payment_completed = 2; // Fully Paid
-            } else if ($order->paid_amount > 0) {
+            } elseif ($order->paid_amount > 0) {
                 $order->payment_completed = 1; // Partially Paid
             }
             $order->save();
@@ -1145,7 +1354,7 @@ class DistributorAndSalesManagementController extends Controller
                 'order_request_id' => $order->id,
                 'action' => 'Payment Approved',
                 'status' => $order->status,
-                'description' => "Payment of Rs. " . number_format($payment->payment_amount, 2) . " approved by " . auth()->user()->name,
+                'description' => 'Payment of Rs. '.number_format($payment->payment_amount, 2).' approved by '.auth()->user()->name,
                 'created_by' => auth()->id(),
             ]);
 
@@ -1158,8 +1367,9 @@ class DistributorAndSalesManagementController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Payment approval failed: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Failed to approve payment: ' . $e->getMessage()], 500);
+            Log::error('Payment approval failed: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Failed to approve payment: '.$e->getMessage()], 500);
         }
     }
 
@@ -1181,7 +1391,7 @@ class DistributorAndSalesManagementController extends Controller
         if ($validator->fails()) {
             \Log::error('Validation failed', $validator->errors()->toArray());
 
-            return response()->json(['success' => false, 'message' => 'Validation Error: ' . implode(', ', $validator->errors()->all())], 422);
+            return response()->json(['success' => false, 'message' => 'Validation Error: '.implode(', ', $validator->errors()->all())], 422);
         }
 
         try {
@@ -1206,6 +1416,7 @@ class DistributorAndSalesManagementController extends Controller
             $order->refresh();
             $order->grand_total = $order->orderProducts->sum(function ($p) {
                 $qty = $p->dispatched_quantity ?? $p->quantity;
+
                 return $qty * $p->unit_price;
             });
             // Set status AFTER refresh so it doesn't get overwritten
@@ -1213,23 +1424,29 @@ class DistributorAndSalesManagementController extends Controller
             $order->save();
             \Log::info('Order Status Updated to 5');
 
-            /*
             // Send Push Notification to Agent
             if ($order->agent && $order->agent->user_id) {
-                $this->notificationService->sendPushNotification(
-                    $order->agent->user_id,
-                    'Order Dispatched',
-                    "Order #{$order->order_number} has been dispatched and is out for delivery."
-                );
+                try {
+                    $this->notificationService->createAndSend(
+                        $order->agent->user_id,
+                        'Order Dispatched',
+                        "Order #{$order->order_number} has been dispatched and is out for delivery.",
+                        'order_request',
+                        'dispatched',
+                        $order->id,
+                        ['order_number' => $order->order_number]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for order dispatch: '.$e->getMessage());
+                }
             }
-            */
 
             // 5. Log History
             StmOrderRequestHistory::create([
                 'order_request_id' => $order->id,
                 'action' => 'Order Dispatched',
                 'status' => $order->status,
-                'description' => 'Order dispatched by ' . auth()->user()->name . '.',
+                'description' => 'Order dispatched by '.auth()->user()->name.'.',
                 'created_by' => auth()->id(),
             ]);
 
@@ -1240,9 +1457,9 @@ class DistributorAndSalesManagementController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            \Log::error('Dispatch Order Error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
+            \Log::error('Dispatch Order Error: '.$e->getMessage().' Trace: '.$e->getTraceAsString());
 
-            return response()->json(['success' => false, 'message' => 'Error dispatching order: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error dispatching order: '.$e->getMessage()], 500);
         }
     }
 
@@ -1332,7 +1549,7 @@ class DistributorAndSalesManagementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => 'Error confirming dispatch: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error confirming dispatch: '.$e->getMessage()], 500);
         }
     }
 
@@ -1369,7 +1586,8 @@ class DistributorAndSalesManagementController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Error completing order: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Error completing order: '.$e->getMessage()], 500);
         }
     }
 
@@ -1388,7 +1606,7 @@ class DistributorAndSalesManagementController extends Controller
             $nextNumber = $lastGrn->id + 1;
         }
 
-        return 'GRN-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        return 'GRN-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     private function getInternalSupplierId()
@@ -1451,10 +1669,10 @@ class DistributorAndSalesManagementController extends Controller
         }
 
         $currentBatchNum++;
-        $batchNumber = 'DISP' . str_pad($currentBatchNum, 4, '0', STR_PAD_LEFT);
+        $batchNumber = 'DISP'.str_pad($currentBatchNum, 4, '0', STR_PAD_LEFT);
 
         $product = PmProductItem::find($productId);
-        if (!$product) {
+        if (! $product) {
             \Log::error("Product not found: $productId");
             throw new \Exception("Product ID $productId not found");
         }
@@ -1490,7 +1708,7 @@ class DistributorAndSalesManagementController extends Controller
         ]);
 
         // Generate Barcodes
-        $barcodeValue = $product->ref_number_auto ?? 'NO-REF-' . time();
+        $barcodeValue = $product->ref_number_auto ?? 'NO-REF-'.time();
         for ($i = 0; $i < $qty; $i++) {
             $barcode = \App\Models\StmBarcode::create([
                 'barcode' => $barcodeValue,
@@ -1560,12 +1778,12 @@ class DistributorAndSalesManagementController extends Controller
 
         // Payments Query
         $paymentsQuery = AdAgentPayment::with(['agent', 'distributions.orderRequest']);
-        
+
         if ($request->filled('agent_id')) {
             $paymentsQuery->where('agent_id', $request->agent_id);
         }
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $paymentsQuery->whereBetween('payment_date', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+            $paymentsQuery->whereBetween('payment_date', [$request->start_date.' 00:00:00', $request->end_date.' 23:59:59']);
         }
         if ($request->filled('payment_status') && $request->payment_status !== 'all') {
             $paymentsQuery->where('status', $request->payment_status);
@@ -1574,8 +1792,8 @@ class DistributorAndSalesManagementController extends Controller
         }
 
         // Credit Notes Query
-        $cnQuery = AdCreditNote::with(['agent', 'products.product', 'creator']);
-        
+        $cnQuery = AdCreditNote::with(['agent', 'products.product', 'creator', 'rejectedByUser', 'histories.creator']);
+
         if ($request->filled('agent_id')) {
             $cnQuery->where('agent_id', $request->agent_id);
         }
@@ -1595,8 +1813,8 @@ class DistributorAndSalesManagementController extends Controller
             'totalCreditNotes' => (clone $cnQuery)->sum('total_amount'),
             'pendingCreditNotes' => (clone $cnQuery)->where('status', 0)->count(),
             'usedCreditNotes' => (clone $cnQuery)->where('status', 3)->sum('total_amount'),
-            'totalAgentOutstanding' => $request->filled('agent_id') 
-                                        ? AdAgent::where('id', $request->agent_id)->sum('outstanding_balance') 
+            'totalAgentOutstanding' => $request->filled('agent_id')
+                                        ? AdAgent::where('id', $request->agent_id)->sum('outstanding_balance')
                                         : AdAgent::sum('outstanding_balance'),
         ];
 
@@ -1606,15 +1824,17 @@ class DistributorAndSalesManagementController extends Controller
 
             if ($request->export === 'pdf') {
                 $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('DistributorAndSalesManagement.pdf.agentFinancial', compact('payments', 'creditNotes', 'agents', 'summary', 'request'));
+
                 return $pdf->download('Agent_Financial_Report.pdf');
             } elseif ($request->export === 'excel') {
                 $headers = [
-                    "Content-type" => "application/vnd.ms-excel",
-                    "Content-Disposition" => "attachment; filename=Agent_Financial_Report.xls",
-                    "Pragma" => "no-cache",
-                    "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-                    "Expires" => "0"
+                    'Content-type' => 'application/vnd.ms-excel',
+                    'Content-Disposition' => 'attachment; filename=Agent_Financial_Report.xls',
+                    'Pragma' => 'no-cache',
+                    'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                    'Expires' => '0',
                 ];
+
                 return response()->view('DistributorAndSalesManagement.excel.agentFinancial', compact('payments', 'creditNotes', 'agents', 'summary', 'request'))->withHeaders($headers);
             }
         }
@@ -1641,7 +1861,7 @@ class DistributorAndSalesManagementController extends Controller
 
         // Filter by Date Range
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('payment_date', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+            $query->whereBetween('payment_date', [$request->start_date.' 00:00:00', $request->end_date.' 23:59:59']);
         }
 
         // Filter by Status
@@ -1665,16 +1885,21 @@ class DistributorAndSalesManagementController extends Controller
     public function getAgentPaymentOrders($id)
     {
         try {
-            $payment = AdAgentPayment::with(['agent', 'distributions.orderRequest.orderProducts.productItem', 'creditNotes'])->findOrFail($id);
+            $payment = AdAgentPayment::with([
+                'agent',
+                'distributions.orderRequest.orderProducts.productItem',
+                'creditNotes',
+                'history.creator'
+            ])->findOrFail($id);
 
             return response()->json([
                 'success' => true,
-                'data' => $payment
+                'data' => $payment,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Payment record not found.'
+                'message' => 'Payment record not found.',
             ], 404);
         }
     }
@@ -1715,7 +1940,7 @@ class DistributorAndSalesManagementController extends Controller
                         // Update payment_completed status
                         if ($order->paid_amount >= $order->grand_total - 0.01) {
                             $order->payment_completed = 2; // Fully Paid
-                        } else if ($order->paid_amount > 0) {
+                        } elseif ($order->paid_amount > 0) {
                             $order->payment_completed = 1; // Partially Paid
                         }
                         $order->save();
@@ -1736,8 +1961,8 @@ class DistributorAndSalesManagementController extends Controller
                                 'new_balance' => $agent->outstanding_balance,
                                 'reference_id' => $distribution->id,
                                 'reference_type' => 'ad_agent_payment_distribution',
-                                'notes' => 'Bulk approval for distribution from Agent Payment #' . $agentPayment->id,
-                                'created_by' => auth()->id()
+                                'notes' => 'Bulk approval for distribution from Agent Payment #'.$agentPayment->id,
+                                'created_by' => auth()->id(),
                             ]);
 
                             // 5. Log Order Request History
@@ -1746,7 +1971,7 @@ class DistributorAndSalesManagementController extends Controller
                                 'created_by' => auth()->id(),
                                 'action' => 'Payment Approved',
                                 'status' => $order->status,
-                                'description' => "Payment of Rs. " . number_format($distribution->payment_amount, 2) . " approved via Bulk Agent Payment #" . $agentPayment->id,
+                                'description' => 'Payment of Rs. '.number_format($distribution->payment_amount, 2).' approved via Bulk Agent Payment #'.$agentPayment->id,
                             ]);
                         }
                     }
@@ -1757,13 +1982,198 @@ class DistributorAndSalesManagementController extends Controller
             $agentPayment->status = 1;
             $agentPayment->save();
 
+            // Log Payment History
+            \App\Models\AdAgentPaymentHistory::create([
+                'ad_agent_payment_id' => $agentPayment->id,
+                'created_by' => auth()->id(),
+                'action' => 'Payment Approved',
+                'status' => 1, // Approved
+                'description' => 'Payment approved and settled by ' . auth()->user()->name . '.',
+            ]);
+
             DB::commit();
+
+            // Send Push Notification to Agent
+            if ($agentPayment->agent && $agentPayment->agent->user_id) {
+                try {
+                    $this->notificationService->createAndSend(
+                        $agentPayment->agent->user_id,
+                        'Payment Approved',
+                        "Your payment reference REC-" . str_pad($agentPayment->id, 5, '0', STR_PAD_LEFT) . " of Rs. " . number_format($agentPayment->amount, 2) . " has been approved.",
+                        'payment',
+                        'approved',
+                        $agentPayment->id,
+                        ['payment_id' => $agentPayment->id]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for agent payment approval: '.$e->getMessage());
+                }
+            }
+
             return response()->json(['success' => true, 'message' => 'All distributions in this payment group have been approved.']);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Bulk payment approval failed: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            Log::error('Bulk payment approval failed: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Reject Agent Payment
+     */
+    public function rejectAgentPayment(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'agent_payment_id' => 'required|exists:ad_agent_payments,id',
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $agentPayment = AdAgentPayment::with(['distributions', 'agent', 'creditNotes'])->findOrFail($request->agent_payment_id);
+
+            if ($agentPayment->status != 0) {
+                return response()->json(['success' => false, 'message' => 'This payment is already processed or rejected.'], 400);
+            }
+
+            // 1. Update master payment status to Rejected (2)
+            $agentPayment->status = 2; // Rejected
+            $agentPayment->rejected_at = now();
+            $agentPayment->rejected_by = auth()->id();
+            $agentPayment->rejection_reason = $request->rejection_reason;
+            $agentPayment->save();
+
+            // 2. Reject each distribution inside the payment
+            foreach ($agentPayment->distributions as $distribution) {
+                if ($distribution->status == 1) { // If pending
+                    $distribution->status = 3; // Rejected
+                    $distribution->save();
+
+                    // Log Order Request History
+                    \App\Models\StmOrderRequestHistory::create([
+                        'order_request_id' => $distribution->stm_order_request_id,
+                        'created_by' => auth()->id(),
+                        'action' => 'Payment Rejected',
+                        'status' => $distribution->orderRequest->status ?? 0,
+                        'description' => 'Payment of Rs. ' . number_format($distribution->payment_amount, 2) . ' rejected by Admin. Reason: ' . $request->rejection_reason,
+                    ]);
+                }
+            }
+
+            // 3. Revert used Credit Notes back to status 1 (Approved/Unused) and clear payment association
+            if ($agentPayment->creditNotes->isNotEmpty()) {
+                foreach ($agentPayment->creditNotes as $creditNote) {
+                    $creditNote->ad_agent_payment_id = null;
+                    $creditNote->status = 1; // Approved/Unused
+                    $creditNote->save();
+                }
+            }
+
+            // 4. Log Payment History
+            \App\Models\AdAgentPaymentHistory::create([
+                'ad_agent_payment_id' => $agentPayment->id,
+                'created_by' => auth()->id(),
+                'action' => 'Payment Rejected',
+                'status' => 2, // Rejected
+                'description' => 'Payment rejected by ' . auth()->user()->name . '. Reason: ' . $request->rejection_reason,
+            ]);
+
+            DB::commit();
+
+            // 5. Send Push Notification to Agent
+            if ($agentPayment->agent && $agentPayment->agent->user_id) {
+                try {
+                    $this->notificationService->createAndSend(
+                        $agentPayment->agent->user_id,
+                        'Payment Rejected',
+                        "Your payment reference REC-" . str_pad($agentPayment->id, 5, '0', STR_PAD_LEFT) . " of Rs. " . number_format($agentPayment->amount, 2) . " has been rejected. Reason: " . $request->rejection_reason,
+                        'payment',
+                        'rejected',
+                        $agentPayment->id,
+                        ['payment_id' => $agentPayment->id, 'rejection_reason' => $request->rejection_reason]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for agent payment rejection: '.$e->getMessage());
+                }
+            }
+
+            return response()->json(['success' => true, 'message' => 'Agent payment has been rejected.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Agent payment rejection failed: '.$e->getMessage());
+
+            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Print or Download Payment Receipt PDF
+     */
+    public function printPaymentReceipt($id, \Illuminate\Http\Request $request)
+    {
+        try {
+            $payment = AdAgentPayment::with([
+                'agent',
+                'distributions.orderRequest',
+                'creditNotes',
+                'creator',
+                'history.creator'
+            ])->findOrFail($id);
+
+            // Load Settings
+            $filePath = storage_path('app/Settings/quotation-settings.json');
+            $settings = [];
+            if (file_exists($filePath)) {
+                $content = file_get_contents($filePath);
+                $settings = json_decode($content, true) ?? [];
+            }
+
+            // Fallback to system_config.json
+            $systemConfigPath = public_path('system_config.json');
+            if (file_exists($systemConfigPath)) {
+                $systemSettings = json_decode(file_get_contents($systemConfigPath), true) ?? [];
+
+                if (empty($settings['company_name']) && ! empty($systemSettings['business_name'])) {
+                    $settings['company_name'] = $systemSettings['business_name'];
+                }
+                if (empty($settings['logo_path']) && ! empty($systemSettings['logos']['primary'])) {
+                    $settings['logo_path'] = $systemSettings['logos']['primary'];
+                }
+                if (empty($settings['address']) && ! empty($systemSettings['address'])) {
+                    $addr = $systemSettings['address'];
+                    $settings['address'] = implode(', ', array_filter([$addr['street'] ?? '', $addr['city'] ?? '', $addr['province'] ?? '', $addr['postal_code'] ?? '']));
+                }
+                if (empty($settings['phone']) && ! empty($systemSettings['contact']['phone'])) {
+                    $settings['phone'] = $systemSettings['contact']['phone'];
+                }
+                if (empty($settings['mobile']) && ! empty($systemSettings['contact']['mobile'])) {
+                    $settings['mobile'] = $systemSettings['contact']['mobile'];
+                }
+                if (empty($settings['email']) && ! empty($systemSettings['contact']['email'])) {
+                    $settings['email'] = $systemSettings['contact']['email'];
+                }
+            }
+
+            if (isset($settings['logo_path'])) {
+                $settings['logo_absolute_path'] = public_path($settings['logo_path']);
+                $settings['logo_url'] = asset($settings['logo_path']);
+            }
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('DistributorAndSalesManagement.pdf.paymentReceipt', compact('payment', 'settings'));
+
+            $filename = 'PaymentReceipt-REC-'.str_pad($payment->id, 5, '0', STR_PAD_LEFT).'.pdf';
+            if ($request->query('action') === 'download') {
+                return $pdf->download($filename);
+            } else {
+                return $pdf->stream($filename);
+            }
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating Payment Receipt: '.$e->getMessage());
         }
     }
 
@@ -2449,7 +2859,7 @@ class DistributorAndSalesManagementController extends Controller
      */
     public function creditNoteIndex(Request $request)
     {
-        $query = AdCreditNote::with(['agent', 'products.product', 'creator']);
+        $query = AdCreditNote::with(['agent', 'products.product', 'creator', 'histories.creator']);
 
         // Search
         if ($request->has('search') && $request->search != '') {
@@ -2514,24 +2924,24 @@ class DistributorAndSalesManagementController extends Controller
 
         $creditNotes = $query->orderBy('created_at', 'desc')->get();
 
-        $filename = "credit_notes_" . date('Y-m-d') . ".csv";
+        $filename = 'credit_notes_'.date('Y-m-d').'.csv';
         $handle = fopen('php://output', 'w');
-        
+
         header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Disposition: attachment; filename="'.$filename.'"');
 
         // CSV Headers
         fputcsv($handle, ['Credit Note #', 'Agent', 'Date', 'Type', 'Amount', 'Status', 'Reason']);
 
         foreach ($creditNotes as $note) {
-            $statusLabel = match($note->status) {
+            $statusLabel = match ($note->status) {
                 0 => 'Pending',
                 1 => 'Approved',
                 2 => 'Rejected',
                 3 => 'Used',
                 default => 'Unknown'
             };
-            
+
             $typeLabel = $note->note_type == 1 ? 'Physical Return' : 'Customer Return';
 
             fputcsv($handle, [
@@ -2541,7 +2951,7 @@ class DistributorAndSalesManagementController extends Controller
                 $typeLabel,
                 number_format($note->total_amount, 2),
                 $statusLabel,
-                $note->reason
+                $note->reason,
             ]);
         }
 
@@ -2564,16 +2974,43 @@ class DistributorAndSalesManagementController extends Controller
 
             $creditNote->update([
                 'status' => 1,
-                'updated_by' => auth()->id()
+                'updated_by' => auth()->id(),
+            ]);
+
+            \App\Models\AdCreditNoteHistory::create([
+                'ad_credit_note_id' => $creditNote->id,
+                'created_by' => auth()->id(),
+                'action' => 'APPROVED',
+                'status' => 1,
+                'description' => 'Credit note request approved.',
             ]);
 
             // Update items status if needed
             $creditNote->products()->update(['status' => 1]);
 
             DB::commit();
+
+            // Send Push Notification to Agent
+            if ($creditNote->agent && $creditNote->agent->user_id) {
+                try {
+                    $this->notificationService->createAndSend(
+                        $creditNote->agent->user_id,
+                        'Credit Note Approved',
+                        "Your credit note request " . $creditNote->credit_note_number . " of Rs. " . number_format($creditNote->total_amount, 2) . " has been approved.",
+                        'credit_note',
+                        'approved',
+                        $creditNote->id,
+                        ['credit_note_id' => $creditNote->id]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for credit note approval: '.$e->getMessage());
+                }
+            }
+
             return response()->json(['success' => true, 'message' => 'Credit note approved successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -2584,7 +3021,7 @@ class DistributorAndSalesManagementController extends Controller
     public function creditNoteReject(Request $request, $id)
     {
         $request->validate([
-            'reason' => 'required|string|max:500'
+            'reason' => 'required|string|max:500',
         ]);
 
         DB::beginTransaction();
@@ -2598,16 +3035,45 @@ class DistributorAndSalesManagementController extends Controller
             $creditNote->update([
                 'status' => 2,
                 'reject_reason' => $request->reason,
-                'updated_by' => auth()->id()
+                'rejected_by' => auth()->id(),
+                'rejected_at' => now(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            \App\Models\AdCreditNoteHistory::create([
+                'ad_credit_note_id' => $creditNote->id,
+                'created_by' => auth()->id(),
+                'action' => 'REJECTED',
+                'status' => 2,
+                'description' => 'Credit note request rejected. Reason: ' . $request->reason,
             ]);
 
             // Update items status
             $creditNote->products()->update(['status' => 2]);
 
             DB::commit();
+
+            // Send Push Notification to Agent
+            if ($creditNote->agent && $creditNote->agent->user_id) {
+                try {
+                    $this->notificationService->createAndSend(
+                        $creditNote->agent->user_id,
+                        'Credit Note Rejected',
+                        "Your credit note request " . $creditNote->credit_note_number . " of Rs. " . number_format($creditNote->total_amount, 2) . " has been rejected. Reason: " . $request->reason,
+                        'credit_note',
+                        'rejected',
+                        $creditNote->id,
+                        ['credit_note_id' => $creditNote->id, 'reject_reason' => $request->reason]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Notification failed for credit note rejection: '.$e->getMessage());
+                }
+            }
+
             return response()->json(['success' => true, 'message' => 'Credit note rejected successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }

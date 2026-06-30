@@ -25,6 +25,8 @@ class AdCreditNote extends Model
         'ad_agent_payment_id',
         'created_by',
         'updated_by',
+        'rejected_by',
+        'rejected_at',
     ];
 
     public function agent()
@@ -47,8 +49,18 @@ class AdCreditNote extends Model
         return $this->hasMany(AdCreditNoteHasProduct::class, 'credit_note_id');
     }
 
+    public function histories()
+    {
+        return $this->hasMany(AdCreditNoteHistory::class, 'ad_credit_note_id')->orderBy('created_at', 'desc');
+    }
+
     public function creator()
     {
         return $this->belongsTo(UmUser::class, 'created_by');
+    }
+
+    public function rejectedByUser()
+    {
+        return $this->belongsTo(UmUser::class, 'rejected_by');
     }
 }

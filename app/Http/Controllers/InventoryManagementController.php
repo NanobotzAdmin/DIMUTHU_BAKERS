@@ -645,7 +645,7 @@ class InventoryManagementController extends Controller
 
                 return [
                     'action' => $h->action,
-                    'timestamp' => $h->created_at->format('Y-m-d h:i A'),
+                    'timestamp' => $h->created_at->tz('Asia/Colombo')->format('Y-m-d h:i A'),
                     'details' => $h->description,
                     'performedBy' => $u ? $u->user_name : 'System', // Use user_name
                     'role' => $role
@@ -676,7 +676,7 @@ class InventoryManagementController extends Controller
                         $approvedByName = $appUser->user_name;
                 }
                 if ($approvedItem->approved_date) {
-                    $approvedAtDate = \Carbon\Carbon::parse($approvedItem->approved_date)->format('Y-m-d h:i A');
+                    $approvedAtDate = \Carbon\Carbon::parse($approvedItem->approved_date)->tz('Asia/Colombo')->format('Y-m-d h:i A');
                 }
             }
 
@@ -687,7 +687,7 @@ class InventoryManagementController extends Controller
                 'toSection' => strtolower($to),
                 'requestedBy' => $creatorName,
                 'requestedByRole' => $creatorRole,
-                'requestedAt' => $req->created_at->format('Y-m-d h:i A'),
+                'requestedAt' => $req->created_at->tz('Asia/Colombo')->format('Y-m-d h:i A'),
                 'scheduledDate' => $req->scheduled_date ? \Carbon\Carbon::parse($req->scheduled_date)->format('Y-m-d') : 'N/A',
                 'notes' => $req->notes ?? 'No additional notes provided.', // Pass notes
                 'status' => $status,

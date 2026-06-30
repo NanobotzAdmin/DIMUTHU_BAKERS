@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use App\Models\UmUser;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -26,7 +26,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()->first()
+                'message' => $validator->errors()->first(),
             ]);
         }
 
@@ -44,7 +44,7 @@ class AuthController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Username not found'
+                    'message' => 'Username not found',
                 ]);
             }
         }
@@ -68,26 +68,27 @@ class AuthController extends Controller
         if (count($matchingUsers) > 1) {
             return response()->json([
                 'success' => false,
-                'message' => 'Multiple accounts share these credentials. Please contact admin.'
+                'message' => 'Multiple accounts share these credentials. Please contact admin.',
             ]);
         }
 
         // If exactly one match, authenticate that user
         if (count($matchingUsers) === 1) {
             $authenticatedUser = $matchingUsers[0];
+
             return $this->handleUserLogin($authenticatedUser, $request, false);
         } else {
             // If authentication fails
             return response()->json([
                 'success' => false,
-                'message' => 'Username or Password is incorrect'
+                'message' => 'Username or Password is incorrect',
             ]);
         }
     }
 
     private function handleUserLogin($user, $request, $isUniversal)
     {
-        // NOTE: Manual authentication logic used instead of Auth::login 
+        // NOTE: Manual authentication logic used instead of Auth::login
         // because UmUser is a standard Model (not Authenticatable) to avoid table name conflicts.
 
         if ($user) { // user is active check? User code has: $user->is_active == CommonVariables::$Active
@@ -104,8 +105,8 @@ class AuthController extends Controller
             $this->manageSmSession($user, $request);
 
             // User Activity
-            $userActivity = new UserActivityManagementController();
-            $userActivity->saveActivity(\App\CommonVariables::$logIn, "Log User, User Id - " . $user->id);
+            $userActivity = new UserActivityManagementController;
+            $userActivity->saveActivity(\App\CommonVariables::$logIn, 'Log User, User Id - '.$user->id);
 
             // Redirect logic
             // Check if user has assigned branches
@@ -120,8 +121,8 @@ class AuthController extends Controller
                 // Fallback to original logic if no branches assigned (or handle as error if mandatory)
                 // For now, let's keep the dashboard logic as fallback or "no branch" state
                 $redirectUrl = route('adminDashboard');
-                if ($user->user_role_id == 3) {
-                    $redirectUrl = '/candidate-dashboard';
+                if ($user->user_role_id == 8) {
+                    $redirectUrl = '/agent-panel';
                 } elseif ($user->user_role_id == 4) {
                     $redirectUrl = '/judge-dashboard';
                 }
@@ -134,9 +135,10 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'redirect' => $redirectUrl,
-                'message' => 'Login successful' . ($isUniversal ? ' (Universal)' : '')
+                'message' => 'Login successful'.($isUniversal ? ' (Universal)' : ''),
             ]);
         }
+
         return response()->json(['success' => false, 'message' => 'Login failed']);
     }
 
@@ -145,7 +147,7 @@ class AuthController extends Controller
         // Check for an active session
         $activeSession = \App\Models\SmSession::where([
             ['um_user_id', $user->id],
-            ['is_active', \App\CommonVariables::$Active]
+            ['is_active', \App\CommonVariables::$Active],
         ])->exists();
 
         if ($activeSession) {
@@ -181,12 +183,12 @@ class AuthController extends Controller
                 ->where('is_active', \App\CommonVariables::$Active)
                 ->update([
                     'is_active' => \App\CommonVariables::$Inactive,
-                    'time_out' => \Carbon\Carbon::now()
+                    'time_out' => \Carbon\Carbon::now(),
                 ]);
 
             // User Activity
-            $userActivity = new UserActivityManagementController();
-            $userActivity->saveActivity(\App\CommonVariables::$logOut, "Logout User, User Id - " . $user->id);
+            $userActivity = new UserActivityManagementController;
+            $userActivity->saveActivity(\App\CommonVariables::$logOut, 'Logout User, User Id - '.$user->id);
         }
 
         Auth::logout();
@@ -199,7 +201,7 @@ class AuthController extends Controller
     public function selectBranchIndex()
     {
         $userId = session('user_id');
-        if (!$userId) {
+        if (! $userId) {
             return redirect()->route('login');
         }
 
@@ -227,6 +229,7 @@ class AuthController extends Controller
             } elseif ($roleId == 4) {
                 $redirectUrl = '/judge-dashboard';
             }
+
             return redirect($redirectUrl);
         }
 
@@ -243,7 +246,7 @@ class AuthController extends Controller
     public function selectBranchStore(Request $request)
     {
         $request->validate([
-            'branch_id' => 'required|exists:um_branch,id'
+            'branch_id' => 'required|exists:um_branch,id',
         ]);
 
         // Verify assignment validity (security check)
@@ -253,7 +256,7 @@ class AuthController extends Controller
             ->where('um_branch.id', $request->branch_id)
             ->exists();
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             return back()->with('error', 'You do not have access to this branch.');
         }
 
@@ -278,6 +281,7 @@ class AuthController extends Controller
 
         return redirect($redirectUrl);
     }
+
     public function forcePasswordChangeIndex()
     {
         return view('auth.force-password-change');
@@ -302,13 +306,13 @@ class AuthController extends Controller
             $user->save();
 
             // Log activity
-            $userActivity = new UserActivityManagementController();
-            $userActivity->saveActivity(\App\CommonVariables::$logIn, "Password Reset Success, User Id - " . $user->id);
+            $userActivity = new UserActivityManagementController;
+            $userActivity->saveActivity(\App\CommonVariables::$logIn, 'Password Reset Success, User Id - '.$user->id);
 
             return redirect()->route('adminDashboard')->with('success', 'Password updated successfully. Welcome!');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Error updating password: ' . $e->getMessage());
+            return back()->with('error', 'Error updating password: '.$e->getMessage());
         }
     }
 }

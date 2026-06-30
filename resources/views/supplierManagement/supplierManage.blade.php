@@ -1321,7 +1321,7 @@
             $('#view-reg').text(data.registrationNumber || 'N/A');
             $('#view-tax').text(data.taxId || 'N/A');
             $('#view-website').text(data.website || 'N/A');
-            const memberSince = data.created_at ? new Date(data.created_at).toLocaleDateString() : 'N/A';
+            const memberSince = data.created_at ? new Date(data.created_at).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) : 'N/A';
             $('#view-member-since').text(memberSince);
 
             let address = 'N/A';

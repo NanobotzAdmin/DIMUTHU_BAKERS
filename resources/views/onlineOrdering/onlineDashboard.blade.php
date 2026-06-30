@@ -166,7 +166,7 @@
                                 </div>
                                 <div class="text-xs text-gray-500 mt-1">
                                     {{ count($order->items) }} item{{ count($order->items) !== 1 ? 's' : '' }} • 
-                                    Pickup: {{ \Carbon\Carbon::parse($order->pickup->scheduledDate)->format('d/m/Y') }} {{ $order->pickup->scheduledTime }}
+                                    Pickup: {{ \Carbon\Carbon::parse($order->pickup->scheduledDate)->tz('Asia/Colombo')->format('d/m/Y') }} {{ $order->pickup->scheduledTime }}
                                 </div>
                             </div>
                             <div class="text-right">
@@ -174,7 +174,7 @@
                                     Rs {{ number_format($order->summary->total, 2) }}
                                 </div>
                                 <div class="text-xs text-gray-500">
-                                    {{ \Carbon\Carbon::parse($order->createdAt)->format('h:i A') }}
+                                    {{ \Carbon\Carbon::parse($order->createdAt)->tz('Asia/Colombo')->format('h:i A') }}
                                 </div>
                             </div>
                         </div>
