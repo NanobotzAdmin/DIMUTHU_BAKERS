@@ -152,7 +152,7 @@
                 <div class="po-title">PURCHASE ORDER</div>
                 <div class="mt-20">
                     <strong>PO Number:</strong> #{{ $order->po_number }}<br>
-                    <strong>Date:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('F d, Y') }}<br>
+                    <strong>Date:</strong> {{ \Carbon\Carbon::parse($order->created_at)->tz('Asia/Colombo')->format('F d, Y') }}<br>
                     
                     @php
                         $statusColors = [

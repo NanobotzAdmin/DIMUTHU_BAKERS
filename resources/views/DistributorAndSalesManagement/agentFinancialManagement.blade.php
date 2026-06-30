@@ -197,7 +197,7 @@
                     @forelse($payments as $payment)
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                                {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y h:i A') : $payment->created_at->format('M d, Y') }}
+                                {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->tz('Asia/Colombo')->format('M d, Y h:i A') : $payment->created_at->tz('Asia/Colombo')->format('M d, Y') }}
                             </td>
                             <td class="px-6 py-4 text-sm font-bold text-slate-800 whitespace-nowrap">
                                 {{ $payment->agent->agent_name ?? 'N/A' }}
@@ -297,7 +297,7 @@
                                 <div class="font-bold text-slate-800">{{ $note->agent->agent_name ?? 'Unknown' }}</div>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
-                                {{ \Carbon\Carbon::parse($note->credit_note_date)->format('M d, Y') }}
+                                {{ \Carbon\Carbon::parse($note->credit_note_date)->tz('Asia/Colombo')->format('M d, Y') }}
                             </td>
                             <td class="px-6 py-4 text-sm font-black text-indigo-700 whitespace-nowrap">
                                 Rs. {{ number_format($note->total_amount, 2) }}
@@ -426,16 +426,34 @@
                             No notes provided.
                         </div>
                     </div>
+
+                    <!-- Audit Trail Section -->
+                    <div class="mt-8">
+                        <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center mb-4">
+                            <span class="w-8 h-[2px] bg-indigo-500 mr-3"></span> Audit Trail
+                        </h4>
+                        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4" id="payment-audit-trail">
+                            <!-- Audit trail items will be appended dynamically -->
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="bg-white px-8 py-5 flex justify-between items-center border-t border-slate-100">
                 @if(Auth::user()->hasPermission('can_payment_approve'))
-                <div id="payment-bulk-approve-container" class="hidden">
+                <div id="payment-bulk-approve-container" class="hidden flex gap-4">
                     <button id="btn-approve-all" type="button" class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95">
                         <i class="bi bi-check2-all mr-2"></i> Approve All Related Orders
                     </button>
+                    <button id="btn-reject-payment" type="button" class="inline-flex items-center px-6 py-3 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 active:scale-95">
+                        <i class="bi bi-x-circle mr-2"></i> Reject Payment
+                    </button>
                 </div>
                 @endif
+                <div id="payment-receipt-container" class="hidden">
+                    <a id="btn-print-receipt" href="#" target="_blank" class="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">
+                        <i class="bi bi-file-earmark-pdf-fill mr-2"></i> Download Receipt
+                    </a>
+                </div>
                 <button type="button" onclick="closePaymentModal()" class="px-8 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-200 transition-all ml-auto active:scale-95">
                     Close
                 </button>
@@ -474,8 +492,18 @@
                         </div>
                         
                         <div id="cnRejectReasonSection" class="hidden bg-rose-50 p-6 rounded-2xl shadow-sm border border-rose-100">
-                            <p class="text-[10px] text-rose-500 uppercase font-black tracking-widest mb-2">Rejection Reason</p>
-                            <p class="text-sm text-rose-700 font-medium leading-relaxed" id="cnDetailRejectReason">-</p>
+                            <p class="text-[10px] text-rose-500 uppercase font-black tracking-widest mb-2">Rejection Information</p>
+                            <p class="text-sm text-rose-700 font-medium leading-relaxed mb-2" id="cnDetailRejectReason">-</p>
+                            <div class="grid grid-cols-2 gap-4 mt-2 border-t border-rose-200/50 pt-2">
+                                <div>
+                                    <span class="block text-[9px] uppercase font-bold text-rose-400">Rejected By</span>
+                                    <span class="text-xs font-bold text-rose-800" id="cnDetailRejectedBy">-</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[9px] uppercase font-bold text-rose-400">Rejected At</span>
+                                    <span class="text-xs font-bold text-rose-800" id="cnDetailRejectedAt">-</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="bg-indigo-600 rounded-3xl p-8 flex flex-col justify-center items-center shadow-lg shadow-indigo-200 text-white relative overflow-hidden">
@@ -504,27 +532,37 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Audit Trail Section -->
+                <div class="mt-8">
+                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center mb-4">
+                        <span class="w-8 h-[2px] bg-indigo-500 mr-3"></span> Audit Trail
+                    </h4>
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4" id="cn-audit-trail">
+                        <!-- Audit trail items will be appended dynamically -->
+                    </div>
+                </div>
             </div>
             
             <!-- Actions Footer -->
             <div class="bg-white border-t border-slate-100 px-8 py-5">
                 <div id="cnActionSection" class="flex flex-col md:flex-row gap-4">
                      @if(Auth::user()->hasPermission('can_approve_credit_note'))
-                    <button onclick="approveNote()" class="flex-1 h-12 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">
+                    <button id="btn-cn-approve" onclick="approveNote()" class="flex-1 h-12 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">
                         Approve Credit Note
                     </button>
-                    @endif
-                    {{-- <button onclick="showCnRejectInput()" class="flex-1 h-12 bg-white text-rose-600 border-2 border-rose-200 rounded-xl font-bold hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-95">
+                    <button id="btn-cn-reject-trigger" onclick="showCnRejectInput()" class="flex-1 h-12 bg-white text-rose-600 border-2 border-rose-200 rounded-xl font-bold hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-95">
                         Reject Request
-                    </button> --}}
+                    </button>
+                    @endif
                 </div>
                 
                 <div id="cnRejectArea" class="hidden animate-in slide-in-from-bottom-4 duration-300">
                     <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Reason for Rejection</label>
                     <textarea id="cnRejectReasonInput" rows="3" class="w-full p-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 mb-4 transition-all text-sm font-medium" placeholder="Enter why this request is being rejected..."></textarea>
                     <div class="flex gap-3">
-                        <button onclick="rejectNote()" class="flex-1 h-12 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 active:scale-95">Confirm Reject</button>
-                        <button onclick="hideCnRejectInput()" class="px-8 h-12 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all active:scale-95">Cancel</button>
+                        <button id="btn-cn-reject-confirm" onclick="rejectNote()" class="flex-1 h-12 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 active:scale-95">Confirm Reject</button>
+                        <button id="btn-cn-reject-cancel" onclick="hideCnRejectInput()" class="px-8 h-12 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all active:scale-95">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -540,6 +578,19 @@
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <script>
+    // Helper functions to disable/enable buttons and update visuals during requests
+    function disableButton(btn) {
+        if (!btn) return;
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    function enableButton(btn) {
+        if (!btn) return;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
     // ==========================================
     // AGENT PAYMENTS LOGIC
     // ==========================================
@@ -588,6 +639,10 @@
                         if (payment.status == 0) {
                             bulkContainer.classList.remove('hidden');
                             document.getElementById('btn-approve-all').onclick = () => approveBulkPayments(payment.id);
+                            const btnReject = document.getElementById('btn-reject-payment');
+                            if (btnReject) {
+                                btnReject.onclick = () => rejectPayment(payment.id);
+                            }
                         } else {
                             bulkContainer.classList.add('hidden');
                         }
@@ -627,6 +682,56 @@
                         notesContainer.classList.add('hidden');
                     }
 
+                    // Audit Trail
+                    const auditTrail = document.getElementById('payment-audit-trail');
+                    auditTrail.innerHTML = '';
+                    if (payment.history && payment.history.length > 0) {
+                        payment.history.forEach(log => {
+                            const dateStr = moment(log.created_at).format('MMM DD, YYYY hh:mm A');
+                            const actorName = log.creator ? (log.creator.first_name + ' ' + (log.creator.last_name || '')) : 'System';
+                            
+                            let iconClass = 'bi-info-circle text-slate-500 bg-slate-100';
+                            if (log.status == 1) {
+                                iconClass = 'bi-check-circle-fill text-emerald-600 bg-emerald-50';
+                            } else if (log.status == 2) {
+                                iconClass = 'bi-x-circle-fill text-rose-600 bg-rose-50';
+                            } else {
+                                iconClass = 'bi-plus-circle text-amber-600 bg-amber-50';
+                            }
+
+                            auditTrail.innerHTML += `
+                                <div class="flex gap-4 items-start pb-4 border-b border-slate-100 last:border-b-0" style="padding-top: 10px;">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconClass.split(' ').slice(1).join(' ')}">
+                                        <i class="bi ${iconClass.split(' ')[0]} text-lg"></i>
+                                    </div>
+                                    <div class="flex-grow" style="width: 100%;">
+                                        <div class="flex justify-between items-center" style="display: flex; justify-content: space-between; width: 100%;">
+                                            <span class="text-sm font-bold text-slate-800">${log.action}</span>
+                                            <span class="text-[10px] text-slate-400 font-medium">${dateStr}</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-1">${log.description}</p>
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">By: ${actorName}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        auditTrail.innerHTML = `
+                            <div class="text-center py-6 text-slate-400 text-xs italic">
+                                <i class="bi bi-clock-history text-xl block mb-2"></i> No history logs available.
+                            </div>
+                        `;
+                    }
+
+                    // Receipt Option
+                    const receiptContainer = document.getElementById('payment-receipt-container');
+                    if (payment.status == 1) {
+                        receiptContainer.classList.remove('hidden');
+                        document.getElementById('btn-print-receipt').href = `/api/agent-payments/receipt/${payment.id}`;
+                    } else {
+                        receiptContainer.classList.add('hidden');
+                    }
+
                     // Orders Table
                     const ordersList = document.getElementById('payment-orders-list');
                     ordersList.innerHTML = '';
@@ -641,9 +746,11 @@
                             alreadyPaidBeforeThis = Math.max(0, paidAmount - currentPayment);
                         }
 
-                        const percentage = (grandTotal > 0) ? (alreadyPaidBeforeThis / grandTotal) * 100 : 0;
-                        const newPercentage = (grandTotal > 0) ? ((alreadyPaidBeforeThis + currentPayment) / grandTotal) * 100 : 0;
+                        const isRejected = (payment.status == 2 || dist.status == 3);
                         const isProcessed = dist.status != 1;
+
+                        const percentage = (grandTotal > 0) ? (alreadyPaidBeforeThis / grandTotal) * 100 : 0;
+                        const newPercentage = isRejected ? percentage : ((grandTotal > 0) ? ((alreadyPaidBeforeThis + currentPayment) / grandTotal) * 100 : 0);
                         const rowId = `payment-accordion-${index}`;
 
                         ordersList.innerHTML += `
@@ -678,7 +785,7 @@
                                         <h5 class="text-sm font-black text-indigo-700 mb-1">Order #${order.order_number}</h5>
                                         <p class="text-xs text-slate-600 mb-1">Order Total: Rs. ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                                         <p class="text-xs text-slate-600 mb-1">Already Paid: Rs. ${alreadyPaidBeforeThis.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                                        <p class="text-xs font-bold text-rose-600 mb-4">Remaining Balance: Rs. ${Math.max(0, grandTotal - alreadyPaidBeforeThis - currentPayment).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                        <p class="text-xs font-bold text-rose-600 mb-4">Remaining Balance: Rs. ${Math.max(0, grandTotal - alreadyPaidBeforeThis - (isRejected ? 0 : currentPayment)).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                                         
                                         <div class="relative w-full bg-slate-200 rounded-full h-2 shadow-inner">
                                             <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, percentage)}%"></div>
@@ -686,7 +793,7 @@
                                         </div>
                                         
                                         <div class="flex justify-between items-center mt-2">
-                                            <span class="text-[10px] text-indigo-600 font-black italic tracking-wide">${isProcessed ? '* This payment is processed' : '* Includes this pending payment'}</span>
+                                            <span class="text-[10px] ${isRejected ? 'text-rose-600' : (isProcessed ? 'text-slate-500' : 'text-indigo-600')} font-black italic tracking-wide">${isRejected ? '* This payment was rejected' : (isProcessed ? '* This payment is processed' : '* Includes this pending payment')}</span>
                                             <span class="text-[10px] font-black text-slate-400 uppercase">${Math.round(newPercentage)}% Completed</span>
                                         </div>
                                     </div>
@@ -739,6 +846,11 @@
             }
         }).then((result) => {
             if (result.isConfirmed) {
+                const btnApprove = document.getElementById('btn-approve-all');
+                const btnReject = document.getElementById('btn-reject-payment');
+                disableButton(btnApprove);
+                disableButton(btnReject);
+
                 fetch('/api/agent-payments/approve-bulk', {
                     method: 'POST',
                     headers: {
@@ -757,8 +869,78 @@
                             confirmButtonColor: '#4f46e5'
                         }).then(() => window.location.reload());
                     } else {
+                        enableButton(btnApprove);
+                        enableButton(btnReject);
                         Swal.fire('Error', data.message, 'error');
                     }
+                })
+                .catch(err => {
+                    enableButton(btnApprove);
+                    enableButton(btnReject);
+                    Swal.fire('Error', 'An internal error occurred.', 'error');
+                });
+            }
+        });
+    }
+
+    function rejectPayment(paymentId) {
+        Swal.fire({
+            title: 'Reject Agent Payment?',
+            text: "Please enter the reason for rejecting this payment:",
+            input: 'text',
+            inputPlaceholder: 'Reason for rejection...',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Yes, Reject It',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to specify a reason!'
+                }
+            },
+            showLoaderOnConfirm: true,
+            preConfirm: (reason) => {
+                const btnApprove = document.getElementById('btn-approve-all');
+                const btnReject = document.getElementById('btn-reject-payment');
+                disableButton(btnApprove);
+                disableButton(btnReject);
+
+                return fetch('/api/agent-payments/reject', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ 
+                        agent_payment_id: paymentId,
+                        rejection_reason: reason
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        enableButton(btnApprove);
+                        enableButton(btnReject);
+                        return response.json().then(err => { throw new Error(err.message || 'Request failed'); });
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    enableButton(btnApprove);
+                    enableButton(btnReject);
+                    Swal.showValidationMessage(`Request failed: ${error.message || error}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result && result.isConfirmed) {
+                Swal.fire({
+                    title: 'Rejected!',
+                    text: 'The payment has been rejected.',
+                    icon: 'success',
+                    confirmButtonColor: '#4f46e5'
+                }).then(() => {
+                    window.location.reload();
                 });
             }
         });
@@ -787,9 +969,15 @@
         const st = statuses[note.status] || statuses[0];
         document.getElementById('cnDetailStatusTag').innerHTML = `<span class="${st.class} px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">${st.label}</span>`;
 
-        if(note.status == 2 && note.reject_reason) {
+        if(note.status == 2) {
             document.getElementById('cnRejectReasonSection').classList.remove('hidden');
-            document.getElementById('cnDetailRejectReason').innerText = note.reject_reason;
+            document.getElementById('cnDetailRejectReason').innerText = note.reject_reason || 'No reason provided';
+            
+            // Set Rejected By and At
+            const rejectedByText = note.rejected_by_user ? (note.rejected_by_user.first_name + ' ' + (note.rejected_by_user.last_name || '')) : 'N/A';
+            const rejectedAtText = note.rejected_at ? moment(note.rejected_at).format('MMM DD, YYYY hh:mm A') : 'N/A';
+            document.getElementById('cnDetailRejectedBy').innerText = rejectedByText;
+            document.getElementById('cnDetailRejectedAt').innerText = rejectedAtText;
         } else {
             document.getElementById('cnRejectReasonSection').classList.add('hidden');
         }
@@ -806,6 +994,47 @@
                 </tr>
             `;
         });
+
+        // Credit Note Audit Trail
+        const auditTrail = document.getElementById('cn-audit-trail');
+        auditTrail.innerHTML = '';
+        if (note.histories && note.histories.length > 0) {
+            note.histories.forEach(log => {
+                const dateStr = moment(log.created_at).format('MMM DD, YYYY hh:mm A');
+                const actorName = log.creator ? (log.creator.first_name ? (log.creator.first_name + ' ' + (log.creator.last_name || '')) : log.creator.user_name) : 'System';
+                
+                let iconClass = 'bi-info-circle text-slate-500 bg-slate-100';
+                if (log.status == 1) {
+                    iconClass = 'bi-check-circle-fill text-emerald-600 bg-emerald-50';
+                } else if (log.status == 2) {
+                    iconClass = 'bi-x-circle-fill text-rose-600 bg-rose-50';
+                } else {
+                    iconClass = 'bi-plus-circle text-amber-600 bg-amber-50';
+                }
+
+                auditTrail.innerHTML += `
+                    <div class="flex gap-4 items-start pb-4 border-b border-slate-100 last:border-b-0" style="padding-top: 10px;">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconClass.split(' ').slice(1).join(' ')}">
+                            <i class="bi ${iconClass.split(' ')[0]} text-lg"></i>
+                        </div>
+                        <div class="flex-grow text-left" style="width: 100%; text-align: left;">
+                            <div class="flex justify-between items-center" style="display: flex; justify-content: space-between; width: 100%;">
+                                <span class="text-sm font-bold text-slate-800">${log.action}</span>
+                                <span class="text-[10px] text-slate-400 font-medium">${dateStr}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">${log.description}</p>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 block">By: ${actorName}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            auditTrail.innerHTML = `
+                <div class="text-center py-6 text-slate-400 text-xs italic">
+                    <i class="bi bi-clock-history text-xl block mb-2"></i> No history logs available.
+                </div>
+            `;
+        }
 
         const cnActionSection = document.getElementById('cnActionSection');
         if (cnActionSection) {
@@ -866,6 +1095,16 @@
         const url = action === 'approve' ? `/credit-note/approve/${selectedCnId}` : `/credit-note/reject/${selectedCnId}`;
         const data = reason ? { reason: reason } : {};
 
+        const btnApprove = document.getElementById('btn-cn-approve');
+        const btnRejectTrigger = document.getElementById('btn-cn-reject-trigger');
+        const btnRejectConfirm = document.getElementById('btn-cn-reject-confirm');
+        const btnRejectCancel = document.getElementById('btn-cn-reject-cancel');
+
+        disableButton(btnApprove);
+        disableButton(btnRejectTrigger);
+        disableButton(btnRejectConfirm);
+        disableButton(btnRejectCancel);
+
         fetch(url, {
             method: 'POST',
             headers: {
@@ -884,8 +1123,19 @@
                     confirmButtonColor: '#059669'
                 }).then(() => window.location.reload());
             } else {
+                enableButton(btnApprove);
+                enableButton(btnRejectTrigger);
+                enableButton(btnRejectConfirm);
+                enableButton(btnRejectCancel);
                 Swal.fire('Error', data.message, 'error');
             }
+        })
+        .catch(err => {
+            enableButton(btnApprove);
+            enableButton(btnRejectTrigger);
+            enableButton(btnRejectConfirm);
+            enableButton(btnRejectCancel);
+            Swal.fire('Error', 'An internal error occurred.', 'error');
         });
     }
 </script>

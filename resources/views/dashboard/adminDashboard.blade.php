@@ -156,7 +156,7 @@
                     {{ Auth::user()->first_name ?? 'Admin' }}! 👋
                 </h2>
                 <p class="text-slate-400 text-sm mt-1 m-0">
-                    Here's what's happening at Dimuthu Bakehouse today.
+                    Here's what's happening at Dimuthu Bake house today.
                 </p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
@@ -370,7 +370,7 @@
                                     </span>
                                 </td>
                                 <td class="text-right">
-                                    <span class="text-slate-400 text-[11px]">{{ $order->created_at->diffForHumans() }}</span>
+                                    <span class="text-slate-400 text-[11px]">{{ $order->created_at->tz('Asia/Colombo')->diffForHumans() }}</span>
                                 </td>
                             </tr>
                         @empty

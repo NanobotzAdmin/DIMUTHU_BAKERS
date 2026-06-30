@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\AdAgent;
 use App\Models\UmUser;
+use App\Models\Notification;
+use App\Models\HsGuideVideo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -253,6 +255,130 @@ class ApiUserController extends Controller
                 'status' => false,
                 'message' => 'An error occurred during profile update',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get notifications for the authenticated user (paginated, latest first).
+     */
+    public function getNotifications(Request $request)
+    {
+        try {
+            $perPage = $request->query('per_page', 20);
+            $user = $request->user();
+
+            $notifications = Notification::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+
+            return response()->json([
+                'status' => true,
+                'data' => $notifications->items(),
+                'pagination' => [
+                    'current_page' => $notifications->currentPage(),
+                    'last_page' => $notifications->lastPage(),
+                    'per_page' => $notifications->perPage(),
+                    'total' => $notifications->total(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Fetch notifications error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch notifications',
+            ], 500);
+        }
+    }
+
+    /**
+     * Mark notifications as read.
+     * Accepts: { notification_ids: [1,2,3] } or { all: true }
+     */
+    public function markNotificationsRead(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if ($request->input('all') === true) {
+                Notification::where('user_id', $user->id)
+                    ->where('is_read', false)
+                    ->update([
+                        'is_read' => true,
+                        'read_at' => now(),
+                    ]);
+            } elseif ($request->has('notification_ids')) {
+                Notification::where('user_id', $user->id)
+                    ->whereIn('id', $request->notification_ids)
+                    ->where('is_read', false)
+                    ->update([
+                        'is_read' => true,
+                        'read_at' => now(),
+                    ]);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Notifications marked as read',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Mark notifications read error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to mark notifications as read',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get unread notification count for badge display.
+     */
+    public function getUnreadCount(Request $request)
+    {
+        try {
+            $count = Notification::where('user_id', $request->user()->id)
+                ->where('is_read', false)
+                ->count();
+
+            return response()->json([
+                'status' => true,
+                'count' => $count,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Unread count error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to get unread count',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get guide videos for the authenticated user's role.
+     */
+    public function getGuideVideos(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $userRoleId = $user->user_role_id;
+
+            $videos = HsGuideVideo::where('status', 1)
+                ->whereHas('userRoles', function ($query) use ($userRoleId) {
+                    $query->where('pm_user_role.id', $userRoleId);
+                })
+                ->orderBy('display_order')
+                ->orderBy('created_at', 'desc')
+                ->get(['id', 'title', 'description', 'video_url', 'thumbnail_url', 'display_order']);
+
+            return response()->json([
+                'status' => true,
+                'data' => $videos,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Guide videos fetch error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch guide videos',
             ], 500);
         }
     }

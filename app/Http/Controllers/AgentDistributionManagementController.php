@@ -276,7 +276,7 @@ class AgentDistributionManagementController extends Controller
                     'commissionEarned' => $s->commission_earned,
                     'varianceNotes' => '',
                     'notes' => '',
-                    'submittedAt' => $s->created_at->format('Y-m-d H:i:s'),
+                    'submittedAt' => $s->created_at->tz('Asia/Colombo')->format('Y-m-d H:i:s'),
                 ];
             });
 
@@ -309,7 +309,7 @@ class AgentDistributionManagementController extends Controller
             'amountDueToBakery' => $settlementData->cash_sales,
             'commissionEarned' => $settlementData->commission_earned,
             'loadedValue' => 0,
-            'submittedAt' => $settlementData->created_at->format('Y-m-d H:i:s'),
+            'submittedAt' => $settlementData->created_at->tz('Asia/Colombo')->format('Y-m-d H:i:s'),
             'varianceNotes' => '',
             'notes' => $settlementData->notes,
         ];

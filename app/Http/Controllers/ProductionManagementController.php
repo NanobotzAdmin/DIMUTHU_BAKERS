@@ -239,11 +239,11 @@ class ProductionManagementController extends Controller
                     if ($tracking) {
                         if ($tracking->status == CommonVariables::$instructionCompleted) {
                             $isCompleted = true;
-                            $endTime = $tracking->end_time ? Carbon::parse($tracking->end_time)->format('h:i A') : null;
-                            $startTime = $tracking->start_time ? Carbon::parse($tracking->start_time)->format('h:i A') : null;
+                            $endTime = $tracking->end_time ? Carbon::parse($tracking->end_time)->tz('Asia/Colombo')->format('h:i A') : null;
+                            $startTime = $tracking->start_time ? Carbon::parse($tracking->start_time)->tz('Asia/Colombo')->format('h:i A') : null;
                         } elseif ($tracking->status == CommonVariables::$instructionInProgress) {
                             $isInProgress = true;
-                            $startTime = $tracking->start_time ? Carbon::parse($tracking->start_time)->format('h:i A') : null;
+                            $startTime = $tracking->start_time ? Carbon::parse($tracking->start_time)->tz('Asia/Colombo')->format('h:i A') : null;
                         }
                     }
 
@@ -284,7 +284,7 @@ class ProductionManagementController extends Controller
                 'recipeName' => $recipe ? $recipe->name : $prodName,
                 'recipeIcon' => '👨‍🍳',
                 'section' => $section,
-                'scheduledTime' => $start->format('h:i A'),
+                'scheduledTime' => $start->tz('Asia/Colombo')->format('h:i A'),
                 'quantity' => $sch->quantity,
                 'unit' => 'units',
                 'status' => $status,
@@ -641,8 +641,8 @@ class ProductionManagementController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Step completed successfully',
-                'completed_at' => now()->format('h:i A'),
-                'next_started_at' => now()->format('h:i A'),
+                'completed_at' => now()->tz('Asia/Colombo')->format('h:i A'),
+                'next_started_at' => now()->tz('Asia/Colombo')->format('h:i A'),
                 'is_batch_completed' => false
             ]);
 

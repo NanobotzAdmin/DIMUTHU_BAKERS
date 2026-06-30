@@ -256,9 +256,9 @@
                                 @endif
 
                                 <div class="flex items-center gap-4 text-sm text-gray-500">
-                                    <span>Issued: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</span>
+                                    <span>Issued: {{ \Carbon\Carbon::parse($invoice->invoice_date)->tz('Asia/Colombo')->format('M d, Y') }}</span>
                                     <span class="text-gray-400">•</span>
-                                    <span>Due: {{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</span>
+                                    <span>Due: {{ \Carbon\Carbon::parse($invoice->due_date)->tz('Asia/Colombo')->format('M d, Y') }}</span>
                                 </div>
                             </div>
                         </div>

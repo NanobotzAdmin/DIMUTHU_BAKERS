@@ -145,7 +145,7 @@
                                     </div>
                                     <div>
                                         <span>Created:</span>
-                                        <span class="ml-2 font-medium text-gray-900">{{ \Carbon\Carbon::parse($allocation['createdAt'])->format('d/m/Y') }}</span>
+                                        <span class="ml-2 font-medium text-gray-900">{{ \Carbon\Carbon::parse($allocation['createdAt'])->tz('Asia/Colombo')->format('d/m/Y') }}</span>
                                     </div>
                                 </div>
 
@@ -207,7 +207,7 @@
                                 </div>
                                 <div>
                                     <span class="text-gray-600">Posted:</span>
-                                    <span class="ml-2 font-medium text-gray-900">{{ $allocation['postedAt'] ? \Carbon\Carbon::parse($allocation['postedAt'])->format('d/m/Y') : '-' }}</span>
+                                    <span class="ml-2 font-medium text-gray-900">{{ $allocation['postedAt'] ? \Carbon\Carbon::parse($allocation['postedAt'])->tz('Asia/Colombo')->format('d/m/Y') : '-' }}</span>
                                 </div>
                                 <div>
                                     <span class="text-gray-600">By:</span>

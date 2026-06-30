@@ -61,7 +61,7 @@
                                     </span>
                                     @if(!empty($integration->last_sync))
                                         <span class="text-xs text-gray-500">
-                                            Last sync: {{ \Carbon\Carbon::parse($integration->last_sync)->format('Y-m-d H:i') }}
+                                            Last sync: {{ \Carbon\Carbon::parse($integration->last_sync)->tz('Asia/Colombo')->format('Y-m-d H:i') }}
                                         </span>
                                     @endif
                                 </div>

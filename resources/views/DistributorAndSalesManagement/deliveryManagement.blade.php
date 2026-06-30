@@ -231,7 +231,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-600">
                                     @if($delivery->scheduledDate)
-                                        <div>{{ \Carbon\Carbon::parse($delivery->scheduledDate)->format('M d') }}</div>
+                                        <div>{{ \Carbon\Carbon::parse($delivery->scheduledDate)->tz('Asia/Colombo')->format('M d') }}</div>
                                         <div class="text-xs text-gray-400 capitalize">{{ $delivery->timeSlot }}</div>
                                     @else
                                         <span class="text-gray-400 italic">Unscheduled</span>

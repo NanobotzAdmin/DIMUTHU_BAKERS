@@ -72,7 +72,7 @@
                             </span>
                             <span class="font-semibold text-gray-900">{{ $alert->title }}</span>
                             <span class="text-xs text-gray-500">
-                                {{ \Carbon\Carbon::parse($alert->createdAt)->format('M d, Y h:i A') }}
+                                {{ \Carbon\Carbon::parse($alert->createdAt)->tz('Asia/Colombo')->format('M d, Y h:i A') }}
                             </span>
                         </div>
                         <p class="text-sm text-gray-700 mb-2">{{ $alert->message }}</p>
@@ -486,7 +486,7 @@
         document.getElementById('detail-priority').innerText = rule.priority;
         document.getElementById('detail-trigger').innerText = rule.trigger.replace('-', ' ');
         document.getElementById('detail-createdBy').innerText = rule.createdBy;
-        document.getElementById('detail-createdAt').innerText = new Date(rule.createdAt).toLocaleDateString();
+        document.getElementById('detail-createdAt').innerText = new Date(rule.createdAt).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' });
 
         const statusSpan = document.getElementById('detail-status');
         if(rule.isActive) {
@@ -523,7 +523,7 @@
 
         // Execution
         document.getElementById('detail-executions').innerText = rule.executionCount;
-        document.getElementById('detail-lastExecuted').innerText = rule.lastExecuted ? new Date(rule.lastExecuted).toLocaleString() : 'Never';
+        document.getElementById('detail-lastExecuted').innerText = rule.lastExecuted ? new Date(rule.lastExecuted).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) : 'Never';
 
         // Buttons
         const toggleBtn = document.getElementById('detail-toggle-btn');

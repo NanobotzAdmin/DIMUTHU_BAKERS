@@ -218,7 +218,7 @@ $roles - Collection of Role models (or array with permissions)
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-600">
                                 {{-- Last Login not available in UmUser, using Updated At as placeholder or N/A --}}
-                                {{ $user->updated_at ? \Carbon\Carbon::parse($user->updated_at)->format('M d, H:i') : 'N/A' }}
+                                {{ $user->updated_at ? \Carbon\Carbon::parse($user->updated_at)->tz('Asia/Colombo')->format('M d, H:i') : 'N/A' }}
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">

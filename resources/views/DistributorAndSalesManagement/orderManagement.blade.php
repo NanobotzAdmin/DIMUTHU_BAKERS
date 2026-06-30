@@ -92,6 +92,7 @@
                 'icon' => 'check-circle',
             ],
             'cancelled' => ['color' => 'bg-red-100 text-red-700 border-red-300', 'label' => 'Cancelled', 'icon' => 'x'],
+            'rejected' => ['color' => 'bg-red-100 text-red-700 border-red-300', 'label' => 'Rejected', 'icon' => 'x-circle'],
             'on-hold' => [
                 'color' => 'bg-orange-100 text-orange-700 border-orange-300',
                 'label' => 'On Hold',
@@ -103,7 +104,7 @@
 @endphp
 
 @section('content')
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 p-4 md:p-6 font-sans text-slate-800">
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 p-2 md:p-6 font-sans text-slate-800">
 
         {{-- HEADER --}}
         <div class="mb-6">
@@ -120,8 +121,8 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Order Management</h1>
-                        <p class="text-gray-600">Manage pickup orders, special orders & scheduled production</p>
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Order Management</h1>
+                        <p class="text-sm md:text-base text-gray-600">Manage pickup orders, special orders & scheduled production</p>
                     </div>
                 </div>
 
@@ -165,10 +166,10 @@
             </div>
 
             {{-- SUMMARY CARDS --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                 {{-- Total --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-purple-500">
+                    class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-purple-500">
                     <div class="flex items-center justify-between mb-3">
                         <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -188,7 +189,7 @@
 
                 {{-- Pending Approval --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-amber-500">
+                    class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-amber-500">
                     <div class="flex items-center justify-between mb-3">
                         <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -206,7 +207,7 @@
 
                 {{-- Approved --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-blue-500">
+                    class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-blue-500">
                     <div class="flex items-center justify-between mb-3">
                         <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -224,7 +225,7 @@
 
                 {{-- Dispatched --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-cyan-500">
+                    class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-cyan-500">
                     <div class="flex items-center justify-between mb-3">
                         <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-cyan-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -244,7 +245,7 @@
 
                 {{-- Completed --}}
                 <div
-                    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-emerald-500">
+                    class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-emerald-500">
                     <div class="flex items-center justify-between mb-3">
                         <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -258,6 +259,25 @@
                     <h3 class="text-gray-600 mb-1 text-sm font-medium">Completed</h3>
                     <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['completed'] ?? 0 }}</p>
                     <p class="text-sm text-gray-500 font-medium">Delivered successfully</p>
+                </div>
+
+                {{-- Rejected --}}
+                <div
+                    class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-t-4 border-red-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="15" y1="9" x2="9" y2="15" />
+                                <line x1="9" y1="9" x2="15" y2="15" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-100">Rejected</span>
+                    </div>
+                    <h3 class="text-gray-600 mb-1 text-sm font-medium">Rejected</h3>
+                    <p class="text-2xl font-bold text-gray-900">{{ $summary['ordersByStatus']['rejected'] ?? 0 }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Orders rejected</p>
                 </div>
             </div>
 
@@ -353,6 +373,12 @@
                     <span
                         class="px-1.5 py-0.5 bg-gray-200 rounded text-xs ml-1">{{ $summary['ordersByStatus']['completed'] ?? 0 }}</span>
                 </button>
+                <button onclick="filterData('status', 'rejected', this)"
+                    class="filter-btn flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    <span>Rejected</span>
+                    <span
+                        class="px-1.5 py-0.5 bg-gray-200 rounded text-xs ml-1">{{ $summary['ordersByStatus']['rejected'] ?? 0 }}</span>
+                </button>
             </div>
 
 
@@ -390,20 +416,20 @@
                     ];
                 @endphp
 
-                <div class="order-item bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300"
+                <div class="order-item bg-white rounded-2xl p-3 md:p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300"
                     data-channel="{{ $channelSlugs[$order['order_type']] ?? '' }}" data-status="{{ $order['status'] }}"
                     data-search="{{ strtolower($order['order_number'] . ' ' . $order['customer_name'] . ' ' . $order['customer_phone']) }}">
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 md:gap-4">
                         {{-- Left --}}
                         <div class="flex-1">
-                            <div class="flex items-start gap-4">
+                            <div class="flex items-start gap-2 md:gap-4">
                                 {{-- Icon --}}
                                 <div
-                                    class="w-14 h-14 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    class="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center flex-shrink-0">
                                     @if ($channelConfig['icon'] == 'store')
                                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round" class="text-purple-600">
+                                            stroke-linejoin="round" class="text-purple-600 w-5 h-5 md:w-7 md:h-7">
                                             <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" />
                                             <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                                             <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" />
@@ -414,7 +440,7 @@
                                     @elseif($channelConfig['icon'] == 'gift')
                                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round" class="text-purple-600">
+                                            stroke-linejoin="round" class="text-purple-600 w-5 h-5 md:w-7 md:h-7">
                                             <rect x="3" y="8" width="18" height="4" rx="1" />
                                             <path d="M12 8v13" />
                                             <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
@@ -424,7 +450,7 @@
                                     @elseif($channelConfig['icon'] == 'agent')
                                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round" class="text-purple-600">
+                                            stroke-linejoin="round" class="text-purple-600 w-5 h-5 md:w-7 md:h-7">
                                             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                             <circle cx="8.5" cy="7" r="4"></circle>
                                             <polyline points="17 11 19 13 23 9"></polyline>
@@ -432,7 +458,7 @@
                                     @else
                                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round" class="text-purple-600">
+                                            stroke-linejoin="round" class="text-purple-600 w-5 h-5 md:w-7 md:h-7">
                                             <path d="m17 2 4 4-4 4" />
                                             <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
                                             <path d="m7 22-4-4 4-4" />
@@ -442,32 +468,43 @@
                                 </div>
 
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-3 mb-2 flex-wrap">
-                                        <h3 class="text-xl text-gray-900 font-bold">{{ $order['order_number'] }}</h3>
-
+                                    <div class="mb-1">
+                                        <h3 class="text-base md:text-xl text-gray-900 font-bold break-all md:break-normal">{{ $order['order_number'] }}</h3>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 md:gap-2 mb-2 flex-wrap">
                                         <span
-                                            class="{{ $channelConfig['color'] }} border px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs font-medium">
+                                            class="{{ $channelConfig['color'] }} border px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs font-medium">
                                             {{ $channelConfig['label'] }}
                                         </span>
                                         <span
-                                            class="{{ $statusConfig['color'] }} border px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs font-medium">
+                                            class="{{ $statusConfig['color'] }} border px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs font-medium">
                                             {{ $statusConfig['label'] }}
                                         </span>
                                         @if(!empty($order['notes']))
-                                            <span class="bg-amber-100 text-amber-700 border border-amber-300 px-2 py-1 rounded-lg flex items-center gap-1 text-xs font-semibold" title="{{ $order['notes'] }}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
+                                            <span class="bg-amber-100 text-amber-700 border border-amber-300 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg flex items-center gap-1 text-[10px] md:text-xs font-semibold" title="{{ $order['notes'] }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600 w-3 h-3 md:w-auto md:h-auto">
                                                     <path d="M12 20h9" />
                                                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                                                 </svg>
-                                                Note Available
+                                                Note
+                                            </span>
+                                        @endif
+                                        @if ($order['is_downloaded'])
+                                            <span class="bg-green-100 text-green-700 border border-green-300 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg flex items-center gap-1 text-[10px] md:text-xs font-semibold" title="Dispatch Note Downloaded">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 md:w-auto md:h-auto">
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                </svg>
+                                                Downloaded
                                             </span>
                                         @endif
                                         @if ($order['recurrence_pattern'])
                                             <span
-                                                class="bg-orange-100 text-orange-700 border border-orange-300 px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs font-medium">
+                                                class="bg-orange-100 text-orange-700 border border-orange-300 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs font-medium">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                    stroke-linejoin="round">
+                                                    stroke-linejoin="round" class="w-3 h-3 md:w-auto md:h-auto">
                                                     <path d="m17 2 4 4-4 4" />
                                                     <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
                                                     <path d="m7 22-4-4 4-4" />
@@ -478,21 +515,21 @@
                                         @endif
                                     </div>
 
-                                    <div class="flex flex-wrap items-center gap-4 mb-3 text-gray-600 text-sm">
-                                        <div class="flex items-center text-blue-800 justify-center gap-2 bg-blue-100 px-2 py-1 rounded-lg border border-blue-800">
+                                    <div class="flex flex-wrap items-center gap-2 md:gap-4 mb-2 text-gray-600 text-[11px] md:text-sm">
+                                        <div class="flex items-center text-blue-800 justify-center gap-1 md:gap-2 bg-blue-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-blue-800">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round">
+                                                stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
                                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                                                 <circle cx="12" cy="7" r="4" />
                                             </svg>
-                                            <span class="font-medium">{{ $order['customer_name'] }}</span>
+                                            <span class="font-medium truncate max-w-[100px] md:max-w-none">{{ $order['customer_name'] }}</span>
                                         </div>
                                         @if ($order['customer_phone'] !== '-')
-                                            <div class="flex items-center gap-2 text-purple-800 justify-center bg-purple-200 px-2 py-1 rounded-lg border border-purple-800">
+                                            <div class="flex items-center gap-1 md:gap-2 text-purple-800 justify-center bg-purple-200 px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg border border-purple-800">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                    stroke-linejoin="round">
+                                                    stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
                                                     <path
                                                         d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                                                 </svg>
@@ -515,33 +552,33 @@
                                         @endif
                                     </div>
 
-                                    <div class="flex flex-wrap items-center gap-4 text-gray-600 text-sm">
-                                        <div class="flex items-center gap-2">
+                                    <div class="flex flex-wrap items-center gap-2 md:gap-4 text-gray-600 text-[11px] md:text-sm">
+                                        <div class="flex items-center gap-1 md:gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round">
+                                                stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
                                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                                                 <line x1="16" y1="2" x2="16" y2="6" />
                                                 <line x1="8" y1="2" x2="8" y2="6" />
                                                 <line x1="3" y1="10" x2="21" y2="10" />
                                             </svg>
                                             <span>
-                                                {{ $order['delivery_date'] ? \Carbon\Carbon::parse($order['delivery_date'])->format('M j, Y \a\t g:i A') : '-' }}
+                                                {{ $order['delivery_date'] ? \Carbon\Carbon::parse($order['delivery_date'])->tz('Asia/Colombo')->format('M j, Y \a\t g:i A') : '-' }}
                                             </span>
                                         </div>
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex items-center gap-1 md:gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round">
+                                                stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
                                                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                                                 <circle cx="12" cy="10" r="3" />
                                             </svg>
                                             <span>{{ $order['delivery_type_text'] }}</span>
                                         </div>
-                                        <div class="flex items-center gap-2">
+                                        <div class="flex items-center gap-1 md:gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round">
+                                                stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
                                                 <circle cx="8" cy="21" r="1" />
                                                 <circle cx="19" cy="21" r="1" />
                                                 <path
@@ -580,16 +617,16 @@
                         </div>
 
                         {{-- Right --}}
-                        <div class="flex flex-col items-end gap-3">
-                            <div class="text-right">
-                                <p class="text-gray-600 text-sm">Total Amount</p>
-                                <p class="text-2xl font-bold text-gray-900">Rs {{ $order['grand_total'] }}</p>
+                        <div class="flex flex-col items-start lg:items-end gap-2 md:gap-3 mt-1 lg:mt-0 w-full lg:w-auto border-t lg:border-t-0 border-gray-100 pt-3 lg:pt-0">
+                            <div class="flex items-center justify-between w-full lg:w-auto lg:block">
+                                <p class="text-gray-600 text-[11px] md:text-sm">Total Amount</p>
+                                <p class="text-lg md:text-2xl font-bold text-gray-900">Rs {{ $order['grand_total'] }}</p>
                             </div>
-                            <div class="flex gap-2">
-                                @if (in_array($order['status'], ['out-for-delivery', 'dispatch-confirmed', 'completed']))
+                            <div class="flex gap-2 w-full lg:w-auto">
+                                @if (in_array($order['status'], ['approved', 'out-for-delivery', 'dispatch-confirmed', 'completed']))
                                     <a href="{{ route('orderManagement.printDispatchNote', $order['id']) }}"
                                         target="_blank"
-                                        class="h-10 px-4 bg-white border-2 border-purple-200 text-purple-600 hover:bg-purple-50 rounded-xl flex items-center gap-2 shadow-sm transition-all duration-300">
+                                        class="h-9 md:h-10 px-3 md:px-4 bg-white border-2 border-purple-200 text-purple-600 hover:bg-purple-50 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-300 flex-1 lg:flex-none text-xs md:text-sm">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
@@ -601,7 +638,7 @@
                                     </a>
                                 @endif
                                 <button onclick="openViewOrderModal({{ json_encode($order) }})"
-                                    class="h-10 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl flex items-center gap-2 shadow-md transition-all duration-300">
+                                    class="h-9 md:h-10 px-3 md:px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl flex items-center justify-center gap-2 shadow-md transition-all duration-300 flex-1 lg:flex-none text-xs md:text-sm">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
@@ -613,6 +650,14 @@
                             </div>
                         </div>
                     </div>
+                    @if(!empty($order['notes']))
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <p class="text-sm bg-amber-50 text-amber-800 px-3 py-2 rounded-lg border border-amber-200">
+                                <span class="font-semibold text-amber-900">Special Instructions:</span>
+                                {{ \Illuminate\Support\Str::limit($order['notes'], 30) }}
+                            </p>
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>
@@ -754,6 +799,7 @@
                 instanceNumber: 1,
                 created_at: orderData.created_at,
                 notes: orderData.notes,
+                is_downloaded: orderData.is_downloaded,
                 requestBranchName: orderData.request_branch_name,
                 reqFromBranchName: orderData.req_from_branch_name,
                 umBranchId: orderData.um_branch_id,
@@ -763,6 +809,9 @@
                 payment_records: orderData.payment_records || [], // Payment records
                 agent_info: orderData.agent_info || null, // New agent details
                 notes: orderData.notes || '', // Order notes
+                rejectedByName: orderData.rejectedByName || null,
+                rejectedAt: orderData.rejectedAt || null,
+                rejectionReason: orderData.rejectionReason || null,
             };
 
             // Create a temporary button element to pass the data
