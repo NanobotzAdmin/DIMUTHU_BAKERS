@@ -822,14 +822,6 @@ class DistributorAndSalesManagementController extends Controller
             $isWarehouseInfo = (int) $request->branch_id === -1;
             $sourceBranchId = $isWarehouseInfo ? null : $request->branch_id;
 
-            // Check if today is holiday or Sunday
-            if (\App\Helpers\DeliveryDateHelper::isHolidayOrSunday(now())) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Today is a holiday or Sunday. Order placement is closed.',
-                ], 422);
-            }
-
             // 1. Calculate all order dates based on recurrence
             $orderDates = [];
 
@@ -891,14 +883,6 @@ class DistributorAndSalesManagementController extends Controller
 
                 $selectedDatetime = \Carbon\Carbon::parse($request->delivery_date);
 
-                // If today is holiday/Sunday, order placement is closed
-                if (\App\Helpers\DeliveryDateHelper::isHolidayOrSunday(now())) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Today is a holiday or Sunday. Order placement is closed.',
-                    ], 422);
-                }
-
                 // If selected date is holiday/Sunday, block it
                 if (\App\Helpers\DeliveryDateHelper::isHolidayOrSunday($selectedDatetime)) {
                     return response()->json([
@@ -907,14 +891,7 @@ class DistributorAndSalesManagementController extends Controller
                     ], 422);
                 }
 
-                $minDelivery = \App\Helpers\DeliveryDateHelper::calculateDeliveryDate(now());
-
-                if ($selectedDatetime->lt($minDelivery)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Earliest possible delivery for this order is '.$minDelivery->tz('Asia/Colombo')->format('F d, Y at h:i A').'.',
-                    ], 422);
-                }
+                // Note: delivery date earlier than min is allowed (user acknowledges via validation step)
 
                 $orderDates[] = $selectedDatetime;
             }
@@ -1889,7 +1866,7 @@ class DistributorAndSalesManagementController extends Controller
                 'agent',
                 'distributions.orderRequest.orderProducts.productItem',
                 'creditNotes',
-                'history.creator'
+                'history.creator',
             ])->findOrFail($id);
 
             return response()->json([
@@ -1988,7 +1965,7 @@ class DistributorAndSalesManagementController extends Controller
                 'created_by' => auth()->id(),
                 'action' => 'Payment Approved',
                 'status' => 1, // Approved
-                'description' => 'Payment approved and settled by ' . auth()->user()->name . '.',
+                'description' => 'Payment approved and settled by '.auth()->user()->name.'.',
             ]);
 
             DB::commit();
@@ -1999,7 +1976,7 @@ class DistributorAndSalesManagementController extends Controller
                     $this->notificationService->createAndSend(
                         $agentPayment->agent->user_id,
                         'Payment Approved',
-                        "Your payment reference REC-" . str_pad($agentPayment->id, 5, '0', STR_PAD_LEFT) . " of Rs. " . number_format($agentPayment->amount, 2) . " has been approved.",
+                        'Your payment reference REC-'.str_pad($agentPayment->id, 5, '0', STR_PAD_LEFT).' of Rs. '.number_format($agentPayment->amount, 2).' has been approved.',
                         'payment',
                         'approved',
                         $agentPayment->id,
@@ -2058,7 +2035,7 @@ class DistributorAndSalesManagementController extends Controller
                         'created_by' => auth()->id(),
                         'action' => 'Payment Rejected',
                         'status' => $distribution->orderRequest->status ?? 0,
-                        'description' => 'Payment of Rs. ' . number_format($distribution->payment_amount, 2) . ' rejected by Admin. Reason: ' . $request->rejection_reason,
+                        'description' => 'Payment of Rs. '.number_format($distribution->payment_amount, 2).' rejected by Admin. Reason: '.$request->rejection_reason,
                     ]);
                 }
             }
@@ -2078,7 +2055,7 @@ class DistributorAndSalesManagementController extends Controller
                 'created_by' => auth()->id(),
                 'action' => 'Payment Rejected',
                 'status' => 2, // Rejected
-                'description' => 'Payment rejected by ' . auth()->user()->name . '. Reason: ' . $request->rejection_reason,
+                'description' => 'Payment rejected by '.auth()->user()->name.'. Reason: '.$request->rejection_reason,
             ]);
 
             DB::commit();
@@ -2089,7 +2066,7 @@ class DistributorAndSalesManagementController extends Controller
                     $this->notificationService->createAndSend(
                         $agentPayment->agent->user_id,
                         'Payment Rejected',
-                        "Your payment reference REC-" . str_pad($agentPayment->id, 5, '0', STR_PAD_LEFT) . " of Rs. " . number_format($agentPayment->amount, 2) . " has been rejected. Reason: " . $request->rejection_reason,
+                        'Your payment reference REC-'.str_pad($agentPayment->id, 5, '0', STR_PAD_LEFT).' of Rs. '.number_format($agentPayment->amount, 2).' has been rejected. Reason: '.$request->rejection_reason,
                         'payment',
                         'rejected',
                         $agentPayment->id,
@@ -2121,7 +2098,7 @@ class DistributorAndSalesManagementController extends Controller
                 'distributions.orderRequest',
                 'creditNotes',
                 'creator',
-                'history.creator'
+                'history.creator',
             ])->findOrFail($id);
 
             // Load Settings
@@ -2996,7 +2973,7 @@ class DistributorAndSalesManagementController extends Controller
                     $this->notificationService->createAndSend(
                         $creditNote->agent->user_id,
                         'Credit Note Approved',
-                        "Your credit note request " . $creditNote->credit_note_number . " of Rs. " . number_format($creditNote->total_amount, 2) . " has been approved.",
+                        'Your credit note request '.$creditNote->credit_note_number.' of Rs. '.number_format($creditNote->total_amount, 2).' has been approved.',
                         'credit_note',
                         'approved',
                         $creditNote->id,
@@ -3045,7 +3022,7 @@ class DistributorAndSalesManagementController extends Controller
                 'created_by' => auth()->id(),
                 'action' => 'REJECTED',
                 'status' => 2,
-                'description' => 'Credit note request rejected. Reason: ' . $request->reason,
+                'description' => 'Credit note request rejected. Reason: '.$request->reason,
             ]);
 
             // Update items status
@@ -3059,7 +3036,7 @@ class DistributorAndSalesManagementController extends Controller
                     $this->notificationService->createAndSend(
                         $creditNote->agent->user_id,
                         'Credit Note Rejected',
-                        "Your credit note request " . $creditNote->credit_note_number . " of Rs. " . number_format($creditNote->total_amount, 2) . " has been rejected. Reason: " . $request->reason,
+                        'Your credit note request '.$creditNote->credit_note_number.' of Rs. '.number_format($creditNote->total_amount, 2).' has been rejected. Reason: '.$request->reason,
                         'credit_note',
                         'rejected',
                         $creditNote->id,
