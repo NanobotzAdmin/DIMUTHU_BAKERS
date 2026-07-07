@@ -794,18 +794,11 @@
 
         if (target.getDay() === 0) {
             Swal.fire({
-                title: 'Delivery Target Notice',
-                text: 'Sundays are non-operational holidays. Do you want to proceed anyway?',
-                icon: 'warning',
-                showCancelButton: true,
+                title: 'Cannot Schedule on Sunday',
+                text: 'Sundays are non-operational holidays. Please select a different delivery date.',
+                icon: 'error',
                 confirmButtonColor: '#4f46e5',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Yes, Proceed',
-                cancelButtonText: 'Change Date'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    setStep(2);
-                }
+                confirmButtonText: 'OK'
             });
             return;
         }
@@ -824,22 +817,51 @@
             success: function(response) {
                 nextBtn.prop('disabled', false).html('Next: Add Products <i class="bi bi-chevron-right"></i>');
                 if (response.status) {
-                    setStep(2);
-                } else {
-                    // Soft warning confirmation - allow proceeding anyway
                     Swal.fire({
-                        title: 'Delivery Target Notice',
-                        text: (response.message || 'The selected delivery date is not recommended.') + ' Do you want to proceed anyway?',
-                        icon: 'warning',
+                        title: 'Confirm Delivery Schedule',
+                        html: `
+                            <div class="text-left mt-2">
+                                <p class="text-sm font-bold text-gray-600 mb-2">Order Placement Policy:</p>
+                                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 mb-4 text-sm text-gray-700">
+                                    <div class="flex items-start gap-2 mb-2">
+                                        <span class="text-indigo-600 font-bold text-lg leading-none">•</span>
+                                        <p class="leading-tight">Orders received <b>before 1:00 PM</b> ➔ delivery/collection by next day 8:00 AM to 10:00 AM</p>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="text-indigo-600 font-bold text-lg leading-none">•</span>
+                                        <p class="leading-tight">Orders received <b>after 1:00 PM</b> ➔ delivery/collection after next day 8:00 AM to 10:00 AM</p>
+                                    </div>
+                                </div>
+                                <p class="text-sm font-bold text-gray-600 mb-2">Selected Delivery Schedule:</p>
+                                <div class="flex gap-3">
+                                    <div class="flex-1 bg-indigo-50 p-2.5 rounded-xl border border-indigo-100 flex items-center gap-2">
+                                        <i class="bi bi-calendar text-indigo-600"></i>
+                                        <span class="text-indigo-600 font-bold text-sm">` + date + `</span>
+                                    </div>
+                                    <div class="flex-1 bg-indigo-50 p-2.5 rounded-xl border border-indigo-100 flex items-center gap-2">
+                                        <i class="bi bi-clock text-indigo-600"></i>
+                                        <span class="text-indigo-600 font-bold text-sm">` + time + `</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
                         showCancelButton: true,
                         confirmButtonColor: '#4f46e5',
                         cancelButtonColor: '#64748b',
-                        confirmButtonText: 'Yes, Proceed',
-                        cancelButtonText: 'Change Date'
+                        confirmButtonText: 'Confirm',
+                        cancelButtonText: 'Cancel'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             setStep(2);
                         }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Delivery Target Notice',
+                        text: response.message || 'The selected delivery date is not allowed.',
+                        icon: 'error',
+                        confirmButtonColor: '#4f46e5',
+                        confirmButtonText: 'OK'
                     });
                 }
             },
@@ -847,20 +869,12 @@
                 nextBtn.prop('disabled', false).html('Next: Add Products <i class="bi bi-chevron-right"></i>');
                 const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Date validation failed.';
                 
-                // Allow proceeding on error as well for soft bypass
                 Swal.fire({
-                    title: 'Bypass Validation?',
-                    text: msg + ' Do you still want to proceed to product selection?',
-                    icon: 'question',
-                    showCancelButton: true,
+                    title: 'Validation Failed',
+                    text: msg,
+                    icon: 'error',
                     confirmButtonColor: '#4f46e5',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Yes, Proceed',
-                    cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        setStep(2);
-                    }
+                    confirmButtonText: 'OK'
                 });
             }
         });

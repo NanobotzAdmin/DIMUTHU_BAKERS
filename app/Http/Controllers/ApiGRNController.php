@@ -132,14 +132,6 @@ class ApiGRNController extends Controller
             ], 422);
         }
 
-        // Check if today is holiday or Sunday
-        if (\App\Helpers\DeliveryDateHelper::isHolidayOrSunday(now())) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Today is a holiday or Sunday. Order placement is closed.',
-            ], 422);
-        }
-
         try {
             DB::beginTransaction();
 
@@ -176,15 +168,7 @@ class ApiGRNController extends Controller
                 ], 422);
             }
 
-            // Calculate min delivery date/time
-            $minDelivery = \App\Helpers\DeliveryDateHelper::calculateDeliveryDate(now());
-
-            if ($selectedDatetime->lt($minDelivery)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Earliest possible delivery for this order is '.$minDelivery->tz('Asia/Colombo')->format('F d, Y at h:i A').'.',
-                ], 422);
-            }
+            // Note: delivery date earlier than min is allowed (user acknowledges via validation step)
 
             // 1. Create Order Request
             $orderRequest = StmOrderRequest::create([
@@ -864,14 +848,6 @@ class ApiGRNController extends Controller
         }
 
         try {
-            // Check if today is holiday or Sunday
-            if (\App\Helpers\DeliveryDateHelper::isHolidayOrSunday(now())) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Today is a holiday or Sunday. Order placement is closed.',
-                ]);
-            }
-
             $selectedDatetime = \Carbon\Carbon::parse($request->delivery_date);
 
             // Check if selected day is Sunday or holiday
@@ -885,12 +861,12 @@ class ApiGRNController extends Controller
             // Calculate min delivery date/time
             $minDelivery = \App\Helpers\DeliveryDateHelper::calculateDeliveryDate(now());
 
-            if ($selectedDatetime->lt($minDelivery)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Earliest possible delivery for this order is '.$minDelivery->tz('Asia/Colombo')->format('F d, Y at h:i A').'.',
-                ]);
-            }
+            // if ($selectedDatetime->lt($minDelivery)) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Earliest possible delivery for this order is '.$minDelivery->tz('Asia/Colombo')->format('F d, Y \a\t h:i A').'.',
+            //     ]);
+            // }
 
             return response()->json([
                 'status' => true,
