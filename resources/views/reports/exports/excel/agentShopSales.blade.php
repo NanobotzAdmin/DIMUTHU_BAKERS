@@ -35,8 +35,8 @@
         <th style="background-color: {{ $companyInfo['colors']['secondary'] ?? '#0d108e' }}; color: #ffffff; font-weight: bold;">Total Sales (Rs)</th>
         <th style="background-color: {{ $companyInfo['colors']['secondary'] ?? '#0d108e' }}; color: #ffffff; font-weight: bold;">Total Returns (Rs)</th>
         <th style="background-color: {{ $companyInfo['colors']['secondary'] ?? '#0d108e' }}; color: #ffffff; font-weight: bold;">Cash Income (Rs)</th>
-        <th style="background-color: {{ $companyInfo['colors']['secondary'] ?? '#0d108e' }}; color: #ffffff; font-weight: bold;">Total Credit (Rs)</th>
         <th style="background-color: {{ $companyInfo['colors']['secondary'] ?? '#0d108e' }}; color: #ffffff; font-weight: bold;">Outstanding (Rs)</th>
+        <th style="background-color: {{ $companyInfo['colors']['secondary'] ?? '#0d108e' }}; color: #ffffff; font-weight: bold;">Total Credit (Rs)</th>
     </tr>
     
     @php
@@ -63,8 +63,8 @@
             <td>{{ $row['total_sales'] }}</td>
             <td>{{ $row['total_returns'] }}</td>
             <td>{{ $row['cash_income'] }}</td>
-            <td>{{ $row['total_credit'] }}</td>
             <td>{{ $row['outstanding_amount'] }}</td>
+            <td>{{ $row['total_credit'] }}</td>
         </tr>
     @endforeach
     
@@ -74,7 +74,7 @@
         <th style="font-weight: bold;">{{ $sumSales }}</th>
         <th style="font-weight: bold;">{{ $sumReturns }}</th>
         <th style="font-weight: bold;">{{ $sumIncome }}</th>
-        <th style="font-weight: bold;">{{ $sumCredit }}</th>
         <th style="font-weight: bold;">{{ $sumOutstanding }}</th>
+        <th style="font-weight: bold;">{{ $sumCredit }}</th>
     </tr>
 </table>

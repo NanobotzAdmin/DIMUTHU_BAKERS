@@ -12,15 +12,15 @@ use App\Models\AdCustomerHasBusiness;
 use App\Models\AdDailyLoad;
 use App\Models\AdDailyLoadItem;
 use App\Models\AdRoute;
+use App\Models\AdSettlement;
 use App\Models\CmCustomer;
+use App\Models\DmDriver;
 use App\Models\PmProductCategory;
 use App\Models\PmProductItem;
+use App\Models\SmSuperviser;
+use App\Models\SoBank;
 use App\Models\StmOrderRequest;
 use App\Models\UmUser;
-use App\Models\AdSettlement;
-use App\Models\SoBank;
-use App\Models\DmDriver;
-use App\Models\SmSuperviser;
 use App\Models\VmVehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -79,11 +79,13 @@ class AgentDistributionManagementController extends Controller
         // Fetch product items and categories for target dropdowns
         $productItems = PmProductItem::where('status', 1)->get(['id', 'product_name']);
         $productCategories = PmProductCategory::where('is_active', true)->get(['id', 'category_name', 'category_code']);
-        
+
         // Fetch active banks for dropdown
         $soBanks = SoBank::where('is_active', 1)->get(['id', 'bank_name', 'bank_code']);
 
-        return view('agentDistribution.agentManagement', compact('agents', 'productItems', 'productCategories', 'soBanks'));
+        $googleMapsKey = config('services.google.maps_key');
+
+        return view('agentDistribution.agentManagement', compact('agents', 'productItems', 'productCategories', 'soBanks', 'googleMapsKey'));
     }
 
     public function dailyLoadsIndex()
@@ -103,7 +105,7 @@ class AgentDistributionManagementController extends Controller
 
             return [
                 'id' => $load->id,
-                'loadNumber' => 'LOAD-' . $load->id, // Simple ID based number for now
+                'loadNumber' => 'LOAD-'.$load->id, // Simple ID based number for now
                 'agentId' => $load->agent_id,
                 'status' => $this->getLoadStatusLabel($load->status),
                 'status_code' => $load->status,
@@ -267,7 +269,7 @@ class AgentDistributionManagementController extends Controller
                     'settlementDate' => $s->settlement_date,
                     'status' => $s->status,
                     'totalSales' => $s->total_sales,
-                    'expectedCash' => $s->cash_sales, // In the mock, actualCash is what agent submitted. Here cash_sales is what they submitted. 
+                    'expectedCash' => $s->cash_sales, // In the mock, actualCash is what agent submitted. Here cash_sales is what they submitted.
                     'actualCash' => $s->cash_sales,   // Assuming cash_sales is the physical cash they claim to have.
                     'cashVariance' => 0, // We might need to calculate this against invoices later
                     'totalCollections' => 0, // Placeholder
@@ -287,7 +289,7 @@ class AgentDistributionManagementController extends Controller
     {
         $settlementData = AdSettlement::with(['agent', 'route', 'dailyLoad'])->find($id);
 
-        if (!$settlementData) {
+        if (! $settlementData) {
             return redirect()->route('settlementList.index')->with('error', 'Settlement not found');
         }
 
@@ -319,15 +321,15 @@ class AgentDistributionManagementController extends Controller
             'agentName' => $settlementData->agent->agent_name,
             'agentCode' => $settlementData->agent->agent_code,
             'agentType' => $settlementData->agent->agent_type,
-            'commissionRate' => $settlementData->agent->commission_rate
+            'commissionRate' => $settlementData->agent->commission_rate,
         ];
         $load = null;
         if ($settlementData->dailyLoad) {
             $load = [
-                'loadNumber' => 'LOAD-' . $settlementData->dailyLoad->id,
+                'loadNumber' => 'LOAD-'.$settlementData->dailyLoad->id,
                 'loadDate' => $settlementData->dailyLoad->load_date->format('Y-m-d'),
                 'totalQuantity' => 0,
-                'totalValue' => 0
+                'totalValue' => 0,
             ];
         }
 
@@ -350,13 +352,13 @@ class AgentDistributionManagementController extends Controller
                 return [
                     'id' => $l->id,
                     'load_number' => $l->load_number,
-                    'load_date' => $l->load_date
+                    'load_date' => $l->load_date,
                 ];
             });
 
         return response()->json([
             'status' => true,
-            'data' => $loads
+            'data' => $loads,
         ]);
     }
 
@@ -371,7 +373,7 @@ class AgentDistributionManagementController extends Controller
             'credit_sales' => 'required|numeric',
             'cheque_sales' => 'required|numeric',
             'commission_earned' => 'required|numeric',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         try {
@@ -386,7 +388,7 @@ class AgentDistributionManagementController extends Controller
                 $lastNum = explode('-', $lastSettlement->settlement_number);
                 $sequence = (int) end($lastNum) + 1;
             }
-            $settlementNumber = "SET-$datePart-" . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+            $settlementNumber = "SET-$datePart-".str_pad($sequence, 3, '0', STR_PAD_LEFT);
 
             $settlement = AdSettlement::create([
                 'agent_id' => $request->agent_id,
@@ -405,12 +407,12 @@ class AgentDistributionManagementController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Settlement created successfully',
-                'data' => $settlement
+                'data' => $settlement,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create settlement: ' . $e->getMessage()
+                'message' => 'Failed to create settlement: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -420,7 +422,7 @@ class AgentDistributionManagementController extends Controller
         $request->validate([
             'id' => 'required',
             'status' => 'required|in:pending,reviewed,approved,disputed',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         try {
@@ -433,12 +435,12 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Settlement status updated successfully'
+                'message' => 'Settlement status updated successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to update settlement status: ' . $e->getMessage()
+                'message' => 'Failed to update settlement status: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -470,11 +472,11 @@ class AgentDistributionManagementController extends Controller
             $settlements[] = [
                 'id' => "stl_gl_$i",
                 'agentId' => $agent['id'],
-                'settlementNumber' => 'SET-' . date('Ymd', strtotime($date)) . "-$i",
+                'settlementNumber' => 'SET-'.date('Ymd', strtotime($date))."-$i",
                 'settlementDate' => $date,
                 'status' => $isPosted ? 'gl_posted' : 'approved',
                 'glPosted' => $isPosted,
-                'glJournalEntryId' => $isPosted ? 'JE-AGT-' . strtotime($date) . "-$i" : null,
+                'glJournalEntryId' => $isPosted ? 'JE-AGT-'.strtotime($date)."-$i" : null,
                 'totalSales' => $sales,
                 'actualCash' => $actual,
                 'amountDueToBakery' => $actual, // Simplified
@@ -560,7 +562,7 @@ class AgentDistributionManagementController extends Controller
             ->get()
             ->map(function ($s) {
                 return [
-                    'id' => $s->agent_id . '_' . strtotime($s->settlement_date) . '_' . $s->settlement_number, // Generate a pseudo ID
+                    'id' => $s->agent_id.'_'.strtotime($s->settlement_date).'_'.$s->settlement_number, // Generate a pseudo ID
                     'agentId' => $s->agent_id,
                     'settlementNumber' => $s->settlement_number,
                     'settlementDate' => $s->settlement_date,
@@ -614,7 +616,7 @@ class AgentDistributionManagementController extends Controller
             ->get()
             ->map(function ($s) {
                 return [
-                    'id' => $s->agent_id . '_' . strtotime($s->settlement_date) . '_' . $s->settlement_number,
+                    'id' => $s->agent_id.'_'.strtotime($s->settlement_date).'_'.$s->settlement_number,
                     'agentId' => $s->agent_id,
                     'settlementNumber' => $s->settlement_number,
                     'settlementDate' => $s->settlement_date,
@@ -661,9 +663,9 @@ class AgentDistributionManagementController extends Controller
                     'id' => (string) $s->invoice_id,
                     'agentId' => (string) $s->agent_id,
                     'settlementDate' => date('Y-m-d', strtotime($s->settlement_date)),
-                    'totalSales' => (double) $s->total_sales,
+                    'totalSales' => (float) $s->total_sales,
                     'cashVariance' => 0, // Placeholder as not directly in invoice table
-                    'commissionEarned' => (double) $s->total_sales * 0.15, // Using standard 15% for overall analytics
+                    'commissionEarned' => (float) $s->total_sales * 0.15, // Using standard 15% for overall analytics
                 ];
             });
 
@@ -684,18 +686,20 @@ class AgentDistributionManagementController extends Controller
                 $method = 'cash';
                 if ($s->payment_type) {
                     $pt = strtolower($s->payment_type);
-                    if (str_contains($pt, 'cash'))
+                    if (str_contains($pt, 'cash')) {
                         $method = 'cash';
-                    elseif (str_contains($pt, 'credit'))
+                    } elseif (str_contains($pt, 'credit')) {
                         $method = 'credit';
-                    elseif (str_contains($pt, 'cheque'))
+                    } elseif (str_contains($pt, 'cheque')) {
                         $method = 'cheque';
+                    }
                 }
+
                 return [
                     'agentId' => (string) $s->agent_id,
                     'saleDate' => date('Y-m-d', strtotime($s->sale_date)),
                     'paymentMethod' => $method,
-                    'totalAmount' => (double) $s->total_amount,
+                    'totalAmount' => (float) $s->total_amount,
                 ];
             });
 
@@ -711,7 +715,7 @@ class AgentDistributionManagementController extends Controller
                     'id' => (string) $agent->id,
                     'agentName' => $agent->agent_name,
                     'agentCode' => $agent->agent_code,
-                    'commissionRate' => (double) $agent->commission_rate,
+                    'commissionRate' => (float) $agent->commission_rate,
                 ];
             });
 
@@ -734,13 +738,13 @@ class AgentDistributionManagementController extends Controller
                     'agentId' => (string) $s->agent_id,
                     'settlementNumber' => $s->settlement_number,
                     'settlementDate' => date('Y-m-d', strtotime($s->settlement_date)),
-                    'totalSales' => (double) $s->total_sales,
-                    'cashSales' => (double) $s->total_sales, // Placeholder
+                    'totalSales' => (float) $s->total_sales,
+                    'cashSales' => (float) $s->total_sales, // Placeholder
                     'creditSales' => 0,
                     'chequeSales' => 0,
-                    'actualCash' => (double) $s->total_sales,
+                    'actualCash' => (float) $s->total_sales,
                     'cashVariance' => 0,
-                    'commissionEarned' => (double) $s->total_sales * 0.15,
+                    'commissionEarned' => (float) $s->total_sales * 0.15,
                     'status' => 'approved',
                 ];
             });
@@ -790,8 +794,8 @@ class AgentDistributionManagementController extends Controller
                 )
                 ->first();
 
-            $totalSales = (double)($salesData->total_sales ?? 0);
-            $invoiceCount = (int)($salesData->invoice_count ?? 0);
+            $totalSales = (float) ($salesData->total_sales ?? 0);
+            $invoiceCount = (int) ($salesData->invoice_count ?? 0);
 
             // 2. Calculate "Getting Amount" (Stock requests from bakery)
             // Including all valid stages of getting stock: Approved to Settled
@@ -801,7 +805,7 @@ class AgentDistributionManagementController extends Controller
                 CommonVariables::$orderRequestReadyToDispatch,
                 CommonVariables::$orderRequestDispatchCompleted,
                 CommonVariables::$orderRequestDispatchConfirmed,
-                CommonVariables::$orderRequestCompleteSettled
+                CommonVariables::$orderRequestCompleteSettled,
             ];
 
             $gettingAmount = StmOrderRequest::where('agent_id', $agentId)
@@ -819,36 +823,36 @@ class AgentDistributionManagementController extends Controller
                 'bonus_rate' => 0,
                 'is_target_achieved' => false,
                 'achievement_pct' => 0,
-                'achievement_msg' => 'No Target Set'
+                'achievement_msg' => 'No Target Set',
             ];
 
             if ($target) {
-                $invoicingRate = (float)$target->invoicing_commission_rate;
+                $invoicingRate = (float) $target->invoicing_commission_rate;
                 $bonusRate = 0;
-                
-                $achievementPct = $target->monthly_sales_target > 0 
-                    ? ($totalSales / $target->monthly_sales_target) * 100 
+
+                $achievementPct = $target->monthly_sales_target > 0
+                    ? ($totalSales / $target->monthly_sales_target) * 100
                     : ($totalSales > 0 ? 100 : 0);
-                
-                $threshold = (float)($target->achievement_threshold ?? 80);
+
+                $threshold = (float) ($target->achievement_threshold ?? 80);
                 $baseComm = 0;
                 $bonusComm = 0;
 
                 if ($achievementPct >= 100) {
                     $baseComm = ($totalSales * ($invoicingRate / 100));
-                    $bonusRate = (float)$target->target_commission_rate;
+                    $bonusRate = (float) $target->target_commission_rate;
                     $bonusComm = ($totalSales * ($bonusRate / 100));
                     $isTargetAchieved = true;
                     $achievementMsg = '100% Achieved (Full Bonus)';
                 } elseif ($achievementPct >= $threshold) {
-                    $bonusRate = (float)$target->reduced_target_commission_rate;
+                    $bonusRate = (float) $target->reduced_target_commission_rate;
                     $bonusComm = ($totalSales * ($bonusRate / 100));
                     $isTargetAchieved = true;
-                    $achievementMsg = number_format($achievementPct, 1) . '% Achieved (Reduced Bonus)';
+                    $achievementMsg = number_format($achievementPct, 1).'% Achieved (Reduced Bonus)';
                 } else {
-                    $bonusRate = (float)$target->reduced_target_commission_rate; // Still show the potential rate
+                    $bonusRate = (float) $target->reduced_target_commission_rate; // Still show the potential rate
                     $isTargetAchieved = false;
-                    $achievementMsg = number_format($achievementPct, 1) . '% Achieved (No Bonus Yet)';
+                    $achievementMsg = number_format($achievementPct, 1).'% Achieved (No Bonus Yet)';
                 }
 
                 $commBreakdown = [
@@ -858,7 +862,7 @@ class AgentDistributionManagementController extends Controller
                     'bonus_rate' => $bonusRate,
                     'is_target_achieved' => $isTargetAchieved,
                     'achievement_pct' => $achievementPct,
-                    'achievement_msg' => $achievementMsg
+                    'achievement_msg' => $achievementMsg,
                 ];
 
                 $tempCommission = $bonusComm;
@@ -869,24 +873,24 @@ class AgentDistributionManagementController extends Controller
             $history = [];
             for ($i = 5; $i >= 0; $i--) {
                 $time = mktime(0, 0, 0, $month - $i, 1, $year);
-                $hYear = (int)date('Y', $time);
-                $hMonth = (int)date('n', $time);
+                $hYear = (int) date('Y', $time);
+                $hMonth = (int) date('n', $time);
 
                 $hTarget = AdAgentMonthlyTarget::where('agent_id', $agentId)
                     ->where('target_year', $hYear)
                     ->where('target_month', $hMonth)
                     ->first();
-                
+
                 if ($hTarget) {
                     $history[] = $hTarget;
                 } else {
                     // Create a pseudo-target with 0s if it doesn't exist for the trend line
-                    $history[] = (object)[
+                    $history[] = (object) [
                         'target_year' => $hYear,
                         'target_month' => $hMonth,
                         'monthly_sales_target' => 0,
                         'monthly_commission' => 0,
-                        'payment_status' => 0
+                        'payment_status' => 0,
                     ];
                 }
             }
@@ -900,7 +904,7 @@ class AgentDistributionManagementController extends Controller
             foreach ($history as $h) {
                 $label = date('M Y', mktime(0, 0, 0, $h->target_month, 1, $h->target_year));
                 $trendLabels[] = $label;
-                
+
                 $monthSales = DB::table('ad_cubusiness_has_invoice as i')
                     ->join('ad_daily_loads as l', 'i.ad_daily_load_id', '=', 'l.id')
                     ->where('l.agent_id', $agentId)
@@ -915,14 +919,14 @@ class AgentDistributionManagementController extends Controller
                     ->whereYear('delivery_date', $h->target_year)
                     ->sum('grand_total');
 
-                $trendSales[] = (double)$monthSales;
-                $trendGetting[] = (double)$monthGetting;
-                $trendTargets[] = (double)$h->monthly_sales_target;
-                
+                $trendSales[] = (float) $monthSales;
+                $trendGetting[] = (float) $monthGetting;
+                $trendTargets[] = (float) $h->monthly_sales_target;
+
                 $commissionHistory[] = [
                     'label' => $label,
-                    'amount' => (double)$h->monthly_commission,
-                    'status' => $h->payment_status
+                    'amount' => (float) $h->monthly_commission,
+                    'status' => $h->payment_status,
                 ];
             }
 
@@ -952,9 +956,9 @@ class AgentDistributionManagementController extends Controller
 
                     $categoryBreakdown[] = [
                         'name' => $ct->category->category_name ?? 'Other',
-                        'target' => (double)$ct->target_amount,
-                        'actual' => (double)$catSales,
-                        'getting' => (double)$catGetting
+                        'target' => (float) $ct->target_amount,
+                        'actual' => (float) $catSales,
+                        'getting' => (float) $catGetting,
                     ];
                 }
             }
@@ -962,28 +966,28 @@ class AgentDistributionManagementController extends Controller
             return response()->json([
                 'success' => true,
                 'metrics' => [
-                    'totalSales' => (double)$totalSales,
-                    'gettingAmount' => (double)$gettingAmount,
-                    'targetAmount' => $target ? (double)$target->monthly_sales_target : 0,
-                    'baseSalary' => $target ? (double)$target->base_salary : 0,
-                    'commission' => (double)$tempCommission,
-                    'tempCommission' => (double)$tempCommission,
+                    'totalSales' => (float) $totalSales,
+                    'gettingAmount' => (float) $gettingAmount,
+                    'targetAmount' => $target ? (float) $target->monthly_sales_target : 0,
+                    'baseSalary' => $target ? (float) $target->base_salary : 0,
+                    'commission' => (float) $tempCommission,
+                    'tempCommission' => (float) $tempCommission,
                     'commissionBreakdown' => $commBreakdown,
                     'paymentStatus' => $target ? $target->payment_status : 0,
                     'orderCount' => $invoiceCount,
-                    'achievement' => $target && $target->monthly_sales_target > 0 ? ($totalSales / $target->monthly_sales_target) * 100 : 0
+                    'achievement' => $target && $target->monthly_sales_target > 0 ? ($totalSales / $target->monthly_sales_target) * 100 : 0,
                 ],
                 'charts' => [
                     'trend' => [
                         'labels' => $trendLabels,
                         'sales' => $trendSales,
                         'getting' => $trendGetting,
-                        'targets' => $trendTargets
+                        'targets' => $trendTargets,
                     ],
                     'categories' => $categoryBreakdown,
-                    'commissions' => $commissionHistory
+                    'commissions' => $commissionHistory,
                 ],
-                'target_details' => $target
+                'target_details' => $target,
             ]);
 
         } catch (\Exception $e) {
@@ -1000,7 +1004,7 @@ class AgentDistributionManagementController extends Controller
                     'id' => (string) $agent->id,
                     'agentName' => $agent->agent_name,
                     'agentCode' => $agent->agent_code,
-                    'commissionRate' => (double) $agent->commission_rate,
+                    'commissionRate' => (float) $agent->commission_rate,
                 ];
             });
 
@@ -1024,13 +1028,13 @@ class AgentDistributionManagementController extends Controller
                     'agentId' => (string) $s->agent_id,
                     'settlementNumber' => $s->settlement_number,
                     'settlementDate' => date('Y-m-d', strtotime($s->settlement_date)),
-                    'totalSales' => (double) $s->total_sales,
-                    'cashSales' => (double) $s->total_sales, // Simple assumption for report placeholder
+                    'totalSales' => (float) $s->total_sales,
+                    'cashSales' => (float) $s->total_sales, // Simple assumption for report placeholder
                     'creditSales' => 0,
                     'chequeSales' => 0,
-                    'actualCash' => (double) $s->total_sales,
+                    'actualCash' => (float) $s->total_sales,
                     'cashVariance' => 0,
-                    'commissionEarned' => (double) $s->total_sales * 0.15,
+                    'commissionEarned' => (float) $s->total_sales * 0.15,
                     'status' => 'approved',
                     'varianceNotes' => '',
                 ];
@@ -1053,18 +1057,20 @@ class AgentDistributionManagementController extends Controller
                 $method = 'cash';
                 if ($s->payment_type) {
                     $pt = strtolower($s->payment_type);
-                    if (str_contains($pt, 'cash'))
+                    if (str_contains($pt, 'cash')) {
                         $method = 'cash';
-                    elseif (str_contains($pt, 'credit'))
+                    } elseif (str_contains($pt, 'credit')) {
                         $method = 'credit';
-                    elseif (str_contains($pt, 'cheque'))
+                    } elseif (str_contains($pt, 'cheque')) {
                         $method = 'cheque';
+                    }
                 }
+
                 return [
                     'agentId' => (string) $s->agent_id,
                     'saleDate' => date('Y-m-d', strtotime($s->sale_date)),
                     'paymentMethod' => $method,
-                    'totalAmount' => (double) ($s->total_amount ?? 0),
+                    'totalAmount' => (float) ($s->total_amount ?? 0),
                 ];
             });
 
@@ -1216,7 +1222,7 @@ class AgentDistributionManagementController extends Controller
                 $orderTotal += $total;
 
                 $items[] = [
-                    'productName' => ['Bun', 'Bread', 'Cake', 'Pastry', 'Muffin'][rand(0, 4)] . ' ' . chr(65 + rand(0, 5)),
+                    'productName' => ['Bun', 'Bread', 'Cake', 'Pastry', 'Muffin'][rand(0, 4)].' '.chr(65 + rand(0, 5)),
                     'quantity' => $qty,
                     'unitPrice' => $price,
                     'total' => $total,
@@ -1225,7 +1231,7 @@ class AgentDistributionManagementController extends Controller
 
             $orders[] = [
                 'id' => "ord_$i",
-                'orderNumber' => 'ORD-' . date('Ymd') . "-$i",
+                'orderNumber' => 'ORD-'.date('Ymd')."-$i",
                 'date' => date('Y-m-d', strtotime("-$i weeks")),
                 'deliveryDate' => date('Y-m-d', strtotime("-$i weeks + 1 day")),
                 'totalAmount' => $orderTotal,
@@ -1245,24 +1251,24 @@ class AgentDistributionManagementController extends Controller
             // Mock FIFO Allocations
             if (rand(0, 1)) {
                 $allocations[] = [
-                    'invoiceNumber' => 'INV-' . date('Ymd') . '-' . rand(100, 999),
+                    'invoiceNumber' => 'INV-'.date('Ymd').'-'.rand(100, 999),
                     'allocatedAmount' => $amount * 0.6,
                 ];
                 $allocations[] = [
-                    'invoiceNumber' => 'INV-' . date('Ymd') . '-' . rand(100, 999),
+                    'invoiceNumber' => 'INV-'.date('Ymd').'-'.rand(100, 999),
                     'allocatedAmount' => $amount * 0.4,
                 ];
             }
 
             $payments[] = [
                 'id' => "pay_$i",
-                'receiptNumber' => 'REC-' . date('Ymd') . "-$i",
+                'receiptNumber' => 'REC-'.date('Ymd')."-$i",
                 'date' => date('Y-m-d', strtotime("-$i months")),
                 'amount' => $amount,
                 'method' => ['cash', 'cheque', 'bank_transfer', 'card'][rand(0, 3)],
                 'status' => 'verified',
                 'agentName' => 'John Doe',
-                'reference' => rand(0, 1) ? 'REF-' . rand(1000, 9999) : null,
+                'reference' => rand(0, 1) ? 'REF-'.rand(1000, 9999) : null,
                 'allocations' => $allocations,
                 'notes' => rand(0, 1) ? 'Payment received with thanks' : null,
             ];
@@ -1271,8 +1277,8 @@ class AgentDistributionManagementController extends Controller
         $visits = [];
         for ($i = 0; $i < 10; $i++) {
             $visitDate = date('Y-m-d', strtotime("-$i days"));
-            $checkIn = date('H:i', strtotime('09:00 + ' . ($i * 30) . ' minutes'));
-            $checkOut = date('H:i', strtotime($checkIn . ' + ' . rand(10, 45) . ' minutes'));
+            $checkIn = date('H:i', strtotime('09:00 + '.($i * 30).' minutes'));
+            $checkOut = date('H:i', strtotime($checkIn.' + '.rand(10, 45).' minutes'));
 
             $status = ['completed', 'skipped', 'in_progress'][rand(0, 2)];
             $orderPlaced = rand(0, 1);
@@ -1280,7 +1286,7 @@ class AgentDistributionManagementController extends Controller
 
             $visits[] = [
                 'id' => "vis_$i",
-                'visitNumber' => 'VISIT-' . date('Ymd') . "-$i",
+                'visitNumber' => 'VISIT-'.date('Ymd')."-$i",
                 'date' => $visitDate,
                 'checkInTime' => $checkIn,
                 'checkOutTime' => $status === 'in_progress' ? null : $checkOut,
@@ -1354,13 +1360,13 @@ class AgentDistributionManagementController extends Controller
 
             // Create user account first
             $defaultPassword = 123456;
-            $userName = strtolower(str_replace(' ', '', $validated['agent_name'])) . '_agent';
+            $userName = strtolower(str_replace(' ', '', $validated['agent_name'])).'_agent';
 
             // Check if username exists, append number if needed
             $baseUserName = $userName;
             $counter = 1;
             while (UmUser::where('user_name', $userName)->exists()) {
-                $userName = $baseUserName . $counter;
+                $userName = $baseUserName.$counter;
                 $counter++;
             }
 
@@ -1418,7 +1424,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating agent: ' . $e->getMessage(),
+                'message' => 'Error creating agent: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1464,7 +1470,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading agent: ' . $e->getMessage(),
+                'message' => 'Error loading agent: '.$e->getMessage(),
             ], 404);
         }
     }
@@ -1539,7 +1545,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating agent: ' . $e->getMessage(),
+                'message' => 'Error updating agent: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1563,13 +1569,13 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Agent ' . $statusText . ' successfully',
+                'message' => 'Agent '.$statusText.' successfully',
                 'new_status' => $newStatus,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error toggling status: ' . $e->getMessage(),
+                'message' => 'Error toggling status: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1593,7 +1599,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deactivating agent: ' . $e->getMessage(),
+                'message' => 'Error deactivating agent: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1607,6 +1613,7 @@ class AgentDistributionManagementController extends Controller
             // Map customers assigned to this route
             $routeCustomers = $route->customers->map(function ($business) {
                 $customer = $business->customer;
+
                 return [
                     'id' => $business->id,
                     'businessName' => $business->business_name ?? ($customer ? $customer->name : 'Unknown'),
@@ -1639,7 +1646,7 @@ class AgentDistributionManagementController extends Controller
         });
 
         // Get active agents for dropdown
-        $agents = AdAgent::orderBy('agent_name')->where('status',CommonVariables::$agentStatusActive)
+        $agents = AdAgent::orderBy('agent_name')->where('status', CommonVariables::$agentStatusActive)
             ->get()
             ->map(function ($agent) {
                 return [
@@ -1667,7 +1674,7 @@ class AgentDistributionManagementController extends Controller
                 $d = $c->businessDetails;
 
                 // If no business details exist, create defaults so customer still appears
-                if (!$d) {
+                if (! $d) {
                     $d = (object) [
                         'b2b_customer_type' => null,
                         'contact_person_name' => null,
@@ -1738,7 +1745,7 @@ class AgentDistributionManagementController extends Controller
             ->map(function ($c) {
                 $d = $c->businessDetails;
 
-                if (!$d) {
+                if (! $d) {
                     $d = (object) [
                         'b2b_customer_type' => null,
                         'contact_person_name' => null,
@@ -1813,7 +1820,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating route: ' . $e->getMessage(),
+                'message' => 'Error creating route: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1844,7 +1851,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading route: ' . $e->getMessage(),
+                'message' => 'Error loading route: '.$e->getMessage(),
             ], 404);
         }
     }
@@ -1885,7 +1892,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating route: ' . $e->getMessage(),
+                'message' => 'Error updating route: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1906,7 +1913,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deactivating route: ' . $e->getMessage(),
+                'message' => 'Error deactivating route: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1988,7 +1995,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 500);
         }
     }
 
@@ -2066,7 +2073,7 @@ class AgentDistributionManagementController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 500);
         }
     }
 
@@ -2078,7 +2085,7 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Customer deleted successfully']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Error: '.$e->getMessage()], 500);
         }
     }
 
@@ -2093,7 +2100,7 @@ class AgentDistributionManagementController extends Controller
             'id' => $customerRecord->id,
             'businessName' => $customerRecord->name,
             'tradeName' => $customerRecord->name, // Placeholder
-            'customerCode' => 'CUS-' . $customerRecord->id, // Placeholder
+            'customerCode' => 'CUS-'.$customerRecord->id, // Placeholder
             'customerType' => $customerRecord->customer_type == CommonVariables::$customerTypeB2B ? 'b2b' : 'b2c',
             'b2bType' => $this->getB2BTypeName($details->b2b_customer_type ?? 0),
             'isVerified' => false, // Placeholder
@@ -2234,7 +2241,7 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2341,7 +2348,7 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating load: ' . $e->getMessage(),
+                'message' => 'Error creating load: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2359,12 +2366,12 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Load marked as loaded successfully'
+                'message' => 'Load marked as loaded successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2374,7 +2381,7 @@ class AgentDistributionManagementController extends Controller
         $agents = AdAgent::where('status', CommonVariables::$agentStatusActive)->get();
         $productItems = PmProductItem::with('category')->where('status', 1)->get(['id', 'product_name', 'pm_product_category_id']);
         $productCategories = PmProductCategory::where('is_active', true)->get(['id', 'category_name', 'category_code']);
-        
+
         // Fetch existing targets for the list view, ordered by most recent first
         $monthlyTargets = AdAgentMonthlyTarget::with('agent')
             ->orderBy('target_year', 'desc')
@@ -2398,10 +2405,10 @@ class AgentDistributionManagementController extends Controller
             ->where('target_month', $request->month)
             ->first();
 
-        if (!$monthlyTarget) {
+        if (! $monthlyTarget) {
             return response()->json([
                 'success' => true,
-                'data' => null
+                'data' => null,
             ]);
         }
 
@@ -2434,7 +2441,7 @@ class AgentDistributionManagementController extends Controller
                         'target_percentage' => $it->target_percentage,
                     ];
                 }),
-            ]
+            ],
         ]);
     }
 
@@ -2487,7 +2494,7 @@ class AgentDistributionManagementController extends Controller
             $monthlyTarget->categoryTargets()->delete();
             if ($request->has('category_targets') && is_array($request->category_targets)) {
                 foreach ($request->category_targets as $ct) {
-                    if (!empty($ct['pm_product_category_id'])) {
+                    if (! empty($ct['pm_product_category_id'])) {
                         AdAgentHasCategoryTargets::create([
                             'monthly_target_id' => $monthlyTarget->id,
                             'pm_product_category_id' => $ct['pm_product_category_id'],
@@ -2504,7 +2511,7 @@ class AgentDistributionManagementController extends Controller
             $monthlyTarget->itemTargets()->delete();
             if ($request->has('item_targets') && is_array($request->item_targets)) {
                 foreach ($request->item_targets as $it) {
-                    if (!empty($it['pm_product_item_id'])) {
+                    if (! empty($it['pm_product_item_id'])) {
                         AdAgentHasItemTargets::create([
                             'monthly_target_id' => $monthlyTarget->id,
                             'pm_product_item_id' => $it['pm_product_item_id'],
@@ -2522,13 +2529,14 @@ class AgentDistributionManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Monthly targets saved successfully'
+                'message' => 'Monthly targets saved successfully',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error saving monthly targets: ' . $e->getMessage()
+                'message' => 'Error saving monthly targets: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2555,13 +2563,13 @@ class AgentDistributionManagementController extends Controller
                 'agent' => [
                     'id' => $agent->id,
                     'agent_name' => $agent->agent_name,
-                    'agent_code' => $agent->agent_code
-                ]
+                    'agent_code' => $agent->agent_code,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2570,7 +2578,7 @@ class AgentDistributionManagementController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:ad_agent_has_monthly_targets,id',
-            'payment_status' => 'required|integer|in:0,1,2'
+            'payment_status' => 'required|integer|in:0,1,2',
         ]);
 
         try {
@@ -2580,8 +2588,8 @@ class AgentDistributionManagementController extends Controller
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false, 
-                'message' => 'Error: ' . $e->getMessage()
+                'success' => false,
+                'message' => 'Error: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -2598,13 +2606,13 @@ class AgentDistributionManagementController extends Controller
     {
         try {
             $agent = AdAgent::with('bankAccounts')->findOrFail($id);
-            
+
             // 1. Basic Stats
             $stats = [
-                'total_sales' => (double) $agent->total_sales,
-                'outstanding_balance' => (double) $agent->outstanding_balance,
-                'total_collections' => (double) $agent->total_collections,
-                'credit_limit' => (double) $agent->credit_limit,
+                'total_sales' => (float) $agent->total_sales,
+                'outstanding_balance' => (float) $agent->outstanding_balance,
+                'total_collections' => (float) $agent->total_collections,
+                'credit_limit' => (float) $agent->credit_limit,
             ];
 
             // 2. Routes
@@ -2615,14 +2623,14 @@ class AgentDistributionManagementController extends Controller
             // 3. Daily Loads (Enhanced)
             $dailyLoads = AdDailyLoad::where('agent_id', $id)
                 ->with([
-                    'route', 
-                    'driver', 
-                    'vehicle', 
+                    'route',
+                    'driver',
+                    'vehicle',
                     'supervisor',
                     'items.product',
-                    'invoices' => function($q) {
+                    'invoices' => function ($q) {
                         $q->with(['business', 'items.product', 'newReturnItems.product']);
-                    }
+                    },
                 ])
                 ->orderBy('load_date', 'desc')
                 ->limit(10)
@@ -2639,7 +2647,7 @@ class AgentDistributionManagementController extends Controller
             $customers = AdCustomerHasBusiness::where('agent_id', $id)
                 ->with(['customer'])
                 ->get()
-                ->map(function($c) {
+                ->map(function ($c) {
                     $invoiceStats = DB::table('ad_cubusiness_has_invoice')
                         ->where('ad_customer_has_business_id', $c->id)
                         ->where('status', 1)
@@ -2649,9 +2657,10 @@ class AgentDistributionManagementController extends Controller
                             DB::raw('MAX(created_at) as last_invoice')
                         )->first();
 
-                    $c->total_sales = (double) ($invoiceStats->total_sales ?? 0);
-                    $c->outstanding = (double) ($invoiceStats->outstanding ?? 0);
+                    $c->total_sales = (float) ($invoiceStats->total_sales ?? 0);
+                    $c->outstanding = (float) ($invoiceStats->outstanding ?? 0);
                     $c->last_invoice = $invoiceStats->last_invoice;
+
                     return $c;
                 });
 
@@ -2707,12 +2716,186 @@ class AgentDistributionManagementController extends Controller
                     'orders' => $orders,
                     'salesTrend' => $salesTrend,
                     'topProducts' => $topProducts,
-                ]
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getAllAgentsLatestLocations(\Illuminate\Http\Request $request)
+    {
+        try {
+            $date = $request->query('date', date('Y-m-d'));
+            $agents = \App\Models\AdAgent::where('status', 1)->get();
+            $locations = [];
+
+            foreach ($agents as $agent) {
+                $latestTrack = \App\Models\AdAgentTracking::where('agent_id', $agent->id)
+                    ->whereDate('date', $date)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($latestTrack) {
+                    $locations[] = [
+                        'agent_id' => $agent->id,
+                        'agent_name' => $agent->agent_name,
+                        'agent_code' => $agent->agent_code,
+                        'phone' => $agent->phone,
+                        'lat' => (float) $latestTrack->lat,
+                        'long' => (float) $latestTrack->long,
+                        'date' => $latestTrack->date->timezone('Asia/Colombo')->format('Y-m-d H:i:s'),
+                    ];
+                }
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => $locations,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getAgentLocationHistory($id, \Illuminate\Http\Request $request)
+    {
+        try {
+            $agent = \App\Models\AdAgent::findOrFail($id);
+            $date = $request->query('date', date('Y-m-d'));
+
+            $tracks = \App\Models\AdAgentTracking::where('agent_id', $id)
+                ->whereDate('date', $date)
+                ->orderBy('date', 'asc')
+                ->get();
+
+            $history = $tracks->map(function ($track) {
+                return [
+                    'lat' => (float) $track->lat,
+                    'long' => (float) $track->long,
+                    'date' => $track->date->timezone('Asia/Colombo')->format('H:i:s'),
+                ];
+            });
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'agent_name' => $agent->agent_name,
+                    'agent_code' => $agent->agent_code,
+                    'date' => $date,
+                    'history' => $history,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function supervisorTrackingIndex()
+    {
+        $agents = \App\Models\AdAgent::where('status', 1)->orderBy('agent_name')->get();
+        $supervisors = \App\Models\SmSuperviser::with('agent')->get()->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'superviser_code' => $s->superviser_code,
+                'superviser_name' => $s->superviser_name,
+                'contact_number' => $s->contact_number,
+                'agent_id' => $s->agent_id,
+                'agent_name' => $s->agent ? $s->agent->agent_name : 'None',
+                'status' => $s->status,
+            ];
+        });
+        $googleMapsKey = config('services.google.maps_key');
+
+        return view('agentDistribution.supervisorTracking', compact('agents', 'supervisors', 'googleMapsKey'));
+    }
+
+    public function getAllSupervisorsLatestLocations(\Illuminate\Http\Request $request)
+    {
+        try {
+            $date = $request->query('date', date('Y-m-d'));
+            $agentId = $request->query('agent_id');
+
+            $supervisorsQuery = \App\Models\SmSuperviser::where('status', 1);
+            if ($agentId) {
+                $supervisorsQuery->where('agent_id', $agentId);
+            }
+            $supervisors = $supervisorsQuery->get();
+            $locations = [];
+
+            foreach ($supervisors as $supervisor) {
+                $latestTrack = \App\Models\SmSupervisorTracking::where('superviser_id', $supervisor->id)
+                    ->whereDate('date', $date)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($latestTrack) {
+                    $locations[] = [
+                        'supervisor_id' => $supervisor->id,
+                        'superviser_name' => $supervisor->superviser_name,
+                        'superviser_code' => $supervisor->superviser_code,
+                        'phone' => $supervisor->contact_number,
+                        'agent_name' => $supervisor->agent ? $supervisor->agent->agent_name : 'None',
+                        'lat' => (float) $latestTrack->lat,
+                        'long' => (float) $latestTrack->long,
+                        'date' => $latestTrack->date->timezone('Asia/Colombo')->format('Y-m-d H:i:s'),
+                    ];
+                }
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => $locations,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getSupervisorLocationHistory($id, \Illuminate\Http\Request $request)
+    {
+        try {
+            $supervisor = \App\Models\SmSuperviser::findOrFail($id);
+            $date = $request->query('date', date('Y-m-d'));
+
+            $tracks = \App\Models\SmSupervisorTracking::where('superviser_id', $id)
+                ->whereDate('date', $date)
+                ->orderBy('date', 'asc')
+                ->get();
+
+            $history = $tracks->map(function ($track) {
+                return [
+                    'lat' => (float) $track->lat,
+                    'long' => (float) $track->long,
+                    'date' => $track->date->timezone('Asia/Colombo')->format('H:i:s'),
+                ];
+            });
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'superviser_name' => $supervisor->superviser_name,
+                    'superviser_code' => $supervisor->superviser_code,
+                    'date' => $date,
+                    'history' => $history,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: '.$e->getMessage(),
             ], 500);
         }
     }

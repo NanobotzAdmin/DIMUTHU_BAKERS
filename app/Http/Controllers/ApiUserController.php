@@ -382,4 +382,130 @@ class ApiUserController extends Controller
             ], 500);
         }
     }
+
+    public function trackLocation(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'lat' => 'required|numeric',
+            'long' => 'required|numeric',
+            'agent_id' => 'nullable|integer',
+            'date' => 'nullable|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            $agentId = $request->agent_id;
+
+            // If agent_id not provided, try to find it from the user
+            if (!$agentId) {
+                $agent = AdAgent::where('user_id', $user->id)->first();
+                if ($agent) {
+                    $agentId = $agent->id;
+                }
+            }
+
+            if (!$agentId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Agent not found for the authenticated user.'
+                ], 404);
+            }
+
+            $date = $request->date ? \Carbon\Carbon::parse($request->date) : \Carbon\Carbon::now();
+
+            $tracking = \App\Models\AdAgentTracking::create([
+                'agent_id' => $agentId,
+                'lat' => $request->lat,
+                'long' => $request->long,
+                'date' => $date,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Location tracked successfully',
+                'data' => $tracking
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Agent location track error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during location tracking'
+            ], 500);
+        }
+    }
+
+    public function trackSupervisorLocation(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'lat' => 'required|numeric',
+            'long' => 'required|numeric',
+            'superviser_id' => 'nullable|integer',
+            'agent_id' => 'nullable|integer',
+            'date' => 'nullable|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            $supervisorId = $request->superviser_id;
+            $agentId = $request->agent_id;
+
+            // If superviser_id not provided, try to find it from the user (role = 10)
+            if (!$supervisorId) {
+                $supervisor = DB::table('sm_superviser')->where('user_id', $user->id)->first();
+                if ($supervisor) {
+                    $supervisorId = $supervisor->id;
+                    if (!$agentId) {
+                        $agentId = $supervisor->agent_id;
+                    }
+                }
+            }
+
+            if (!$supervisorId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Supervisor profile not found for the authenticated user.'
+                ], 404);
+            }
+
+            $date = $request->date ? \Carbon\Carbon::parse($request->date) : \Carbon\Carbon::now();
+
+            $tracking = \App\Models\SmSupervisorTracking::create([
+                'superviser_id' => $supervisorId,
+                'agent_id' => $agentId,
+                'lat' => $request->lat,
+                'long' => $request->long,
+                'date' => $date,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Supervisor location tracked successfully',
+                'data' => $tracking
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Supervisor location track error: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'An error occurred during location tracking'
+            ], 500);
+        }
+    }
 }

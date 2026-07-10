@@ -140,8 +140,8 @@
                             <th class="text-right">Total Sales (Rs)</th>
                             <th class="text-right">Total Returns (Rs)</th>
                             <th class="text-right">Cash Income (Rs)</th>
-                            <th class="text-right">Total Credit (Rs)</th>
                             <th class="text-right">Outstanding Amount (Rs)</th>
+                            <th class="text-right">Total Credit (Rs)</th>
                             <th class="text-center">Action</th>
                         </tr>
                     </thead>
@@ -155,8 +155,8 @@
                             <th class="text-right" id="ft_total_sales">0.00</th>
                             <th class="text-right" id="ft_total_returns">0.00</th>
                             <th class="text-right" id="ft_cash_income">0.00</th>
-                            <th class="text-right" id="ft_total_credit">0.00</th>
                             <th class="text-right" id="ft_outstanding">0.00</th>
+                            <th class="text-right" id="ft_total_credit">0.00</th>
                             <th></th>
                         </tr>
                     </tfoot>
@@ -448,8 +448,8 @@
                         <td class="text-right text-gray-600">${formatMoney(row.total_sales)}</td>
                         <td class="text-right text-gray-600">${formatMoney(row.total_returns)}</td>
                         <td class="text-right text-gray-600">${formatMoney(row.cash_income)}</td>
-                        <td class="text-right text-gray-600">${formatMoney(row.total_credit)}</td>
                         <td class="text-right font-bold" style="color: #dc2626;">${formatMoney(row.outstanding_amount)}</td>
+                        <td class="text-right text-gray-600">${formatMoney(row.total_credit)}</td>
                         <td class="text-center">
                             <button type="button" onclick="viewCustomerDetails(${index})" class="action-btn action-btn-view">
                                 <i class="bi bi-eye"></i> View

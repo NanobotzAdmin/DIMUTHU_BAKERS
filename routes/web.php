@@ -172,6 +172,11 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::delete('/api/agents/{id}/deactivate', [AgentDistributionManagementController::class, 'deactivateAgent'])->name('agents.deactivate');
     Route::post('/api/agents/{id}/toggle-status', [AgentDistributionManagementController::class, 'toggleAgentStatus'])->name('agents.toggleStatus');
     Route::post('/api/agents/quick-save', [AgentDistributionManagementController::class, 'quickSaveAgent'])->name('agents.quickSave');
+    Route::get('/api/agents/locations/all', [AgentDistributionManagementController::class, 'getAllAgentsLatestLocations'])->name('agents.locations.all');
+    Route::get('/api/agents/{id}/locations/history', [AgentDistributionManagementController::class, 'getAgentLocationHistory'])->name('agents.locations.history');
+    Route::get('/supervisor-tracking', [AgentDistributionManagementController::class, 'supervisorTrackingIndex'])->name('supervisors.tracking');
+    Route::get('/api/supervisors/locations/all', [AgentDistributionManagementController::class, 'getAllSupervisorsLatestLocations'])->name('supervisors.locations.all');
+    Route::get('/api/supervisors/{id}/locations/history', [AgentDistributionManagementController::class, 'getSupervisorLocationHistory'])->name('supervisors.locations.history');
 
     // Agent Targets API Routes
     Route::get('/api/agents/monthly-targets/load', [AgentDistributionManagementController::class, 'getMonthlyTargets'])->name('agents.monthlyTargets.load');

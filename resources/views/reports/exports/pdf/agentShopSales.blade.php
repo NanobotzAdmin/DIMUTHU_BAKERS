@@ -70,8 +70,8 @@
                 <th class="text-right">Total Sales (Rs)</th>
                 <th class="text-right">Total Returns (Rs)</th>
                 <th class="text-right">Cash Income (Rs)</th>
-                <th class="text-right">Total Credit (Rs)</th>
                 <th class="text-right">Outstanding (Rs)</th>
+                <th class="text-right">Total Credit (Rs)</th>
             </tr>
         </thead>
         <tbody>
@@ -99,8 +99,8 @@
                     <td class="text-right">{{ number_format($row['total_sales'], 2) }}</td>
                     <td class="text-right">{{ number_format($row['total_returns'], 2) }}</td>
                     <td class="text-right">{{ number_format($row['cash_income'], 2) }}</td>
-                    <td class="text-right">{{ number_format($row['total_credit'], 2) }}</td>
                     <td class="text-right">{{ number_format($row['outstanding_amount'], 2) }}</td>
+                    <td class="text-right">{{ number_format($row['total_credit'], 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -111,8 +111,8 @@
                 <td class="text-right">{{ number_format($sumSales, 2) }}</td>
                 <td class="text-right">{{ number_format($sumReturns, 2) }}</td>
                 <td class="text-right">{{ number_format($sumIncome, 2) }}</td>
-                <td class="text-right">{{ number_format($sumCredit, 2) }}</td>
                 <td class="text-right">{{ number_format($sumOutstanding, 2) }}</td>
+                <td class="text-right">{{ number_format($sumCredit, 2) }}</td>
             </tr>
         </tfoot>
     </table>
