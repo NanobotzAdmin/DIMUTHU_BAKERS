@@ -22,6 +22,7 @@ use App\Http\Controllers\PosManagementController;
 use App\Http\Controllers\PrivilegeManagementController;
 use App\Http\Controllers\ProductionManagementController;
 use App\Http\Controllers\ProductManagementController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierManagementController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WasteRecoveryManagementController;
@@ -284,6 +285,11 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::get('/analytics-reports-financial-reports', [AnalyticsReportsManagementController::class, 'analyticsReportsFinancialReportsIndex'])->name('analyticsReportsFinancialReports.index');
     Route::get('/analytics-reports-daily-summary', [AnalyticsReportsManagementController::class, 'analyticsReportsDailySummaryIndex'])->name('analyticsReportsDailySummary.index');
     Route::get('/api/web-daily-summary', [AnalyticsReportsManagementController::class, 'getWebDailySummary'])->name('api.webDailySummary');
+
+    Route::get('/reports/agent-shop-sales', [ReportController::class, 'agentShopSalesIndex'])->name('reports.agentShopSales.index');
+    Route::post('/api/reports/agent-shop-sales/data', [ReportController::class, 'getAgentShopSalesData'])->name('reports.agentShopSales.data');
+    Route::post('/api/reports/agent-shop-sales/customer-details', [ReportController::class, 'getAgentShopCustomerDetails'])->name('reports.agentShopSales.customerDetails');
+    Route::get('/reports/agent-shop-sales/export', [ReportController::class, 'exportAgentShopSales'])->name('reports.agentShopSales.export');
 
     // Product Types
     Route::get('/product-types/fetch', [ProductManagementController::class, 'fetchProductTypes'])->name('productTypes.fetch');
