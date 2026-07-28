@@ -23,6 +23,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [ApiUserController::class , 'logout']);
     Route::post('/user/update-fcm-token', [ApiUserController::class, 'updateFcmToken']);
+    Route::post('/agent/track-location', [ApiUserController::class, 'trackLocation']);
+    Route::post('/supervisor/track-location', [ApiUserController::class, 'trackSupervisorLocation']);
     Route::post('/user/force-password-change', [ApiUserController::class, 'forcePasswordChange']);
     Route::post('/profile/update', [ApiUserController::class, 'updateProfile']);
 
