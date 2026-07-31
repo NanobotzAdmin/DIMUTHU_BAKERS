@@ -2848,6 +2848,7 @@ class AgentDistributionManagementController extends Controller
                         'lat' => (float) $latestTrack->lat,
                         'long' => (float) $latestTrack->long,
                         'date' => $latestTrack->date->timezone('Asia/Colombo')->format('Y-m-d H:i:s'),
+                        'description' => $latestTrack->description,
                     ];
                 }
             }
@@ -2880,6 +2881,7 @@ class AgentDistributionManagementController extends Controller
                     'lat' => (float) $track->lat,
                     'long' => (float) $track->long,
                     'date' => $track->date->timezone('Asia/Colombo')->format('H:i:s'),
+                    'description' => $track->description,
                 ];
             });
 
