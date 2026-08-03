@@ -17,6 +17,7 @@ class SmSupervisorTracking extends Model
         'lat',
         'long',
         'date',
+        'description',
     ];
 
     protected $casts = [

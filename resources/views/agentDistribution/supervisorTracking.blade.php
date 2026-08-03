@@ -338,6 +338,7 @@
                                     <p class="text-xs text-gray-500 mb-1">Code: ${loc.superviser_code}</p>
                                     <p class="text-xs text-gray-600 mb-1">Phone: ${loc.phone || '-'}</p>
                                     <p class="text-xs text-gray-600 mb-1">Agent: ${loc.agent_name}</p>
+                                    ${loc.description ? `<p class="text-xs font-medium text-indigo-600 mb-1">Status/Event: ${loc.description}</p>` : ''}
                                     <p class="text-[10px] text-gray-400">Last updated: ${loc.date}</p>
                                 </div>
                             `
@@ -418,7 +419,7 @@
                             });
 
                             const infoWindow = new google.maps.InfoWindow({
-                                content: `<div class="p-1 text-xs font-semibold">${isStart ? 'Start' : 'End'}: ${point.date}</div>`
+                                content: `<div class="p-2 text-xs font-semibold">${isStart ? 'Start' : 'End'}: ${point.date}${point.description ? `<br/><span class="text-indigo-600 font-normal">${point.description}</span>` : ''}</div>`
                             });
 
                             marker.addListener('click', () => {
@@ -443,7 +444,7 @@
                             });
 
                             const infoWindow = new google.maps.InfoWindow({
-                                content: `<div class="p-1 text-xs font-semibold">Time: ${point.date}</div>`
+                                content: `<div class="p-2 text-xs font-semibold">Time: ${point.date}${point.description ? `<br/><span class="text-indigo-600 font-normal">${point.description}</span>` : ''}</div>`
                             });
 
                             marker.addListener('click', () => {

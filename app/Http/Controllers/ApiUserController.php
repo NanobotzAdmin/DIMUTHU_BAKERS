@@ -451,6 +451,7 @@ class ApiUserController extends Controller
             'superviser_id' => 'nullable|integer',
             'agent_id' => 'nullable|integer',
             'date' => 'nullable|date',
+            'description' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -492,6 +493,7 @@ class ApiUserController extends Controller
                 'lat' => $request->lat,
                 'long' => $request->long,
                 'date' => $date,
+                'description' => $request->description,
             ]);
 
             return response()->json([
