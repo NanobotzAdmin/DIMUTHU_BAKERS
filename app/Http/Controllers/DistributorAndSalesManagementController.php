@@ -483,7 +483,7 @@ class DistributorAndSalesManagementController extends Controller
                     ] : null,
                     'delivery_type' => $order->delivery_type,
                     'delivery_type_text' => $order->delivery_type == CommonVariables::$deliveryTypePickup ? 'Pickup' : 'Delivery',
-                    'delivery_date' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->tz('Asia/Colombo')->format('Y-m-d H:i') : '-',
+                    'delivery_date' => $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->format('Y-m-d H:i') : '-',
                     'event_type' => $order->event_type,
                     'event_type_text' => match ($order->event_type) {
                         CommonVariables::$eventTypeWedding => 'Wedding',

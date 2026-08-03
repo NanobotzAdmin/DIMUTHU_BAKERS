@@ -556,14 +556,14 @@
                                         <div class="flex items-center gap-1 md:gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
+                                                stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4 text-blue-600">
                                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                                                 <line x1="16" y1="2" x2="16" y2="6" />
                                                 <line x1="8" y1="2" x2="8" y2="6" />
                                                 <line x1="3" y1="10" x2="21" y2="10" />
                                             </svg>
-                                            <span>
-                                                {{ $order['delivery_date'] ? \Carbon\Carbon::parse($order['delivery_date'])->tz('Asia/Colombo')->format('M j, Y \a\t g:i A') : '-' }}
+                                            <span class="text-black">
+                                                <span class="font-semibold text-blue-600">Delivery Date & Time :</span> {{ $order['delivery_date'] ? \Carbon\Carbon::parse($order['delivery_date'])->format('M j, Y \a\t g:i A') : '-' }}
                                             </span>
                                         </div>
                                         <div class="flex items-center gap-1 md:gap-2">

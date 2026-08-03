@@ -16,7 +16,9 @@
                     </div>
                     <div>
                         <div class="mb-1 md:mb-2">
-                            <h2 id="modal-order-number" class="text-lg md:text-2xl text-white font-bold break-all md:break-normal leading-tight"></h2>
+                            <h2 id="modal-order-number"
+                                class="text-lg md:text-2xl text-white font-bold break-all md:break-normal leading-tight">
+                            </h2>
                         </div>
                         <div class="flex items-center gap-1.5 md:gap-3 mb-2 flex-wrap">
                             <span id="modal-channel-badge"
@@ -27,7 +29,9 @@
                                 class="border px-1.5 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-sm font-medium hidden"></span>
                             <span id="modal-downloaded-badge"
                                 class="bg-green-100 text-green-700 border border-green-300 px-1.5 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg items-center gap-1 text-[10px] md:text-sm font-semibold hidden">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                     <polyline points="7 10 12 15 17 10"></polyline>
                                     <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -35,7 +39,8 @@
                                 Downloaded
                             </span>
                         </div>
-                        <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-1 md:gap-x-6 md:gap-y-2 text-purple-100 text-[11px] md:text-sm mt-2">
+                        <div
+                            class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-1 md:gap-x-6 md:gap-y-2 text-purple-100 text-[11px] md:text-sm mt-2">
                             <div class="flex items-center gap-1.5">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -45,6 +50,7 @@
                                     <line x1="8" x2="8" y1="2" y2="6" />
                                     <line x1="3" x2="21" y1="10" y2="10" />
                                 </svg>
+                                <span class="text-white font-semibold">Order Created Date :</span>
                                 <span id="modal-header-created-at"></span>
                             </div>
                             <div class="flex items-center gap-1.5 md:border-l md:border-white/20 md:pl-6">
@@ -57,11 +63,21 @@
                                 <span id="modal-header-outlet-code"></span>
                             </div>
                             <div class="flex items-center gap-1.5 md:border-l md:border-white/20 md:pl-6">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
                                 <span id="modal-header-agent-name" class="font-bold"></span>
                             </div>
                             <div class="flex items-center gap-1.5 md:border-l md:border-white/20 md:pl-6">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="w-3 h-3 md:w-4 md:h-4">
+                                    <path
+                                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                </svg>
                                 <span id="modal-header-agent-phone"></span>
                             </div>
                         </div>
@@ -82,7 +98,8 @@
                 <button id="modal-print-so-btn" onclick="printModalSalesOrder('print')"
                     class="h-8 md:h-9 px-3 md:px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-sm transition-colors w-full md:w-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        class="w-4 h-4">
                         <polyline points="6 9 6 2 18 2 18 9" />
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                         <rect width="12" height="8" x="6" y="14" />
@@ -92,7 +109,8 @@
                 <button id="modal-download-so-btn" onclick="printModalSalesOrder('download')"
                     class="h-8 md:h-9 px-3 md:px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-sm transition-colors w-full md:w-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        class="w-4 h-4">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
                         <line x1="12" x2="12" y1="15" y2="3" />
@@ -102,7 +120,8 @@
                 <button id="modal-print-btn" onclick="printModalDispatchNote()"
                     class="h-8 md:h-9 px-3 md:px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-sm transition-colors hidden w-full md:w-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="w-4 h-4">
                         <polyline points="6 9 6 2 18 2 18 9" />
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                         <rect width="12" height="8" x="6" y="14" />
@@ -126,7 +145,8 @@
 
                 {{-- Order Items - MOVED TO TOP --}}
                 <div class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
+                    <div
+                        class="bg-gradient-to-r from-purple-50 to-blue-50 px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                         <h3 class="text-base md:text-lg text-gray-900 font-semibold flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -146,7 +166,9 @@
                 {{-- Order Notes --}}
                 <div id="modal-notes-section" class="bg-amber-50 rounded-2xl p-6 border-2 border-amber-200 hidden">
                     <h3 class="text-lg text-gray-900 mb-3 flex items-center gap-2 font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-amber-600">
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                         </svg>
@@ -158,7 +180,9 @@
                 {{-- Rejection Information --}}
                 <div id="modal-rejection-section" class="bg-red-50 rounded-2xl p-6 border-2 border-red-200 hidden">
                     <h3 class="text-lg text-gray-900 mb-3 flex items-center gap-2 font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="text-red-600">
                             <circle cx="12" cy="12" r="10" />
                             <line x1="12" y1="8" x2="12" y2="12" />
                             <line x1="12" y1="16" x2="12.01" y1="16" />
@@ -177,7 +201,9 @@
                     </div>
                     <div>
                         <p class="text-gray-500 font-medium text-xs mb-1">Reason for Rejection</p>
-                        <p id="modal-rejection-reason" class="text-red-700 whitespace-pre-wrap font-semibold text-sm bg-red-100/50 p-3 rounded-lg border border-red-200"></p>
+                        <p id="modal-rejection-reason"
+                            class="text-red-700 whitespace-pre-wrap font-semibold text-sm bg-red-100/50 p-3 rounded-lg border border-red-200">
+                        </p>
                     </div>
                 </div>
 
@@ -494,10 +520,10 @@
         const stBadge = document.getElementById('modal-status-badge');
         stBadge.className =
             `border px-1.5 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg flex items-center gap-1 md:gap-1.5 text-[10px] md:text-sm font-medium ${statusConf.color}`;
-        
+
         // Add specific sizing to the status icon SVG string before inserting
         let statusIconHtml = statusConf.icon;
-        if(statusIconHtml) {
+        if (statusIconHtml) {
             statusIconHtml = statusIconHtml.replace('<svg', '<svg class="w-3 h-3 md:w-4 md:h-4"');
         }
         stBadge.innerHTML = `${statusIconHtml} ${statusConf.label}`;
@@ -828,7 +854,7 @@
                 const statusClass = payment.status === 'Active'
                     ? 'bg-green-100 text-green-700'
                     : (payment.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
-                
+
                 // Approve button for pending payments
                 let actionBtn = '';
                 if (payment.status_raw === 1) {
@@ -1161,17 +1187,17 @@
                         items: items
                     })
                 })
-                .then(response => {
-                    if (!response.ok) {
+                    .then(response => {
+                        if (!response.ok) {
+                            enableAllOrderModalButtons();
+                            return response.json().then(json => { throw new Error(json.message || 'Server error'); });
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
                         enableAllOrderModalButtons();
-                        return response.json().then(json => { throw new Error(json.message || 'Server error'); });
-                    }
-                    return response.json();
-                })
-                .catch(error => {
-                    enableAllOrderModalButtons();
-                    Swal.showValidationMessage(`Request failed: ${error}`);
-                });
+                        Swal.showValidationMessage(`Request failed: ${error}`);
+                    });
             },
             allowOutsideClick: () => !Swal.isLoading()
         }).then((result) => {
@@ -1223,17 +1249,17 @@
                         reason: reason
                     })
                 })
-                .then(response => {
-                    if (!response.ok) {
+                    .then(response => {
+                        if (!response.ok) {
+                            enableAllOrderModalButtons();
+                            return response.json().then(json => { throw new Error(json.message || 'Server error'); });
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
                         enableAllOrderModalButtons();
-                        return response.json().then(json => { throw new Error(json.message || 'Server error'); });
-                    }
-                    return response.json();
-                })
-                .catch(error => {
-                    enableAllOrderModalButtons();
-                    Swal.showValidationMessage(`Request failed: ${error}`);
-                });
+                        Swal.showValidationMessage(`Request failed: ${error}`);
+                    });
             },
             allowOutsideClick: () => !Swal.isLoading()
         }).then((result) => {
@@ -1276,27 +1302,27 @@
                         payment_id: paymentId
                     })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Approved!',
-                            text: data.message,
-                            timer: 1500
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Approved!',
+                                text: data.message,
+                                timer: 1500
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            enableAllOrderModalButtons();
+                            Swal.fire('Error', data.message || 'Something went wrong', 'error');
+                        }
+                    })
+                    .catch(error => {
                         enableAllOrderModalButtons();
-                        Swal.fire('Error', data.message || 'Something went wrong', 'error');
-                    }
-                })
-                .catch(error => {
-                    enableAllOrderModalButtons();
-                    console.error(error);
-                    Swal.fire('Error', 'Server communication error', 'error');
-                });
+                        console.error(error);
+                        Swal.fire('Error', 'Server communication error', 'error');
+                    });
             }
         });
     }

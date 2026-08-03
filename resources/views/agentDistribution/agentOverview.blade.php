@@ -225,17 +225,33 @@
 
                         <!-- Tab Pane: Customer Portfolio (NEW) -->
                         <div id="pane-portfolio" class="tab-pane hidden animate-fadeIn">
-                             <div class="mb-6 flex justify-between items-center">
+                             <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <h3 class="text-lg font-bold text-gray-800 tracking-tight">Financial Portfolio by Customer</h3>
+                                <div class="relative w-full md:w-72">
+                                    <input type="text" id="portfolioSearchInput" onkeyup="filterPortfolioTable()" placeholder="Search customer entity..."
+                                        class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                        <i class="bi bi-search text-xs"></i>
+                                    </div>
+                                </div>
                             </div>
                             <div class="overflow-x-auto">
-                                <table class="w-full text-left">
+                                <table class="w-full text-left" id="portfolioTable">
                                     <thead>
                                         <tr class="border-b border-gray-300">
                                             <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest pl-4">Customer Entity</th>
-                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Total Business</th>
-                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Outstanding</th>
-                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-center pr-4">Activity Status</th>
+                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right cursor-pointer select-none hover:text-indigo-600 transition-colors" onclick="sortPortfolioTable('total_sales')">
+                                                <div class="inline-flex items-center gap-1.5 justify-end">
+                                                    <span>Total Business</span>
+                                                    <i id="sortIcon-total_sales" class="bi bi-arrow-down-up text-gray-400"></i>
+                                                </div>
+                                            </th>
+                                            <th class="pb-4 text-xs font-bold text-gray-500 uppercase tracking-widest text-right pr-4 cursor-pointer select-none hover:text-indigo-600 transition-colors" onclick="sortPortfolioTable('outstanding')">
+                                                <div class="inline-flex items-center gap-1.5 justify-end">
+                                                    <span>Outstanding</span>
+                                                    <i id="sortIcon-outstanding" class="bi bi-arrow-down-up text-gray-400"></i>
+                                                </div>
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody id="portfolioTableBody" class="divide-y divide-gray-50">
@@ -254,6 +270,16 @@
 
                         <!-- Tab Pane: Market Network -->
                         <div id="pane-network" class="tab-pane hidden animate-fadeIn">
+                            <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <h3 class="text-lg font-bold text-gray-800 tracking-tight">Business Contacts Network</h3>
+                                <div class="relative w-full md:w-72">
+                                    <input type="text" id="networkSearchInput" onkeyup="filterNetworkGrid()" placeholder="Search business contacts..."
+                                        class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                        <i class="bi bi-search text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6"
                                 id="networkGrid">
                                 <!-- Dynamic Content -->
@@ -420,6 +446,68 @@
             </div>
         </div>
 
+        <!-- MODAL: ORDER REQUEST DETAILS -->
+        <div id="orderRequestModal"
+            class="hidden fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 sm:p-6 bg-gray-900/75 backdrop-blur-sm animate-fadeIn">
+            <!-- Backdrop Overlay -->
+            <div class="absolute inset-0" onclick="closeOrderModal()"></div>
+
+            <!-- Modal Content Dialog -->
+            <div class="relative bg-white rounded-[2.5rem] text-left overflow-hidden shadow-2xl transform transition-all w-full sm:max-w-3xl max-h-[90vh] flex flex-col z-10" onclick="event.stopPropagation()">
+                <!-- Header (Fixed) -->
+                <div class="bg-gray-50 px-8 py-6 flex items-center justify-between border-b border-gray-100 shrink-0">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm">
+                            <i class="bi bi-box-seam text-2xl"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 mb-0" id="modalOrderTitle">ORDER #0000</h5>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest" id="modalOrderSubtitle">Stock Request Details</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeOrderModal()"
+                        class="bg-red-200 rounded-full p-2 text-red-500 hover:text-red-600 hover:bg-red-100 shadow-sm transition-all">
+                        <i class="bi bi-x-lg text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Body (Scrollable) -->
+                <div class="p-8 space-y-6 overflow-y-auto flex-1">
+                    <!-- Header Details Card -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100/50">
+                        <div>
+                            <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Customer / Partner</p>
+                            <p class="text-sm font-bold text-gray-800" id="modalOrderCustomer">Customer Name</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Order Date</p>
+                            <p class="text-sm font-bold text-gray-800" id="modalOrderDate">Date</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Status</p>
+                            <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full border border-emerald-200" id="modalOrderStatusText">Status</span>
+                        </div>
+                    </div>
+
+                    <!-- Requested Items List -->
+                    <div>
+                        <h6 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <i class="bi bi-list-check text-indigo-600"></i> Requested SKU Items
+                        </h6>
+                        <div class="space-y-3" id="modalOrderItems">
+                            <!-- Dynamic Requested Products -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer (Fixed) -->
+                <div class="border-t border-gray-100 p-6 bg-gray-50/50 flex justify-end shrink-0">
+                    <button type="button" onclick="closeOrderModal()"
+                        class="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-xs shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">Close Order</button>
+                </div>
+            </div>
+        </div>
+
 
     </div>
 
@@ -531,14 +619,14 @@
             // -- Portfolio --
             const portfolioBody = document.getElementById('portfolioTableBody');
             portfolioBody.innerHTML = data.customers.map(c => `
-                <tr class="hover:bg-gray-100/50 transition-all border-b border-gray-100">
+                <tr class="portfolio-row hover:bg-gray-100/50 transition-all border-b border-gray-100" data-sales="${parseFloat(c.total_sales) || 0}" data-outstanding="${parseFloat(c.outstanding) || 0}">
                     <td class="py-5 pl-4">
                         <div class="flex items-center gap-4">
                             <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 border border-indigo-100">
                                 <i class="bi bi-shop text-lg"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-gray-800 mb-0.5">${c.business_name || c.customer?.name}</p>
+                                <p class="text-sm font-bold text-gray-800 mb-0.5 portfolio-customer-name">${c.business_name || c.customer?.name || ''}</p>
                                 <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">${c.customer_id ? 'CUST-'+c.customer_id : 'Field Map'}</p>
                             </div>
                         </div>
@@ -546,14 +634,19 @@
                     <td class="text-right">
                         <p class="text-sm font-bold text-gray-800">Rs. ${parseFloat(c.total_sales).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                     </td>
-                    <td class="text-right">
+                    <td class="text-right pr-4">
                         <p class="text-sm font-bold ${c.outstanding > 0 ? 'text-rose-600' : 'text-emerald-600'}">Rs. ${parseFloat(c.outstanding).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                     </td>
-                    <td class="text-center pr-4">
-                        <p class="text-xs font-bold text-gray-500 italic">${c.last_invoice ? new Date(c.last_invoice).toLocaleDateString() : 'No Activity'}</p>
-                    </td>
                 </tr>
-            `).join('') || '<tr><td colspan="4" class="py-12 text-center text-xs text-gray-400 italic">No customer financial activity found</td></tr>';
+            `).join('') || '<tr><td colspan="3" class="py-12 text-center text-xs text-gray-400 italic">No customer financial activity found</td></tr>';
+            
+            // Clear portfolio search on data load
+            const portfolioSearchInput = document.getElementById('portfolioSearchInput');
+            if (portfolioSearchInput) portfolioSearchInput.value = '';
+
+            // Clear network search on data load
+            const networkSearchInput = document.getElementById('networkSearchInput');
+            if (networkSearchInput) networkSearchInput.value = '';
 
             // -- Analytics --
             renderSalesChart(data.salesTrend);
@@ -668,18 +761,22 @@
 
                     // -- Network Grid --
                     const networkGrid = document.getElementById('networkGrid');
-                    networkGrid.innerHTML = data.customers.map(c => `
-                             <div class="bg-white p-6 rounded-[2rem] border border-blue-500 text-center hover:shadow-xl transition-all group">
+                    networkGrid.innerHTML = data.customers.map(c => {
+                        const name = c.business_name || c.customer?.name || '';
+                        const addr = c.address || '';
+                        return `
+                             <div class="network-card bg-white p-6 rounded-[2rem] border border-blue-500 text-center hover:shadow-xl transition-all group" data-search="${(name + ' ' + addr).replace(/"/g, '&quot;')}">
                                 <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-indigo-500 mx-auto mb-5 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-sm border border-gray-50">
                                     <i class="bi bi-shop text-2xl"></i>
                                 </div>
-                                <h5 class="text-sm font-bold text-gray-800 mb-1">${c.business_name || c.customer?.name}</h5>
-                                <p class="text-xs font-bold text-gray-500 mb-4 italic leading-relaxed">${c.address || 'Field Mapping Active'}</p>
+                                <h5 class="text-sm font-bold text-gray-800 mb-1">${name}</h5>
+                                <p class="text-xs font-bold text-gray-500 mb-4 italic leading-relaxed">${addr || 'Field Mapping Active'}</p>
                             <div class="w-full h-1 bg-gray-50 rounded-full overflow-hidden">
                                 <div class="bg-emerald-400 h-full" style="width: 100%"></div>
                             </div>
                         </div>
-                    `).join('') || '<p class="col-span-5 text-center py-12 text-xs text-gray-400 italic">No network clients mapped</p>';
+                    `;
+                    }).join('') || '<p class="col-span-5 text-center py-12 text-xs text-gray-400 italic">No network clients mapped</p>';
                 }
 
                 function openProfileModal() {
@@ -846,6 +943,79 @@
                         4: 'Ready', 5: 'Dispatched', 6: 'Confirmed', 7: 'Settled', 12: 'Cancelled'
                     };
                     return labels[status] || 'Active';
+                }
+
+                let portfolioSortState = {
+                    column: null,
+                    direction: 'asc' // 'asc' or 'desc'
+                };
+
+                function sortPortfolioTable(column) {
+                    const tbody = document.getElementById('portfolioTableBody');
+                    const rows = Array.from(tbody.querySelectorAll('.portfolio-row'));
+
+                    if (rows.length === 0) return;
+
+                    // Toggle direction if same column clicked, else default to 'desc' for numbers
+                    if (portfolioSortState.column === column) {
+                        portfolioSortState.direction = portfolioSortState.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        portfolioSortState.column = column;
+                        portfolioSortState.direction = 'desc';
+                    }
+
+                    // Update UI Icons
+                    const totalSalesIcon = document.getElementById('sortIcon-total_sales');
+                    const outstandingIcon = document.getElementById('sortIcon-outstanding');
+
+                    if (totalSalesIcon) totalSalesIcon.className = 'bi bi-arrow-down-up text-gray-400';
+                    if (outstandingIcon) outstandingIcon.className = 'bi bi-arrow-down-up text-gray-400';
+
+                    const activeIcon = document.getElementById(`sortIcon-${column}`);
+                    if (activeIcon) {
+                        activeIcon.className = portfolioSortState.direction === 'asc' 
+                            ? 'bi bi-sort-numeric-up text-indigo-600 font-bold' 
+                            : 'bi bi-sort-numeric-down-alt text-indigo-600 font-bold';
+                    }
+
+                    // Sort rows
+                    const dataKey = column === 'total_sales' ? 'sales' : 'outstanding';
+                    rows.sort((a, b) => {
+                        const valA = parseFloat(a.dataset[dataKey]) || 0;
+                        const valB = parseFloat(b.dataset[dataKey]) || 0;
+                        
+                        return portfolioSortState.direction === 'asc' ? valA - valB : valB - valA;
+                    });
+
+                    // Re-append sorted rows
+                    rows.forEach(row => tbody.appendChild(row));
+                }
+
+                function filterPortfolioTable() {
+                    const query = (document.getElementById('portfolioSearchInput')?.value || '').toLowerCase().trim();
+                    const rows = document.querySelectorAll('.portfolio-row');
+                    rows.forEach(row => {
+                        const nameEl = row.querySelector('.portfolio-customer-name');
+                        const text = (nameEl?.textContent || '').toLowerCase();
+                        if (text.includes(query)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+
+                function filterNetworkGrid() {
+                    const query = (document.getElementById('networkSearchInput')?.value || '').toLowerCase().trim();
+                    const cards = document.querySelectorAll('.network-card');
+                    cards.forEach(card => {
+                        const text = (card.dataset.search || '').toLowerCase();
+                        if (text.includes(query)) {
+                            card.style.display = '';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
                 }
             </script>
 @endsection
