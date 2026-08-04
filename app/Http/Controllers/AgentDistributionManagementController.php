@@ -2726,6 +2726,81 @@ class AgentDistributionManagementController extends Controller
         }
     }
 
+    /**
+     * Check which agents are currently logged into the mobile app.
+     * An agent is "online" if their um_user has a Sanctum token used within the last 35 minutes.
+     */
+    public function getAgentsOnlineStatus()
+    {
+        try {
+            $agents = \App\Models\AdAgent::where('status', 1)->get();
+            $onlineMap = [];
+            $threshold = \Carbon\Carbon::now()->subMinutes(3);
+
+            foreach ($agents as $agent) {
+                $isOnline = false;
+                if ($agent->user_id) {
+                    $isOnline = \DB::table('personal_access_tokens')
+                        ->where('tokenable_type', \App\Models\UmUser::class)
+                        ->where('tokenable_id', $agent->user_id)
+                        ->where('last_used_at', '>=', $threshold)
+                        ->exists();
+                }
+                $onlineMap[] = [
+                    'agent_id' => $agent->id,
+                    'is_online' => $isOnline,
+                ];
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => $onlineMap,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Check which supervisors are currently logged into the mobile app.
+     */
+    public function getSupervisorsOnlineStatus()
+    {
+        try {
+            $supervisors = \App\Models\SmSuperviser::where('status', 1)->get();
+            $onlineMap = [];
+            $threshold = \Carbon\Carbon::now()->subMinutes(3);
+
+            foreach ($supervisors as $supervisor) {
+                $isOnline = false;
+                if ($supervisor->user_id) {
+                    $isOnline = \DB::table('personal_access_tokens')
+                        ->where('tokenable_type', \App\Models\UmUser::class)
+                        ->where('tokenable_id', $supervisor->user_id)
+                        ->where('last_used_at', '>=', $threshold)
+                        ->exists();
+                }
+                $onlineMap[] = [
+                    'supervisor_id' => $supervisor->id,
+                    'is_online' => $isOnline,
+                ];
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => $onlineMap,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function getAllAgentsLatestLocations(\Illuminate\Http\Request $request)
     {
         try {
@@ -2748,6 +2823,8 @@ class AgentDistributionManagementController extends Controller
                         'lat' => (float) $latestTrack->lat,
                         'long' => (float) $latestTrack->long,
                         'date' => $latestTrack->date->timezone('Asia/Colombo')->format('Y-m-d H:i:s'),
+                        'description' => $latestTrack->description,
+                        'tracking_type' => (int) ($latestTrack->tracking_type ?? \App\Models\AdAgentTracking::TYPE_PERIODIC_30MIN),
                     ];
                 }
             }
@@ -2780,6 +2857,8 @@ class AgentDistributionManagementController extends Controller
                     'lat' => (float) $track->lat,
                     'long' => (float) $track->long,
                     'date' => $track->date->timezone('Asia/Colombo')->format('H:i:s'),
+                    'description' => $track->description,
+                    'tracking_type' => (int) ($track->tracking_type ?? \App\Models\AdAgentTracking::TYPE_PERIODIC_30MIN),
                 ];
             });
 
@@ -2791,6 +2870,106 @@ class AgentDistributionManagementController extends Controller
                     'date' => $date,
                     'history' => $history,
                 ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function storeAgentLiveLocation($id, \Illuminate\Http\Request $request)
+    {
+        try {
+            $agent = \App\Models\AdAgent::findOrFail($id);
+
+            $lat = $request->input('lat');
+            $long = $request->input('long');
+
+            // If lat/long provided in request body, use them directly
+            if ($lat && $long) {
+                $tracking = \App\Models\AdAgentTracking::create([
+                    'agent_id' => $agent->id,
+                    'lat' => $lat,
+                    'long' => $long,
+                    'date' => \Carbon\Carbon::now(),
+                    'description' => $request->description ?? 'Live location checked by Admin',
+                    'tracking_type' => \App\Models\AdAgentTracking::TYPE_LIVE_TRACKING, // 5
+                ]);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Agent live location recorded successfully',
+                    'data' => $tracking
+                ]);
+            }
+
+            // Pre-check: Is the agent actually logged into the mobile app?
+            $threshold = \Carbon\Carbon::now()->subMinutes(3);
+            $hasActiveToken = $agent->user_id
+                ? \DB::table('personal_access_tokens')
+                    ->where('tokenable_type', \App\Models\UmUser::class)
+                    ->where('tokenable_id', $agent->user_id)
+                    ->where('last_used_at', '>=', $threshold)
+                    ->exists()
+                : false;
+
+            if (!$hasActiveToken) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Agent is not logged into the mobile app. Cannot fetch live location.',
+                    'offline' => true,
+                ], 200);
+            }
+
+            // Otherwise, trigger Cache signal so mobile app will upload fresh GPS on next check
+            \Illuminate\Support\Facades\Cache::put('location_request_agent_' . $agent->id, true, now()->addMinutes(2));
+
+            // Wait up to 10 seconds for mobile app to push fresh tracking_type = 5 entry
+            $startTime = time();
+            $freshTrack = null;
+
+            while ((time() - $startTime) < 10) {
+                usleep(500000); // 500ms
+                $freshTrack = \App\Models\AdAgentTracking::where('agent_id', $agent->id)
+                    ->where('date', '>=', \Carbon\Carbon::now()->subSeconds(20))
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($freshTrack) {
+                    break;
+                }
+            }
+
+            // Fallback to latest available location if no fresh location received within timeout
+            if (!$freshTrack) {
+                $freshTrack = \App\Models\AdAgentTracking::where('agent_id', $agent->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+            }
+
+            if (!$freshTrack) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No location records found for agent.',
+                ], 404);
+            }
+
+            // Save dedicated live tracking record
+            $tracking = \App\Models\AdAgentTracking::create([
+                'agent_id' => $agent->id,
+                'lat' => $freshTrack->lat,
+                'long' => $freshTrack->long,
+                'date' => \Carbon\Carbon::now(),
+                'description' => $request->description ?? 'Live location checked by Admin',
+                'tracking_type' => \App\Models\AdAgentTracking::TYPE_LIVE_TRACKING, // 5
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Agent live location recorded successfully',
+                'data' => $tracking
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -2849,6 +3028,7 @@ class AgentDistributionManagementController extends Controller
                         'long' => (float) $latestTrack->long,
                         'date' => $latestTrack->date->timezone('Asia/Colombo')->format('Y-m-d H:i:s'),
                         'description' => $latestTrack->description,
+                        'tracking_type' => (int) ($latestTrack->tracking_type ?? \App\Models\SmSupervisorTracking::TYPE_PERIODIC_30MIN),
                     ];
                 }
             }
@@ -2882,6 +3062,7 @@ class AgentDistributionManagementController extends Controller
                     'long' => (float) $track->long,
                     'date' => $track->date->timezone('Asia/Colombo')->format('H:i:s'),
                     'description' => $track->description,
+                    'tracking_type' => (int) ($track->tracking_type ?? \App\Models\SmSupervisorTracking::TYPE_PERIODIC_30MIN),
                 ];
             });
 
@@ -2893,6 +3074,108 @@ class AgentDistributionManagementController extends Controller
                     'date' => $date,
                     'history' => $history,
                 ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function storeSupervisorLiveLocation($id, \Illuminate\Http\Request $request)
+    {
+        try {
+            $supervisor = \App\Models\SmSuperviser::findOrFail($id);
+
+            $lat = $request->input('lat');
+            $long = $request->input('long');
+
+            // If lat/long provided in body, store directly
+            if ($lat && $long) {
+                $tracking = \App\Models\SmSupervisorTracking::create([
+                    'superviser_id' => $supervisor->id,
+                    'agent_id' => $supervisor->agent_id,
+                    'lat' => $lat,
+                    'long' => $long,
+                    'date' => \Carbon\Carbon::now(),
+                    'description' => $request->description ?? 'Live location checked by Admin',
+                    'tracking_type' => \App\Models\SmSupervisorTracking::TYPE_LIVE_TRACKING, // 5
+                ]);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Live location recorded successfully',
+                    'data' => $tracking
+                ]);
+            }
+
+            // Pre-check: Is the supervisor actually logged into the mobile app?
+            $threshold = \Carbon\Carbon::now()->subMinutes(3);
+            $hasActiveToken = $supervisor->user_id
+                ? \DB::table('personal_access_tokens')
+                    ->where('tokenable_type', \App\Models\UmUser::class)
+                    ->where('tokenable_id', $supervisor->user_id)
+                    ->where('last_used_at', '>=', $threshold)
+                    ->exists()
+                : false;
+
+            if (!$hasActiveToken) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Supervisor is not logged into the mobile app. Cannot fetch live location.',
+                    'offline' => true,
+                ], 200);
+            }
+
+            // Trigger Cache signal to request fresh GPS from logged-in mobile device
+            \Illuminate\Support\Facades\Cache::put('location_request_supervisor_' . $supervisor->id, true, now()->addMinutes(2));
+
+            // Poll for fresh location entry created by mobile app within last 12 seconds
+            $startTime = time();
+            $freshTrack = null;
+
+            while ((time() - $startTime) < 8) {
+                usleep(500000); // 500ms sleep
+                $freshTrack = \App\Models\SmSupervisorTracking::where('superviser_id', $supervisor->id)
+                    ->where('date', '>=', \Carbon\Carbon::now()->subSeconds(15))
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($freshTrack) {
+                    break;
+                }
+            }
+
+            // Fallback to latest available track if no fresh ping within timeout
+            if (!$freshTrack) {
+                $freshTrack = \App\Models\SmSupervisorTracking::where('superviser_id', $supervisor->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+            }
+
+            if (!$freshTrack) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No mobile location records found for supervisor.',
+                ], 404);
+            }
+
+            // Create dedicated Live Tracking (type 5) entry with retrieved coordinates
+            $tracking = \App\Models\SmSupervisorTracking::create([
+                'superviser_id' => $supervisor->id,
+                'agent_id' => $supervisor->agent_id,
+                'lat' => $freshTrack->lat,
+                'long' => $freshTrack->long,
+                'date' => \Carbon\Carbon::now(),
+                'description' => $request->description ?? 'Live location checked by Admin',
+                'tracking_type' => \App\Models\SmSupervisorTracking::TYPE_LIVE_TRACKING, // 5
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Supervisor live location captured successfully',
+                'data' => $tracking
             ]);
         } catch (\Exception $e) {
             return response()->json([

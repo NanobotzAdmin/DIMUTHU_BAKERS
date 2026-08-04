@@ -130,9 +130,16 @@
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-2">
+                                            <button id="live-loc-btn-{{ $agent['id'] }}"
+                                                data-agent-id="{{ $agent['id'] }}"
+                                                onclick="fetchAndStoreAgentLiveLocation('{{ $agent['id'] }}', '{{ $agent['agentName'] }}')"
+                                                class="agent-live-loc-btn inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-400 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors font-medium cursor-not-allowed" title="Checking status..." disabled>
+                                                <i class="bi bi-broadcast text-sm"></i>
+                                                <span class="live-loc-label">Checking...</span>
+                                            </button>
                                             <button onclick="openAgentHistoryMap('{{ $agent['id'] }}', '{{ $agent['agentName'] }}')"
-                                                class="text-gray-500 hover:text-indigo-600 p-1" title="Track on Map">
-                                                <i class="bi bi-geo-alt"></i>
+                                                class="text-gray-500 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Track History on Map">
+                                                <i class="bi bi-geo-alt text-base"></i>
                                             </button>
                                             <button onclick="viewAgent('{{ json_encode($agent) }}')"
                                                 class="text-gray-500 hover:text-blue-600 p-1" title="View Details"><i
@@ -482,12 +489,51 @@
                         <h3 class="text-lg font-semibold leading-6 text-gray-900" id="map-modal-title">Agent Locations</h3>
                         <p class="text-sm text-gray-500" id="map-modal-desc">Real-time tracking visualizer</p>
                     </div>
-                    <!-- Date Selector -->
-                    <div id="map-date-container" class="flex items-center gap-2">
-                        <label for="map-history-date" class="text-xs font-medium text-gray-700">Select Date:</label>
-                        <input type="date" id="map-history-date" 
-                            class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-amber-500 focus:border-amber-500"
-                            value="{{ date('Y-m-d') }}" onchange="handleMapDateChange()">
+                    <!-- Date and Type Selectors -->
+                    <div id="map-date-container" class="flex flex-wrap items-center gap-3">
+                        <div class="flex items-center gap-1.5 relative" id="agentTrackingTypeMultiSelectContainer">
+                            <label class="text-xs font-medium text-gray-700">Type:</label>
+                            <div class="relative">
+                                <button type="button" id="agentTrackingTypeDropdownBtn" onclick="toggleAgentTrackingTypeDropdown()"
+                                    class="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white flex items-center justify-between gap-2 min-w-[150px] shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-amber-500">
+                                    <span id="agentTrackingTypeDropdownLabel" class="truncate text-xs font-medium text-gray-700">All Types Selected</span>
+                                    <i class="bi bi-chevron-down text-xs text-gray-500"></i>
+                                </button>
+                                <!-- Dropdown Menu -->
+                                <div id="agentTrackingTypeDropdownMenu" class="hidden absolute left-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-2 space-y-1">
+                                    <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-xs font-semibold text-amber-700 border-b border-gray-100 pb-1.5">
+                                        <input type="checkbox" id="agentTypeSelectAll" checked onchange="toggleSelectAllAgentTrackingTypes(this)" class="rounded text-amber-600 focus:ring-amber-500 h-3.5 w-3.5">
+                                        Select All
+                                    </label>
+                                    <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-xs text-gray-700">
+                                        <input type="checkbox" value="1" checked onchange="handleAgentTrackingTypeCheckboxChange()" class="agent-tracking-type-cb rounded text-amber-600 focus:ring-amber-500 h-3.5 w-3.5">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 30-Min Track
+                                    </label>
+                                    {{-- <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-xs text-gray-700">
+                                        <input type="checkbox" value="2" checked onchange="handleAgentTrackingTypeCheckboxChange()" class="agent-tracking-type-cb rounded text-amber-600 focus:ring-amber-500 h-3.5 w-3.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Start Trip
+                                    </label>
+                                    <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-xs text-gray-700">
+                                        <input type="checkbox" value="3" checked onchange="handleAgentTrackingTypeCheckboxChange()" class="agent-tracking-type-cb rounded text-amber-600 focus:ring-amber-500 h-3.5 w-3.5">
+                                        <span class="w-2 h-2 rounded-full bg-purple-500"></span> Customer Billing
+                                    </label>
+                                    <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-xs text-gray-700">
+                                        <input type="checkbox" value="4" checked onchange="handleAgentTrackingTypeCheckboxChange()" class="agent-tracking-type-cb rounded text-amber-600 focus:ring-amber-500 h-3.5 w-3.5">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> Unload
+                                    </label> --}}
+                                    <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-xs text-gray-700">
+                                        <input type="checkbox" value="5" checked onchange="handleAgentTrackingTypeCheckboxChange()" class="agent-tracking-type-cb rounded text-amber-600 focus:ring-amber-500 h-3.5 w-3.5">
+                                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> Live Tracking
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <label for="map-history-date" class="text-xs font-medium text-gray-700">Date:</label>
+                            <input type="date" id="map-history-date" 
+                                class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-amber-500 focus:border-amber-500"
+                                value="{{ date('Y-m-d') }}" onchange="handleMapDateChange()">
+                        </div>
                     </div>
                 </div>
 
@@ -538,6 +584,10 @@
                     this.setSelectionRange(cursorPosition + (newLength - oldLength), cursorPosition + (newLength - oldLength));
                 });
             }
+
+            // Fetch agent online status and update View Live Location buttons
+            fetchAgentOnlineStatus();
+            setInterval(fetchAgentOnlineStatus, 60000); // Refresh every 60 seconds
         });
 
         // Modal Logic
@@ -1213,7 +1263,7 @@
                             position: pos,
                             map: trackMapObj,
                             title: `${loc.agent_name} (${loc.agent_code})`,
-                            icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                            icon: getCustomMapMarkerIcon(loc.tracking_type)
                         });
 
                         const infoWindow = new google.maps.InfoWindow({
@@ -1253,10 +1303,79 @@
             loadAgentHistoryFromDate();
         }
 
+        function getAgentTrackingTypeBadge(type) {
+            const types = {
+                1: { name: '30-Min Track', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+                2: { name: 'Start Trip', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+                3: { name: 'Customer Billing', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+                4: { name: 'Unload', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+                5: { name: 'Live Tracking', color: 'bg-rose-100 text-rose-800 border-rose-200' },
+            };
+            const item = types[type] || { name: 'General Track', color: 'bg-gray-100 text-gray-800 border-gray-200' };
+            return `<span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${item.color} mb-1">${item.name}</span>`;
+        }
+
+        // ==========================================
+        // MULTI-SELECT AGENT TRACKING TYPE DROPDOWN LOGIC
+        // ==========================================
+        function toggleAgentTrackingTypeDropdown() {
+            const menu = document.getElementById('agentTrackingTypeDropdownMenu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('agentTrackingTypeMultiSelectContainer');
+            if (container && !container.contains(e.target)) {
+                const menu = document.getElementById('agentTrackingTypeDropdownMenu');
+                if (menu) menu.classList.add('hidden');
+            }
+        });
+
+        function getSelectedAgentTrackingTypes() {
+            const cbs = document.querySelectorAll('.agent-tracking-type-cb:checked');
+            return Array.from(cbs).map(cb => cb.value);
+        }
+
+        function toggleSelectAllAgentTrackingTypes(selectAllCb) {
+            const cbs = document.querySelectorAll('.agent-tracking-type-cb');
+            cbs.forEach(cb => cb.checked = selectAllCb.checked);
+            updateAgentTrackingTypeDropdownLabel();
+            handleMapDateChange();
+        }
+
+        function handleAgentTrackingTypeCheckboxChange() {
+            const cbs = document.querySelectorAll('.agent-tracking-type-cb');
+            const checkedCbs = document.querySelectorAll('.agent-tracking-type-cb:checked');
+            const selectAllCb = document.getElementById('agentTypeSelectAll');
+            if (selectAllCb) {
+                selectAllCb.checked = (cbs.length === checkedCbs.length);
+            }
+            updateAgentTrackingTypeDropdownLabel();
+            handleMapDateChange();
+        }
+
+        function updateAgentTrackingTypeDropdownLabel() {
+            const checkedCbs = document.querySelectorAll('.agent-tracking-type-cb:checked');
+            const totalCbs = document.querySelectorAll('.agent-tracking-type-cb');
+            const label = document.getElementById('agentTrackingTypeDropdownLabel');
+            if (!label) return;
+
+            if (checkedCbs.length === 0) {
+                label.innerText = 'None Selected';
+            } else if (checkedCbs.length === totalCbs.length) {
+                label.innerText = 'All Types Selected';
+            } else {
+                label.innerText = `${checkedCbs.length} Type(s) Selected`;
+            }
+        }
+
         function loadAgentHistoryFromDate() {
             if (!activeAgentId) return;
             const dateVal = mapHistoryDate.value;
             if (!dateVal) return;
+
+            const selectedTypes = getSelectedAgentTrackingTypes();
 
             fetch(`/api/agents/${activeAgentId}/locations/history?date=${dateVal}`)
                 .then(res => res.json())
@@ -1268,7 +1387,17 @@
                         return;
                     }
 
-                    const history = res.data.history;
+                    // Filter history array by selected tracking types
+                    let history = res.data.history;
+                    if (selectedTypes.length < 5) {
+                        history = history.filter(p => selectedTypes.includes(String(p.tracking_type)));
+                    }
+
+                    if (history.length === 0) {
+                        mapLegend.innerHTML = `<span class="text-amber-600 font-semibold">No records match the selected tracking type(s)</span>`;
+                        return;
+                    }
+
                     mapLegend.innerHTML = `
                         <div class="flex items-center gap-2">
                             <span class="w-3.5 h-3.5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold">S</span>
@@ -1289,53 +1418,36 @@
                         pathCoords.push(pos);
                         bounds.extend(pos);
 
-                        const isStart = index === 0;
-                        const isEnd = index === history.length - 1;
+                        const isStart = (index === 0 && selectedTypes.length === 5);
+                        const isEnd = (index === history.length - 1 && selectedTypes.length === 5);
+
+                        const markerOptions = {
+                            position: pos,
+                            map: trackMapObj,
+                            title: `${isStart ? 'Start' : (isEnd ? 'End' : 'Point')} at ${point.date}`,
+                            icon: getCustomMapMarkerIcon(point.tracking_type, isStart, isEnd)
+                        };
 
                         if (isStart || isEnd) {
-                            const marker = new google.maps.Marker({
-                                position: pos,
-                                map: trackMapObj,
-                                label: isStart ? 'S' : 'E',
-                                title: `${isStart ? 'Start' : 'End'} point at ${point.date}`,
-                                icon: isStart ? 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-                            });
-
-                            const infoWindow = new google.maps.InfoWindow({
-                                content: `<div class="p-1 text-xs font-semibold">${isStart ? 'Start' : 'End'}: ${point.date}</div>`
-                            });
-
-                            marker.addListener('click', () => {
-                                infoWindow.open(trackMapObj, marker);
-                            });
-
-                            trackMarkers.push(marker);
-                        } else {
-                            // Intermediate point - draw a small yellow circle
-                            const marker = new google.maps.Marker({
-                                position: pos,
-                                map: trackMapObj,
-                                title: `Time: ${point.date}`,
-                                icon: {
-                                    path: google.maps.SymbolPath.CIRCLE,
-                                    scale: 5,
-                                    fillColor: '#F59E0B',
-                                    fillOpacity: 1.0,
-                                    strokeColor: '#D97706',
-                                    strokeWeight: 1.5
-                                }
-                            });
-
-                            const infoWindow = new google.maps.InfoWindow({
-                                content: `<div class="p-1 text-xs font-semibold">Time: ${point.date}</div>`
-                            });
-
-                            marker.addListener('click', () => {
-                                infoWindow.open(trackMapObj, marker);
-                            });
-
-                            trackMarkers.push(marker);
+                            markerOptions.label = {
+                                text: isStart ? 'S' : 'E',
+                                color: '#FFFFFF',
+                                fontSize: '11px',
+                                fontWeight: 'bold'
+                            };
                         }
+
+                        const marker = new google.maps.Marker(markerOptions);
+
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `<div class="p-2 text-xs font-semibold">${isStart ? 'Start: ' : (isEnd ? 'End: ' : 'Time: ')}${point.date}<br/>${getAgentTrackingTypeBadge(point.tracking_type)}${point.description ? `<br/><span class="text-indigo-600 font-normal">${point.description}</span>` : ''}</div>`
+                        });
+
+                        marker.addListener('click', () => {
+                            infoWindow.open(trackMapObj, marker);
+                        });
+
+                        trackMarkers.push(marker);
                     });
 
                     // Draw route: use DirectionsService if 2 or more points
@@ -1428,6 +1540,169 @@
                     console.error(err);
                     Swal.fire('Error', 'Failed to fetch location history.', 'error');
                 });
+        }
+
+        function getAgentTrackingTypeBadge(type) {
+            const types = {
+                1: { name: '30-Min Track', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+                2: { name: 'Start Trip', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+                3: { name: 'Customer Billing', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+                4: { name: 'Unload', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+                5: { name: 'Live Tracking', color: 'bg-rose-100 text-rose-800 border-rose-200' },
+            };
+            const item = types[type] || { name: 'General Track', color: 'bg-gray-100 text-gray-800 border-gray-200' };
+            return `<span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${item.color} mb-1">${item.name}</span>`;
+        }
+
+        function getCustomMapMarkerIcon(trackingType, isStart = false, isEnd = false) {
+            const type = parseInt(trackingType);
+
+            // 1: 30-Min Track -> Blue (#3B82F6)
+            // 2: Start Trip -> Emerald Green (#10B981)
+            // 3: Customer Billing -> Purple (#8B5CF6)
+            // 4: Unload -> Amber/Orange (#F59E0B)
+            // 5: Live Tracking -> Rose/Red (#EF4444)
+            const colorMap = {
+                1: { fill: '#3B82F6', stroke: '#1D4ED8' },
+                2: { fill: '#10B981', stroke: '#047857' },
+                3: { fill: '#8B5CF6', stroke: '#6D28D9' },
+                4: { fill: '#F59E0B', stroke: '#B45309' },
+                5: { fill: '#EF4444', stroke: '#B91C1C' },
+            };
+
+            const typeConfig = colorMap[type] || { fill: '#3B82F6', stroke: '#1D4ED8' };
+            let fillColor = typeConfig.fill;
+            let strokeColor = typeConfig.stroke;
+
+            if (isStart) {
+                fillColor = '#2563EB'; // Strong Blue
+                strokeColor = '#1E40AF';
+            } else if (isEnd) {
+                fillColor = '#DC2626'; // Strong Red
+                strokeColor = '#991B1B';
+            }
+
+            return {
+                path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+                fillColor: fillColor,
+                fillOpacity: 1.0,
+                scale: 1.7,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 1.8,
+                anchor: new google.maps.Point(12, 22),
+            };
+        }
+
+        // Track which agents are currently online (logged into mobile app)
+        let agentOnlineMap = {};
+
+        function fetchAgentOnlineStatus() {
+            fetch('/api/agents/online-status')
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status && res.data) {
+                        agentOnlineMap = {};
+                        res.data.forEach(item => {
+                            agentOnlineMap[item.agent_id] = item.is_online;
+                        });
+                        updateLiveLocationButtons();
+                    }
+                })
+                .catch(err => console.error('Failed to fetch agent online status:', err));
+        }
+
+        function updateLiveLocationButtons() {
+            document.querySelectorAll('.agent-live-loc-btn').forEach(btn => {
+                const agentId = btn.getAttribute('data-agent-id');
+                const label = btn.querySelector('.live-loc-label');
+                const isOnline = agentOnlineMap[agentId] === true;
+
+                if (isOnline) {
+                    btn.disabled = false;
+                    btn.className = 'agent-live-loc-btn inline-flex items-center gap-1 text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1.5 rounded-lg border border-indigo-200 transition-colors font-medium cursor-pointer';
+                    btn.title = 'Fetch Live Location & Save';
+                    label.innerHTML = '<span class="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-0.5"></span> View Live Location';
+                } else {
+                    btn.disabled = true;
+                    btn.className = 'agent-live-loc-btn inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-400 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-colors font-medium cursor-not-allowed';
+                    btn.title = 'Agent is not logged into the mobile app';
+                    label.innerHTML = '<span class="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 mr-0.5"></span> Offline';
+                }
+            });
+        }
+
+        function fetchAndStoreAgentLiveLocation(agentId, name) {
+            // Double-check online status before proceeding
+            if (agentOnlineMap[agentId] !== true) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Agent Offline',
+                    text: `${name} is not currently logged into the mobile app. Live location is not available.`,
+                    confirmButtonColor: '#6B7280',
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Track Agent Live Location?',
+                text: `Do you want to fetch and record live location for ${name}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4F46E5',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Yes, Track Location',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Fetching Live Location...',
+                        text: `Connecting to ${name}'s latest mobile app location...`,
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch(`/api/agents/${agentId}/store-live-location`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            description: 'Live location checked by Admin',
+                            tracking_type: 5 // Live Tracking
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.status) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Live Location Captured',
+                                text: `Agent live location recorded successfully!`,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            openAgentHistoryMap(agentId, name);
+                        } else if (res.offline) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Agent Offline',
+                                text: res.message || 'Agent is not logged into the mobile app.',
+                            });
+                            // Refresh online status
+                            fetchAgentOnlineStatus();
+                        } else {
+                            Swal.fire('Notice', res.message || 'Failed to retrieve live location.', 'warning');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Failed to execute store live location API.', 'error');
+                    });
+                }
+            });
         }
     </script>
 

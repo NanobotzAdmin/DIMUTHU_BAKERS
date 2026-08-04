@@ -167,6 +167,7 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
 
     // Agent CRUD API Routes
     Route::post('/api/agents/create', [AgentDistributionManagementController::class, 'createAgent'])->name('agents.create');
+    Route::get('/api/agents/online-status', [AgentDistributionManagementController::class, 'getAgentsOnlineStatus'])->name('agents.onlineStatus');
     Route::get('/api/agents/{id}', [AgentDistributionManagementController::class, 'loadAgentDetails'])->name('agents.details');
     Route::put('/api/agents/{id}/update', [AgentDistributionManagementController::class, 'updateAgent'])->name('agents.update');
     Route::delete('/api/agents/{id}/deactivate', [AgentDistributionManagementController::class, 'deactivateAgent'])->name('agents.deactivate');
@@ -174,9 +175,12 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::post('/api/agents/quick-save', [AgentDistributionManagementController::class, 'quickSaveAgent'])->name('agents.quickSave');
     Route::get('/api/agents/locations/all', [AgentDistributionManagementController::class, 'getAllAgentsLatestLocations'])->name('agents.locations.all');
     Route::get('/api/agents/{id}/locations/history', [AgentDistributionManagementController::class, 'getAgentLocationHistory'])->name('agents.locations.history');
+    Route::post('/api/agents/{id}/store-live-location', [AgentDistributionManagementController::class, 'storeAgentLiveLocation'])->name('agents.locations.storeLive');
     Route::get('/supervisor-tracking', [AgentDistributionManagementController::class, 'supervisorTrackingIndex'])->name('supervisors.tracking');
     Route::get('/api/supervisors/locations/all', [AgentDistributionManagementController::class, 'getAllSupervisorsLatestLocations'])->name('supervisors.locations.all');
+    Route::get('/api/supervisors/online-status', [AgentDistributionManagementController::class, 'getSupervisorsOnlineStatus'])->name('supervisors.onlineStatus');
     Route::get('/api/supervisors/{id}/locations/history', [AgentDistributionManagementController::class, 'getSupervisorLocationHistory'])->name('supervisors.locations.history');
+    Route::post('/api/supervisors/{id}/store-live-location', [AgentDistributionManagementController::class, 'storeSupervisorLiveLocation'])->name('supervisors.locations.storeLive');
 
     // Agent Targets API Routes
     Route::get('/api/agents/monthly-targets/load', [AgentDistributionManagementController::class, 'getMonthlyTargets'])->name('agents.monthlyTargets.load');
