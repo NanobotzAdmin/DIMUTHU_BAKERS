@@ -296,6 +296,15 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::post('/api/reports/agent-shop-sales/customer-details', [ReportController::class, 'getAgentShopCustomerDetails'])->name('reports.agentShopSales.customerDetails');
     Route::get('/reports/agent-shop-sales/export', [ReportController::class, 'exportAgentShopSales'])->name('reports.agentShopSales.export');
 
+    Route::get('/reports/weekly-agent-review', [ReportController::class, 'weeklyAgentReviewIndex'])->name('reports.weeklyAgentReview.index');
+    Route::post('/api/reports/weekly-agent-review/data', [ReportController::class, 'getWeeklyAgentReviewData'])->name('reports.weeklyAgentReview.data');
+
+    Route::get('/reports/monthly-agent-review', [ReportController::class, 'monthlyAgentReviewIndex'])->name('reports.monthlyAgentReview.index');
+    Route::post('/api/reports/monthly-agent-review/data', [ReportController::class, 'getMonthlyAgentReviewData'])->name('reports.monthlyAgentReview.data');
+
+    Route::get('/reports/all-agent-performance', [ReportController::class, 'allAgentPerformanceIndex'])->name('reports.allAgentPerformance.index');
+    Route::post('/api/reports/all-agent-performance/data', [ReportController::class, 'getAllAgentPerformanceData'])->name('reports.allAgentPerformance.data');
+
     // Product Types
     Route::get('/product-types/fetch', [ProductManagementController::class, 'fetchProductTypes'])->name('productTypes.fetch');
     Route::post('/product-types/store', [ProductManagementController::class, 'storeProductType'])->name('productTypes.store');
