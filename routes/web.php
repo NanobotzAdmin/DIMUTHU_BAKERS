@@ -278,6 +278,7 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::get('/waste-tracking', [WasteRecoveryManagementController::class, 'wasteTrackingIndex'])->name('wasteTracking.index');
     Route::get('/waste-recovery-dashboard', [WasteRecoveryManagementController::class, 'wasteRecoveryDashboardIndex'])->name('wasteRecoveryDashboard.index');
     Route::get('/waste-recovery-reports', [WasteRecoveryManagementController::class, 'wasteRecoveryReportsIndex'])->name('wasteRecoveryReports.index');
+    Route::get('/waste-recovery-reports/export-pdf', [WasteRecoveryManagementController::class, 'exportWastePLPdf'])->name('wasteRecoveryReports.exportPdf');
     Route::get('/waste-recovery-automation', [WasteRecoveryManagementController::class, 'wasteRecoveryAutomationIndex'])->name('wasteRecoveryAutomation.index');
 
     // AI Assistant
@@ -302,12 +303,15 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
 
     Route::get('/reports/weekly-agent-review', [ReportController::class, 'weeklyAgentReviewIndex'])->name('reports.weeklyAgentReview.index');
     Route::post('/api/reports/weekly-agent-review/data', [ReportController::class, 'getWeeklyAgentReviewData'])->name('reports.weeklyAgentReview.data');
+    Route::get('/reports/weekly-agent-review/export-pdf', [ReportController::class, 'exportWeeklyAgentReviewPdf'])->name('reports.weeklyAgentReview.exportPdf');
 
     Route::get('/reports/monthly-agent-review', [ReportController::class, 'monthlyAgentReviewIndex'])->name('reports.monthlyAgentReview.index');
     Route::post('/api/reports/monthly-agent-review/data', [ReportController::class, 'getMonthlyAgentReviewData'])->name('reports.monthlyAgentReview.data');
+    Route::get('/reports/monthly-agent-review/export-pdf', [ReportController::class, 'exportMonthlyAgentReviewPdf'])->name('reports.monthlyAgentReview.exportPdf');
 
     Route::get('/reports/all-agent-performance', [ReportController::class, 'allAgentPerformanceIndex'])->name('reports.allAgentPerformance.index');
     Route::post('/api/reports/all-agent-performance/data', [ReportController::class, 'getAllAgentPerformanceData'])->name('reports.allAgentPerformance.data');
+    Route::get('/reports/all-agent-performance/export-pdf', [ReportController::class, 'exportAllAgentPerformancePdf'])->name('reports.allAgentPerformance.exportPdf');
 
     // Product Types
     Route::get('/product-types/fetch', [ProductManagementController::class, 'fetchProductTypes'])->name('productTypes.fetch');

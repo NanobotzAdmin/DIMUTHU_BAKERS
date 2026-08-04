@@ -4,10 +4,11 @@
 
     <style>
         .report-header {
-            background-color: #b45309; /* Amber 700 */
+            background-color: #b45309;
+            /* Amber 700 */
             color: white;
         }
-        
+
         .metric-card {
             border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
@@ -15,20 +16,23 @@
             background: white;
             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
-        
+
         .table-simple th {
             font-size: 0.75rem;
-            background-color: #fffbeb; /* Amber 50 */
-            color: #b45309; /* Amber 700 */
+            background-color: #fffbeb;
+            /* Amber 50 */
+            color: #b45309;
+            /* Amber 700 */
             padding: 0.6rem 0.75rem;
             text-transform: uppercase;
             font-weight: 800;
-            border-bottom: 2px solid #fcd34d; /* Amber 300 */
+            border-bottom: 2px solid #fcd34d;
+            /* Amber 300 */
             border-right: 1px solid #fef3c7;
             text-align: left;
             vertical-align: bottom;
         }
-        
+
         .table-simple td {
             font-size: 0.85rem;
             padding: 0.75rem 0.75rem;
@@ -37,22 +41,25 @@
             color: #334155;
             vertical-align: middle;
         }
-        
+
         .table-simple tr:last-child td {
             border-bottom: none;
         }
-        
+
         .section-title {
-            color: #b45309; /* Amber 700 */
+            color: #b45309;
+            /* Amber 700 */
             font-weight: 800;
             text-transform: uppercase;
             font-size: 0.85rem;
             margin-bottom: 0.75rem;
         }
-        
+
         .badge-ramp {
-            background-color: #fef3c7; /* Amber 100 */
-            color: #d97706; /* Amber 600 */
+            background-color: #fef3c7;
+            /* Amber 100 */
+            color: #d97706;
+            /* Amber 600 */
             font-size: 0.65rem;
             font-weight: 800;
             padding: 0.1rem 0.4rem;
@@ -60,10 +67,12 @@
             margin-left: 0.5rem;
             display: inline-block;
         }
-        
+
         .badge-qualified {
-            background-color: #dcfce7; /* Green 100 */
-            color: #166534; /* Green 800 */
+            background-color: #dcfce7;
+            /* Green 100 */
+            color: #166534;
+            /* Green 800 */
             font-size: 0.7rem;
             font-weight: 700;
             padding: 0.25rem 0.5rem;
@@ -72,10 +81,12 @@
             display: inline-block;
             width: 100%;
         }
-        
+
         .badge-unqualified {
-            background-color: #fff1f2; /* Rose 100 */
-            color: #9f1239; /* Rose 800 */
+            background-color: #fff1f2;
+            /* Rose 100 */
+            color: #9f1239;
+            /* Rose 800 */
             font-size: 0.7rem;
             font-weight: 700;
             padding: 0.25rem 0.5rem;
@@ -87,9 +98,16 @@
     </style>
 
     <div class="container mx-auto px-4 py-6">
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">All Agent Performance Report</h2>
+                <p class="text-sm text-gray-500 mt-1">View monthly performance leaderboard, outlet movement, return trends, and credit ageing for all agents.</p>
+            </div>
+        </div>
+
         <!-- Filters Section -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">All Agent Performance Filters</h2>
             <form id="reportFilterForm" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 @csrf
                 <div>
@@ -97,10 +115,14 @@
                     <input type="month" id="month" name="month" required
                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm p-2.5">
                 </div>
-                <div>
+                <div class="flex gap-2">
                     <button type="submit" id="btnLoadReport"
-                        class="w-full flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-amber-700 hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all">
+                        class="flex-1 flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
                         <i class="bi bi-funnel mr-2"></i> Generate Report
+                    </button>
+                    <button type="button" onclick="exportToPDF()"
+                        class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all active:scale-95">
+                        <i class="bi bi-file-earmark-pdf-fill text-lg"></i> Export PDF
                     </button>
                 </div>
             </form>
@@ -113,11 +135,13 @@
         </div>
 
         <!-- Dashboard Container -->
-        <div id="dashboardContainer" class="hidden max-w-6xl mx-auto bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+        <div id="dashboardContainer"
+            class="hidden max-w-6xl mx-auto bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
             <!-- Header -->
             <div class="report-header p-6 flex justify-between items-end">
                 <div>
-                    <div class="text-xs uppercase tracking-widest font-semibold mb-1 opacity-80">Dimuthu Bake House — Agent Review</div>
+                    <div class="text-xs uppercase tracking-widest font-semibold mb-1 opacity-80">Dimuthu Bake House — Agent
+                        Review</div>
                     <h1 class="text-3xl font-bold tracking-tight">All Agent Performance Report</h1>
                 </div>
                 <div class="text-right text-sm">
@@ -129,7 +153,8 @@
             <!-- Leaderboard -->
             <div class="p-0 border-b border-gray-200">
                 <div class="px-6 py-4 bg-white border-b border-gray-100 flex items-center justify-between">
-                    <h2 class="section-title mb-0 flex-1">AGENT LEADERBOARD <span class="text-gray-400 font-normal normal-case ml-2">(sorted by achievement %)</span></h2>
+                    <h2 class="section-title mb-0 flex-1">AGENT LEADERBOARD <span
+                            class="text-gray-400 font-normal normal-case ml-2">(sorted by achievement %)</span></h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full table-simple" style="min-width: 900px;">
@@ -154,15 +179,17 @@
                     </table>
                 </div>
                 <div class="text-xs text-gray-500 px-6 py-3 bg-gray-50 border-t border-gray-100">
-                    M1 / M2 badges mark agents in ramp-up months (targets set manually by management). 5% bonus requires 100% achievement at all three levels — total, category, and SKU — calculated on net sales.
+                    M1 / M2 badges mark agents in ramp-up months (targets set manually by management). 5% bonus requires
+                    100% achievement at all three levels — total, category, and SKU — calculated on net sales.
                 </div>
             </div>
-            
+
             <div class="p-6">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
                     <!-- Return % Trend -->
                     <div>
-                        <h3 class="section-title">RETURN % TREND <span class="text-gray-400 font-normal normal-case text-xs ml-1">(3 months, team)</span></h3>
+                        <h3 class="section-title">RETURN % TREND <span
+                                class="text-gray-400 font-normal normal-case text-xs ml-1">(3 months, team)</span></h3>
                         <table class="w-full table-simple border border-amber-100">
                             <thead>
                                 <tr>
@@ -176,12 +203,14 @@
                                 <!-- JS Injected -->
                             </tbody>
                         </table>
-                        <div class="text-sm text-gray-600 mt-2">Trend improving — two-visits rule and reason codes are working.</div>
+                        <div class="text-sm text-gray-600 mt-2">Trend improving — two-visits rule and reason codes are
+                            working.</div>
                     </div>
 
                     <!-- Credit Ageing Summary -->
                     <div>
-                        <h3 class="section-title">CREDIT AGEING SUMMARY <span class="text-gray-400 font-normal normal-case text-xs ml-1">(all agents, Rs.)</span></h3>
+                        <h3 class="section-title">CREDIT AGEING SUMMARY <span
+                                class="text-gray-400 font-normal normal-case text-xs ml-1">(all agents, Rs.)</span></h3>
                         <table class="w-full table-simple border border-amber-100">
                             <thead>
                                 <tr>
@@ -202,15 +231,18 @@
                     <div class="metric-card">
                         <h3 class="section-title">OUTLET BASE MOVEMENT (<span id="lblOutletMonth">JULY</span>)</h3>
                         <div class="space-y-4 mt-3 text-sm">
-                            <div><span class="text-gray-600">Opening active outlets:</span> <strong class="text-gray-900 text-base" id="valOutOpen">0</strong></div>
+                            <div><span class="text-gray-600">Opening active outlets:</span> <strong
+                                    class="text-gray-900 text-base" id="valOutOpen">0</strong></div>
                             <div>
-                                <span class="text-gray-600">New shops:</span> <strong class="text-emerald-600" id="valOutNew">+0</strong> 
-                                <span class="text-gray-400 mx-2">•</span> 
-                                <span class="text-gray-600">Newly dormant:</span> <strong class="text-rose-600" id="valOutDormant">0</strong>
+                                <span class="text-gray-600">New shops:</span> <strong class="text-emerald-600"
+                                    id="valOutNew">+0</strong>
+                                <span class="text-gray-400 mx-2">•</span>
+                                <span class="text-gray-600">Newly dormant:</span> <strong class="text-rose-600"
+                                    id="valOutDormant">0</strong>
                             </div>
                             <div class="pt-2 border-t border-gray-100">
-                                <span class="text-gray-600">Closing active outlets:</span> 
-                                <strong class="text-gray-900 text-base" id="valOutClose">0</strong> 
+                                <span class="text-gray-600">Closing active outlets:</span>
+                                <strong class="text-gray-900 text-base" id="valOutClose">0</strong>
                                 <span class="text-emerald-600 font-medium" id="valOutGrowth">(+0%)</span>
                             </div>
                         </div>
@@ -218,7 +250,8 @@
 
                     <!-- Next Month Targets -->
                     <div class="metric-card">
-                        <h3 class="section-title">NEXT MONTH TARGETS (<span id="lblNextMonth">AUG</span>) — entered by management</h3>
+                        <h3 class="section-title">NEXT MONTH TARGETS (<span id="lblNextMonth">AUG</span>) — entered by
+                            management</h3>
                         <div class="mt-3 text-sm text-gray-700 space-y-2 leading-relaxed" id="containerNextTargets">
                             <!-- JS Injected -->
                             Greenglobal: <strong>Rs. 6,200,000</strong> • Lakmal: <strong>Rs. 4,500,000</strong><br>
@@ -227,21 +260,25 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="bg-gray-50 border-t border-gray-100 text-xs text-gray-400 p-3 flex justify-between">
                 <div class="flex gap-4">
-                    <span class="flex items-center gap-1 text-rose-600 font-bold"><span class="w-3 h-3 bg-rose-600 inline-block mr-1"></span> Rule violation</span>
-                    <span class="flex items-center gap-1 text-amber-600 font-bold"><span class="w-3 h-3 bg-amber-600 inline-block mr-1"></span> Warning</span>
-                    <span class="flex items-center gap-1 text-emerald-600 font-bold"><span class="w-3 h-3 bg-emerald-600 inline-block mr-1"></span> On track</span>
+                    <span class="flex items-center gap-1 text-rose-600 font-bold"><span
+                            class="w-3 h-3 bg-rose-600 inline-block mr-1"></span> Rule violation</span>
+                    <span class="flex items-center gap-1 text-amber-600 font-bold"><span
+                            class="w-3 h-3 bg-amber-600 inline-block mr-1"></span> Warning</span>
+                    <span class="flex items-center gap-1 text-emerald-600 font-bold"><span
+                            class="w-3 h-3 bg-emerald-600 inline-block mr-1"></span> On track</span>
                 </div>
-                <span>Dimuthu Bakers v2.0.1 — Report C — All Agent Performance (<span id="lblFooterMonth">July 2026</span>)</span>
+                <span>Dimuthu Bakers v2.0.1 — Report C — All Agent Performance (<span id="lblFooterMonth">July
+                        2026</span>)</span>
             </div>
         </div>
     </div>
 
     <script>
         const formatMoney = (amount) => Number(amount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-        
+
         document.getElementById('reportFilterForm').addEventListener('submit', function (e) {
             e.preventDefault();
             loadReportData();
@@ -257,8 +294,8 @@
 
         function loadReportData() {
             const formData = new FormData(document.getElementById('reportFilterForm'));
-            const selectedMonthStr = document.getElementById('month').value; 
-            
+            const selectedMonthStr = document.getElementById('month').value;
+
             document.getElementById('dashboardContainer').classList.add('hidden');
             document.getElementById('loadingIndicator').classList.remove('hidden');
 
@@ -306,7 +343,7 @@
             res.leaderboard.forEach((ag, idx) => {
                 // Color Logic
                 const achieveColor = ag.achievement >= 100 ? 'text-emerald-600 font-bold' : (ag.achievement >= 80 ? 'text-emerald-500 font-bold' : (ag.achievement >= 70 ? 'text-amber-500 font-bold' : 'text-rose-600 font-bold'));
-                
+
                 let remainingHtml = '';
                 if (ag.achievement >= 100) {
                     remainingHtml = `<div class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-xs font-bold text-center inline-block">Achieved <i class="bi bi-check2"></i></div>`;
@@ -319,27 +356,27 @@
                 const collColor = ag.collection_percent >= 90 ? 'text-emerald-600 font-bold' : (ag.collection_percent >= 80 ? 'text-amber-500 font-bold' : 'text-amber-500 font-bold'); // as per mockup styling
                 const utilColor = ag.credit_util <= 60 ? 'text-emerald-600 font-bold' : (ag.credit_util <= 85 ? 'text-amber-600 font-bold' : 'text-rose-600 font-bold');
 
-                const bonusHtml = ag.bonus_qualified 
-                    ? `<div class="badge-qualified">✔ Qualified</div>` 
+                const bonusHtml = ag.bonus_qualified
+                    ? `<div class="badge-qualified">✔ Qualified</div>`
                     : `<div class="badge-unqualified">✖ ${ag.achievement}%</div>`;
 
                 const badgeHtml = ag.badge ? `<span class="badge-ramp">${ag.badge}</span>` : '';
 
                 tblLb.innerHTML += `
-                    <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-amber-50/30 transition-colors">
-                        <td class="text-center text-gray-400 font-medium">${idx + 1}</td>
-                        <td class="font-bold text-gray-900">${ag.agent_name} ${badgeHtml}</td>
-                        <td class="text-right text-gray-700">${formatMoney(ag.sales)}</td>
-                        <td class="text-right ${achieveColor}">${ag.achievement}%</td>
-                        <td class="text-right">${remainingHtml}</td>
-                        <td class="text-right ${visitColor}">${ag.visit_compliance}%</td>
-                        <td class="text-right ${returnColor}">${ag.return_percent}%</td>
-                        <td class="text-right ${collColor}">${ag.collection_percent}%</td>
-                        <td class="text-center text-gray-700 font-medium">${ag.new_shops}</td>
-                        <td class="text-right ${utilColor}">${ag.credit_util}%</td>
-                        <td class="text-center">${bonusHtml}</td>
-                    </tr>
-                `;
+                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-amber-50/30 transition-colors">
+                                <td class="text-center text-gray-400 font-medium">${idx + 1}</td>
+                                <td class="font-bold text-gray-900">${ag.agent_name} ${badgeHtml}</td>
+                                <td class="text-right text-gray-700">${formatMoney(ag.sales)}</td>
+                                <td class="text-right ${achieveColor}">${ag.achievement}%</td>
+                                <td class="text-right">${remainingHtml}</td>
+                                <td class="text-right ${visitColor}">${ag.visit_compliance}%</td>
+                                <td class="text-right ${returnColor}">${ag.return_percent}%</td>
+                                <td class="text-right ${collColor}">${ag.collection_percent}%</td>
+                                <td class="text-center text-gray-700 font-medium">${ag.new_shops}</td>
+                                <td class="text-right ${utilColor}">${ag.credit_util}%</td>
+                                <td class="text-center">${bonusHtml}</td>
+                            </tr>
+                        `;
             });
 
             // Return Trend
@@ -350,50 +387,50 @@
             trendData.forEach((rt, idx) => {
                 const isLast = idx === trendData.length - 1;
                 const totColor = isLast ? 'font-black' : 'font-bold text-gray-800';
-                
+
                 // Compare to previous for arrow
                 let arrow = '';
                 if (idx > 0) {
-                    const prevTot = trendData[idx-1].total_pct;
+                    const prevTot = trendData[idx - 1].total_pct;
                     if (rt.total_pct < prevTot) arrow = ' ▼';
                     else if (rt.total_pct > prevTot) arrow = ' ▲';
                 }
 
                 tblRet.innerHTML += `
-                    <tr>
-                        <td class="text-gray-700">${rt.month_label}</td>
-                        <td class="text-right text-gray-600">${rt.defect_pct}%</td>
-                        <td class="text-right ${rt.other_pct > 1.0 ? 'text-rose-600' : 'text-gray-600'}">${rt.other_pct}%</td>
-                        <td class="text-right ${totColor}">${rt.total_pct}%${isLast ? arrow : ''}</td>
-                    </tr>
-                `;
+                            <tr>
+                                <td class="text-gray-700">${rt.month_label}</td>
+                                <td class="text-right text-gray-600">${rt.defect_pct}%</td>
+                                <td class="text-right ${rt.other_pct > 1.0 ? 'text-rose-600' : 'text-gray-600'}">${rt.other_pct}%</td>
+                                <td class="text-right ${totColor}">${rt.total_pct}%${isLast ? arrow : ''}</td>
+                            </tr>
+                        `;
             });
 
             // Credit Ageing
             const tblCred = document.getElementById('tblCreditAgeing');
             const ca = res.credit_ageing;
             tblCred.innerHTML = `
-                <tr>
-                    <td class="text-gray-700">Current</td>
-                    <td class="text-right text-gray-700">${formatMoney(ca.current.amount)}</td>
-                    <td class="text-right text-gray-600">${ca.current.pct}%</td>
-                </tr>
-                <tr>
-                    <td class="text-gray-700">1 &ndash; 30 days</td>
-                    <td class="text-right text-gray-700">${formatMoney(ca.days_30.amount)}</td>
-                    <td class="text-right text-gray-600">${ca.days_30.pct}%</td>
-                </tr>
-                <tr>
-                    <td class="text-gray-700">31 &ndash; 60 days</td>
-                    <td class="text-right text-gray-700">${formatMoney(ca.days_60.amount)}</td>
-                    <td class="text-right text-gray-600">${ca.days_60.pct}%</td>
-                </tr>
-                <tr class="bg-rose-50/50">
-                    <td class="text-rose-700 font-bold">60+ days</td>
-                    <td class="text-right text-rose-700 font-bold">${formatMoney(ca.days_60_plus.amount)}</td>
-                    <td class="text-right text-rose-600 font-bold">${ca.days_60_plus.pct}%</td>
-                </tr>
-            `;
+                        <tr>
+                            <td class="text-gray-700">Current</td>
+                            <td class="text-right text-gray-700">${formatMoney(ca.current.amount)}</td>
+                            <td class="text-right text-gray-600">${ca.current.pct}%</td>
+                        </tr>
+                        <tr>
+                            <td class="text-gray-700">1 &ndash; 30 days</td>
+                            <td class="text-right text-gray-700">${formatMoney(ca.days_30.amount)}</td>
+                            <td class="text-right text-gray-600">${ca.days_30.pct}%</td>
+                        </tr>
+                        <tr>
+                            <td class="text-gray-700">31 &ndash; 60 days</td>
+                            <td class="text-right text-gray-700">${formatMoney(ca.days_60.amount)}</td>
+                            <td class="text-right text-gray-600">${ca.days_60.pct}%</td>
+                        </tr>
+                        <tr class="bg-rose-50/50">
+                            <td class="text-rose-700 font-bold">60+ days</td>
+                            <td class="text-right text-rose-700 font-bold">${formatMoney(ca.days_60_plus.amount)}</td>
+                            <td class="text-right text-rose-600 font-bold">${ca.days_60_plus.pct}%</td>
+                        </tr>
+                    `;
 
             // Outlet Movement
             const om = res.outlet_movement;
@@ -401,7 +438,7 @@
             document.getElementById('valOutNew').innerText = `+${om.new_shops}`;
             document.getElementById('valOutDormant').innerText = `-${om.newly_dormant}`;
             document.getElementById('valOutClose').innerText = om.closing;
-            
+
             const gSign = om.growth_pct >= 0 ? '+' : '';
             const gArrow = om.growth_pct >= 0 ? '▲' : '▼';
             const gColor = om.growth_pct >= 0 ? 'text-emerald-600' : 'text-rose-600';
@@ -417,21 +454,33 @@
                 let label1 = t1.agent_name;
                 if (t1.badge) label1 += ` (${t1.badge})`;
                 let val1 = t1.target === 'Pending' ? 'Pending' : `Rs. ${formatMoney(t1.target)}`;
-                
+
                 let lineHtml = `${label1}: <strong>${val1}</strong>`;
 
                 if (i + 1 < res.next_targets.targets.length) {
-                    const t2 = res.next_targets.targets[i+1];
+                    const t2 = res.next_targets.targets[i + 1];
                     let label2 = t2.agent_name;
                     if (t2.badge) label2 += ` (${t2.badge})`;
                     let val2 = t2.target === 'Pending' ? 'Pending' : `Rs. ${formatMoney(t2.target)}`;
-                    
+
                     lineHtml += ` <span class="text-gray-400 mx-2">•</span> ${label2}: <strong>${val2}</strong>`;
                 }
                 ntHtml += `<div>${lineHtml}</div>`;
             }
             if (ntHtml === '') ntHtml = '<div class="text-gray-400 italic">No targets set for next month.</div>';
             ntCont.innerHTML = ntHtml;
+        }
+
+        function exportToPDF() {
+            const month = document.getElementById('month').value;
+
+            if (!month) {
+                Swal.fire('Warning', 'Please select a month first.', 'warning');
+                return;
+            }
+
+            const url = `{{ route('reports.allAgentPerformance.exportPdf') }}?month=${month}`;
+            window.open(url, '_blank');
         }
     </script>
 @endsection

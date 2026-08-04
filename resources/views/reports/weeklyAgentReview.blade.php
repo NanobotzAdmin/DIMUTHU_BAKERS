@@ -4,10 +4,11 @@
 
     <style>
         .report-header {
-            background-color: #b45309; /* Amber 700 */
+            background-color: #b45309;
+            /* Amber 700 */
             color: white;
         }
-        
+
         .metric-card {
             border: 1px solid #e2e8f0;
             border-radius: 0.75rem;
@@ -15,7 +16,7 @@
             background: white;
             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
-        
+
         .metric-title {
             font-size: 0.75rem;
             text-transform: uppercase;
@@ -31,12 +32,14 @@
             color: #1e293b;
             line-height: 1.2;
         }
-        
+
         .large-metric-card {
-            border: 2px solid #d97706; /* Amber 600 */
-            background: #fffbeb; /* Amber 50 */
+            border: 2px solid #d97706;
+            /* Amber 600 */
+            background: #fffbeb;
+            /* Amber 50 */
         }
-        
+
         .table-simple th {
             font-size: 0.8rem;
             background-color: #f8fafc;
@@ -47,23 +50,30 @@
             border-bottom: 1px solid #e2e8f0;
             text-align: left;
         }
-        
+
         .table-simple td {
             font-size: 0.875rem;
             padding: 0.75rem 1rem;
             border-bottom: 1px solid #f1f5f9;
             color: #334155;
         }
-        
+
         .table-simple tr:last-child td {
             border-bottom: none;
         }
     </style>
 
     <div class="container mx-auto px-4 py-6">
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Weekly Agent Review</h2>
+                <p class="text-sm text-gray-500 mt-1">Review weekly sales, visit compliance, returns, and target progress by agent.</p>
+            </div>
+        </div>
+
         <!-- Filters Section -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Weekly Agent Review Filters</h2>
             <form id="reportFilterForm" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                 @csrf
                 <div>
@@ -86,10 +96,14 @@
                     <input type="date" id="end_date" name="end_date" required
                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm p-2.5">
                 </div>
-                <div>
+                <div class="flex gap-2">
                     <button type="submit" id="btnLoadReport"
-                        class="w-full flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-amber-700 hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all">
+                        class="flex-1 flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
                         <i class="bi bi-funnel mr-2"></i> Load Report
+                    </button>
+                    <button type="button" onclick="exportToPDF()"
+                        class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all active:scale-95">
+                        <i class="bi bi-file-earmark-pdf-fill text-lg"></i> Export PDF
                     </button>
                 </div>
             </form>
@@ -106,7 +120,8 @@
             <!-- Header -->
             <div class="report-header rounded-t-xl p-6 flex justify-between items-end">
                 <div>
-                    <div class="text-xs uppercase tracking-widest font-semibold mb-1 opacity-80">Dimuthu Bake House — Agent Review</div>
+                    <div class="text-xs uppercase tracking-widest font-semibold mb-1 opacity-80">Dimuthu Bake House — Agent
+                        Review</div>
                     <h1 class="text-3xl font-bold tracking-tight">Weekly Agent Review</h1>
                 </div>
                 <div class="text-right text-sm">
@@ -119,13 +134,17 @@
             <div class="bg-amber-50 border-x border-b border-amber-200 p-4 mb-6 rounded-b-xl text-sm">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
-                        <span class="font-semibold text-amber-900">Agent:</span> <span class="font-bold text-gray-900" id="lblAgentName">Agent Name (Code)</span>
+                        <span class="font-semibold text-amber-900">Agent:</span> <span class="font-bold text-gray-900"
+                            id="lblAgentName">Agent Name (Code)</span>
                     </div>
                     <div>
-                        <span class="font-semibold text-amber-900">Routes:</span> <span class="text-gray-900" id="lblRoutes">Routes List</span>
+                        <span class="font-semibold text-amber-900">Routes:</span> <span class="text-gray-900"
+                            id="lblRoutes">Routes List</span>
                     </div>
                     <div class="md:col-span-2">
-                        <span class="font-semibold text-amber-900">Monthly Target:</span> <span class="font-bold text-gray-900" id="lblMonthlyTarget">Rs. 0</span> <span class="text-gray-500 italic">(entered by management)</span>
+                        <span class="font-semibold text-amber-900">Monthly Target:</span> <span
+                            class="font-bold text-gray-900" id="lblMonthlyTarget">Rs. 0</span> <span
+                            class="text-gray-500 italic">(entered by management)</span>
                     </div>
                 </div>
             </div>
@@ -166,7 +185,8 @@
                     <div>
                         <div class="metric-title text-amber-800">Remaining to Monthly Target</div>
                         <div class="text-4xl font-black text-amber-700 mt-1" id="valRemainingTarget">Rs. 0</div>
-                        <div class="text-sm text-gray-600 mt-2">MTD sales <span id="valMtdSales" class="font-semibold">Rs. 0</span> of <span id="valMtdTarget" class="font-semibold">Rs. 0</span> target</div>
+                        <div class="text-sm text-gray-600 mt-2">MTD sales <span id="valMtdSales" class="font-semibold">Rs.
+                                0</span> of <span id="valMtdTarget" class="font-semibold">Rs. 0</span> target</div>
                     </div>
                 </div>
             </div>
@@ -176,7 +196,8 @@
                 <!-- Daily Outlet Visits -->
                 <div>
                     <div class="flex justify-between items-end mb-3">
-                        <h3 class="text-amber-800 font-bold uppercase tracking-wider text-sm">Daily Outlet Visits <span class="text-gray-400 text-xs normal-case font-normal">(minimum 30 per day)</span></h3>
+                        <h3 class="text-amber-800 font-bold uppercase tracking-wider text-sm">Daily Outlet Visits <span
+                                class="text-gray-400 text-xs normal-case font-normal">(minimum 30 per day)</span></h3>
                     </div>
                     <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                         <table class="w-full table-simple">
@@ -197,7 +218,9 @@
                 <!-- Returns By Reason -->
                 <div>
                     <div class="flex justify-between items-end mb-3">
-                        <h3 class="text-amber-800 font-bold uppercase tracking-wider text-sm">Returns By Reason <span class="text-gray-400 text-xs normal-case font-normal">(manufacturing defects only allowed)</span></h3>
+                        <h3 class="text-amber-800 font-bold uppercase tracking-wider text-sm">Returns By Reason <span
+                                class="text-gray-400 text-xs normal-case font-normal">(manufacturing defects only
+                                allowed)</span></h3>
                     </div>
                     <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-3">
                         <table class="w-full table-simple">
@@ -214,7 +237,8 @@
                         </table>
                     </div>
                     <div class="text-sm text-gray-600">
-                        Top returned product: <strong class="text-gray-800" id="valTopReturnProduct">None</strong> — <span id="valTopReturnQty">0</span> units
+                        Top returned product: <strong class="text-gray-800" id="valTopReturnProduct">None</strong> — <span
+                            id="valTopReturnQty">0</span> units
                     </div>
                 </div>
             </div>
@@ -231,11 +255,15 @@
                         </div>
                         <div class="flex justify-between border-b border-gray-50 pb-2">
                             <span class="text-gray-600">Collections this week:</span>
-                            <span class="font-bold text-gray-900"><span id="valCollectionsThisWeek">Rs. 0</span> <span class="text-emerald-600 font-medium" id="valCollectionRate">(0% collection rate)</span></span>
+                            <span class="font-bold text-gray-900"><span id="valCollectionsThisWeek">Rs. 0</span> <span
+                                    class="text-emerald-600 font-medium" id="valCollectionRate">(0% collection
+                                    rate)</span></span>
                         </div>
                         <div class="flex justify-between pt-1">
                             <span class="text-gray-600">Closing dues:</span>
-                            <span><strong class="text-gray-900" id="valClosingDues">Rs. 0</strong> <span class="text-gray-400 mx-1">|</span> <span class="text-gray-500">Aged 30+ days:</span> <strong class="text-rose-600" id="valAged30Days">Rs. 0</strong></span>
+                            <span><strong class="text-gray-900" id="valClosingDues">Rs. 0</strong> <span
+                                    class="text-gray-400 mx-1">|</span> <span class="text-gray-500">Aged 30+ days:</span>
+                                <strong class="text-rose-600" id="valAged30Days">Rs. 0</strong></span>
                         </div>
                     </div>
                 </div>
@@ -323,7 +351,7 @@
             const sDate = new Date(startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
             const eDate = new Date(endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
             document.getElementById('lblDateRange').innerText = `${sDate} - ${eDate}`;
-            
+
             document.getElementById('lblAgentName').innerText = `${res.agent.name} (${res.agent.code})`;
             document.getElementById('lblRoutes').innerText = res.agent.routes;
             document.getElementById('lblMonthlyTarget').innerText = `Rs. ${formatMoney(res.monthly_target)}`;
@@ -332,7 +360,7 @@
             document.getElementById('valWeeklySales').innerText = `Rs. ${formatMoney(res.weekly_sales)}`;
             document.getElementById('valVisitCompliance').innerText = `${res.visit_compliance.percent}%`;
             document.getElementById('valVisitDesc').innerText = `${res.visit_compliance.visited} of ${res.visit_compliance.total} outlets visited`;
-            
+
             const retEl = document.getElementById('valReturnPercent');
             const retDescEl = document.getElementById('valReturnDesc');
             retEl.innerText = `${res.returns.percent}%`;
@@ -358,17 +386,17 @@
             const tbodyVisits = document.getElementById('tblDailyVisits');
             tbodyVisits.innerHTML = '';
             res.daily_visits.forEach(day => {
-                let statusHtml = day.status === 'OK' 
+                let statusHtml = day.status === 'OK'
                     ? `<span class="text-emerald-600 font-bold"><i class="bi bi-check2"></i> OK</span>`
                     : `<span class="text-rose-600 font-bold"><i class="bi bi-x-lg"></i> Below 30</span>`;
-                
+
                 tbodyVisits.innerHTML += `
-                    <tr>
-                        <td>${day.day}</td>
-                        <td class="text-center font-semibold ${day.status !== 'OK' ? 'text-rose-600' : ''}">${day.outlets_visited}</td>
-                        <td>${statusHtml}</td>
-                    </tr>
-                `;
+                        <tr>
+                            <td>${day.day}</td>
+                            <td class="text-center font-semibold ${day.status !== 'OK' ? 'text-rose-600' : ''}">${day.outlets_visited}</td>
+                            <td>${statusHtml}</td>
+                        </tr>
+                    `;
             });
 
             // Returns Table
@@ -376,12 +404,12 @@
             tbodyReturns.innerHTML = '';
             res.returns_by_reason.forEach(reason => {
                 tbodyReturns.innerHTML += `
-                    <tr>
-                        <td>${reason.reason}</td>
-                        <td class="text-right font-medium">${formatMoney(reason.value)}</td>
-                        <td class="text-right font-bold ${reason.percent > 1 ? 'text-rose-600' : 'text-gray-600'}">${reason.percent}%</td>
-                    </tr>
-                `;
+                        <tr>
+                            <td>${reason.reason}</td>
+                            <td class="text-right font-medium">${formatMoney(reason.value)}</td>
+                            <td class="text-right font-bold ${reason.percent > 1 ? 'text-rose-600' : 'text-gray-600'}">${reason.percent}%</td>
+                        </tr>
+                    `;
             });
             if (res.returns_by_reason.length === 0) {
                 tbodyReturns.innerHTML = `<tr><td colspan="3" class="text-center text-gray-400 py-4">No returns recorded</td></tr>`;
@@ -401,6 +429,20 @@
             document.getElementById('valNewShops').innerText = `+${res.outlet_growth.new_shops}`;
             document.getElementById('valDormantShops').innerText = res.outlet_growth.dormant_shops;
             document.getElementById('valActiveOutlets').innerText = `${res.outlet_growth.active_outlets} / ${res.outlet_growth.total_outlets}`;
+        }
+
+        function exportToPDF() {
+            const agentId = document.getElementById('agent_id').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+
+            if (!agentId || !startDate || !endDate) {
+                Swal.fire('Warning', 'Please select an agent and date range first.', 'warning');
+                return;
+            }
+
+            const url = `{{ route('reports.weeklyAgentReview.exportPdf') }}?agent_id=${agentId}&start_date=${startDate}&end_date=${endDate}`;
+            window.open(url, '_blank');
         }
     </script>
 @endsection

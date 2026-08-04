@@ -218,7 +218,7 @@ class ReportController extends Controller
         return view('reports.weeklyAgentReview', compact('agents'));
     }
 
-    public function getWeeklyAgentReviewData(Request $request)
+    private function _buildWeeklyAgentReviewData(Request $request)
     {
         $request->validate([
             'agent_id' => 'required|integer',
@@ -373,7 +373,7 @@ class ReportController extends Controller
         $activeOutlets = count($activeInLast14DaysIds);
         $dormantShops = max(0, $totalOutlets - $activeOutlets);
 
-        return response()->json([
+        return [
             'success' => true,
             'agent' => [
                 'name' => $agent->agent_name ?? 'Unknown',
@@ -420,7 +420,47 @@ class ReportController extends Controller
                 'active_outlets' => $activeOutlets,
                 'total_outlets' => $totalOutlets
             ]
+        ];
+    }
+
+    public function getWeeklyAgentReviewData(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|integer',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
         ]);
+
+        $data = $this->_buildWeeklyAgentReviewData($request);
+
+        return response()->json(array_merge(['success' => true], $data));
+    }
+
+    public function exportWeeklyAgentReviewPdf(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|integer',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $data = $this->_buildWeeklyAgentReviewData($request);
+        
+        $startDateFormatted = Carbon::parse($request->input('start_date'))->format('d M Y');
+        $endDateFormatted = Carbon::parse($request->input('end_date'))->format('d M Y');
+
+        $configPath = public_path('system_config.json');
+        $companyInfo = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : null;
+
+        $pdf = Pdf::loadView('reports.exports.pdf.weeklyAgentReview', [
+            'data' => $data,
+            'startDate' => $startDateFormatted,
+            'endDate' => $endDateFormatted,
+            'companyInfo' => $companyInfo
+        ])->setPaper('a4', 'portrait');
+
+        $fileName = 'Weekly_Agent_Review_' . $data['agent']['name'] . '_' . $request->input('start_date') . '.pdf';
+        return $pdf->download($fileName);
     }
     public function monthlyAgentReviewIndex()
     {
@@ -428,7 +468,7 @@ class ReportController extends Controller
         return view('reports.monthlyAgentReview', compact('agents'));
     }
 
-    public function getMonthlyAgentReviewData(Request $request)
+    private function _buildMonthlyAgentReviewData(Request $request)
     {
         $request->validate([
             'agent_id' => 'required|integer',
@@ -613,7 +653,7 @@ class ReportController extends Controller
         $totalCreditLimit = $assignedCustomers->sum('credit_limit');
         $creditUtilization = $totalCreditLimit > 0 ? round(($closingDues / $totalCreditLimit) * 100) : 0;
 
-        return response()->json([
+        return [
             'success' => true,
             'agent' => [
                 'name' => $agent->agent_name ?? 'Unknown',
@@ -661,14 +701,49 @@ class ReportController extends Controller
                 'days_31_60' => $aged60d,
                 'days_60_plus' => $aged60dPlus
             ]
-        ]);
+        ];
     }
+
+    public function getMonthlyAgentReviewData(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|integer',
+            'month' => 'required|date_format:Y-m',
+        ]);
+
+        $data = $this->_buildMonthlyAgentReviewData($request);
+        return response()->json(array_merge(['success' => true], $data));
+    }
+
+    public function exportMonthlyAgentReviewPdf(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|integer',
+            'month' => 'required|date_format:Y-m',
+        ]);
+
+        $data = $this->_buildMonthlyAgentReviewData($request);
+        $monthYear = Carbon::createFromFormat('Y-m', $request->input('month'))->format('F Y');
+
+        $configPath = public_path('system_config.json');
+        $companyInfo = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : null;
+
+        $pdf = Pdf::loadView('reports.exports.pdf.monthlyAgentReview', [
+            'data' => $data,
+            'monthYear' => $monthYear,
+            'companyInfo' => $companyInfo
+        ])->setPaper('a4', 'portrait');
+
+        $fileName = 'Monthly_Agent_Review_' . $data['agent']['name'] . '_' . $request->input('month') . '.pdf';
+        return $pdf->download($fileName);
+    }
+
     public function allAgentPerformanceIndex()
     {
         return view('reports.allAgentPerformance');
     }
 
-    public function getAllAgentPerformanceData(Request $request)
+    private function _buildAllAgentPerformanceData(Request $request)
     {
         $request->validate([
             'month' => 'required|date_format:Y-m',
@@ -883,8 +958,7 @@ class ReportController extends Controller
             'days_60_plus' => ['amount' => $c60Plus, 'pct' => $cTotal > 0 ? round(($c60Plus / $cTotal) * 100) : 0],
         ];
 
-        return response()->json([
-            'success' => true,
+        return [
             'leaderboard' => $leaderboard,
             'outlet_movement' => [
                 'opening' => $totalActiveOpening,
@@ -899,6 +973,38 @@ class ReportController extends Controller
                 'label' => $nextMonthDate->format('M'),
                 'targets' => $nextMonthTargets
             ]
+        ];
+    }
+
+    public function getAllAgentPerformanceData(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|date_format:Y-m',
         ]);
+
+        $data = $this->_buildAllAgentPerformanceData($request);
+        return response()->json(array_merge(['success' => true], $data));
+    }
+
+    public function exportAllAgentPerformancePdf(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|date_format:Y-m',
+        ]);
+
+        $data = $this->_buildAllAgentPerformanceData($request);
+        $monthYear = Carbon::createFromFormat('Y-m', $request->input('month'))->format('F Y');
+
+        $configPath = public_path('system_config.json');
+        $companyInfo = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : null;
+
+        $pdf = Pdf::loadView('reports.exports.pdf.allAgentPerformance', [
+            'data' => $data,
+            'monthYear' => $monthYear,
+            'companyInfo' => $companyInfo
+        ])->setPaper('a4', 'landscape');
+
+        $fileName = 'All_Agent_Performance_' . $request->input('month') . '.pdf';
+        return $pdf->download($fileName);
     }
 }
