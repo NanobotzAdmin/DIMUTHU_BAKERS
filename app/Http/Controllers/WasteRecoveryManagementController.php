@@ -383,6 +383,36 @@ class WasteRecoveryManagementController extends Controller
         return view('wasteRecovery.reports', compact('wastePL', 'categories', 'envImpact', 'efficiencyKPIs'));
     }
 
+    public function exportWastePLPdf()
+    {
+        $wastePL = [
+            'beginningInventory' => 150000,
+            'productionCosts' => 458000,
+            'endingInventory' => 124000,
+            'costOfWasteItems' => 484000,
+            'dayOldSales' => 240000,
+            'wasteRecoveryIncome' => 52000,
+            'totalRevenue' => 292000,
+            'nrvWritedowns' => 85000,
+            'wasteLoss' => 124000,
+            'processingCosts' => 32000,
+            'disposalCosts' => 15000,
+            'totalExpenses' => 256000,
+            'netWasteLoss' => 192000,
+            'recoveryRate' => 48.5
+        ];
+
+        $configPath = public_path('system_config.json');
+        $companyInfo = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : null;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.exports.pdf.wastePL', [
+            'wastePL' => $wastePL,
+            'companyInfo' => $companyInfo
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('Waste_Profit_Loss_Report.pdf');
+    }
+
     public function wasteRecoveryAutomationIndex()
     {
         // Integration Statistics

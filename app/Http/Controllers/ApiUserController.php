@@ -55,6 +55,7 @@ class ApiUserController extends Controller
             ], 401);
         }
 
+        $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         $profile = null;
@@ -99,8 +100,10 @@ class ApiUserController extends Controller
 
     public function logout(Request $request)
     {
-        // Revoke the token that was used to authenticate the current request
-        $request->user()->currentAccessToken()->delete();
+        // Revoke all tokens for the user on logout
+        if ($request->user()) {
+            $request->user()->tokens()->delete();
+        }
 
         return response()->json([
             'status' => true,
@@ -421,11 +424,15 @@ class ApiUserController extends Controller
 
             $date = $request->date ? \Carbon\Carbon::parse($request->date) : \Carbon\Carbon::now();
 
+            $trackingType = $request->tracking_type ? (int) $request->tracking_type : \App\Models\AdAgentTracking::TYPE_PERIODIC_30MIN;
+
             $tracking = \App\Models\AdAgentTracking::create([
                 'agent_id' => $agentId,
                 'lat' => $request->lat,
                 'long' => $request->long,
                 'date' => $date,
+                'description' => $request->description,
+                'tracking_type' => $trackingType,
             ]);
 
             return response()->json([
@@ -487,6 +494,8 @@ class ApiUserController extends Controller
 
             $date = $request->date ? \Carbon\Carbon::parse($request->date) : \Carbon\Carbon::now();
 
+            $trackingType = $request->tracking_type ? (int) $request->tracking_type : \App\Models\SmSupervisorTracking::TYPE_PERIODIC_30MIN;
+
             $tracking = \App\Models\SmSupervisorTracking::create([
                 'superviser_id' => $supervisorId,
                 'agent_id' => $agentId,
@@ -494,6 +503,7 @@ class ApiUserController extends Controller
                 'long' => $request->long,
                 'date' => $date,
                 'description' => $request->description,
+                'tracking_type' => $trackingType,
             ]);
 
             return response()->json([
@@ -508,6 +518,41 @@ class ApiUserController extends Controller
                 'status' => false,
                 'message' => 'An error occurred during location tracking'
             ], 500);
+        }
+    }
+
+    public function checkLocationRequest(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['status' => false, 'requested' => false], 401);
+            }
+
+            $requested = false;
+
+            // Check if supervisor
+            if ($user->user_role_id === 10) {
+                $supervisor = DB::table('sm_superviser')->where('user_id', $user->id)->first();
+                if ($supervisor && \Illuminate\Support\Facades\Cache::has('location_request_supervisor_' . $supervisor->id)) {
+                    $requested = true;
+                    \Illuminate\Support\Facades\Cache::forget('location_request_supervisor_' . $supervisor->id);
+                }
+            } else {
+                // Check if agent
+                $agent = DB::table('ad_agent')->where('user_id', $user->id)->first();
+                if ($agent && \Illuminate\Support\Facades\Cache::has('location_request_agent_' . $agent->id)) {
+                    $requested = true;
+                    \Illuminate\Support\Facades\Cache::forget('location_request_agent_' . $agent->id);
+                }
+            }
+
+            return response()->json([
+                'status' => true,
+                'requested' => $requested
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'requested' => false], 500);
         }
     }
 }

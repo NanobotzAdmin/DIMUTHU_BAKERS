@@ -32,6 +32,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branch' */])->group(function () {
     Route::get('/adminDashboard', [DashboardController::class, 'adminDashboard'])->name('adminDashboard');
 
+    Route::get('/under-development', [DashboardController::class, 'underDevelopment'])->name('underDevelopment');
+
     // User Management
     Route::get('/user-management', [UserManagementController::class, 'userManageIndex'])->name('userManagement.index');
     Route::post('/user-management/store', [UserManagementController::class, 'store'])->name('userManagement.store');
@@ -167,6 +169,7 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
 
     // Agent CRUD API Routes
     Route::post('/api/agents/create', [AgentDistributionManagementController::class, 'createAgent'])->name('agents.create');
+    Route::get('/api/agents/online-status', [AgentDistributionManagementController::class, 'getAgentsOnlineStatus'])->name('agents.onlineStatus');
     Route::get('/api/agents/{id}', [AgentDistributionManagementController::class, 'loadAgentDetails'])->name('agents.details');
     Route::put('/api/agents/{id}/update', [AgentDistributionManagementController::class, 'updateAgent'])->name('agents.update');
     Route::delete('/api/agents/{id}/deactivate', [AgentDistributionManagementController::class, 'deactivateAgent'])->name('agents.deactivate');
@@ -174,9 +177,12 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::post('/api/agents/quick-save', [AgentDistributionManagementController::class, 'quickSaveAgent'])->name('agents.quickSave');
     Route::get('/api/agents/locations/all', [AgentDistributionManagementController::class, 'getAllAgentsLatestLocations'])->name('agents.locations.all');
     Route::get('/api/agents/{id}/locations/history', [AgentDistributionManagementController::class, 'getAgentLocationHistory'])->name('agents.locations.history');
+    Route::post('/api/agents/{id}/store-live-location', [AgentDistributionManagementController::class, 'storeAgentLiveLocation'])->name('agents.locations.storeLive');
     Route::get('/supervisor-tracking', [AgentDistributionManagementController::class, 'supervisorTrackingIndex'])->name('supervisors.tracking');
     Route::get('/api/supervisors/locations/all', [AgentDistributionManagementController::class, 'getAllSupervisorsLatestLocations'])->name('supervisors.locations.all');
+    Route::get('/api/supervisors/online-status', [AgentDistributionManagementController::class, 'getSupervisorsOnlineStatus'])->name('supervisors.onlineStatus');
     Route::get('/api/supervisors/{id}/locations/history', [AgentDistributionManagementController::class, 'getSupervisorLocationHistory'])->name('supervisors.locations.history');
+    Route::post('/api/supervisors/{id}/store-live-location', [AgentDistributionManagementController::class, 'storeSupervisorLiveLocation'])->name('supervisors.locations.storeLive');
 
     // Agent Targets API Routes
     Route::get('/api/agents/monthly-targets/load', [AgentDistributionManagementController::class, 'getMonthlyTargets'])->name('agents.monthlyTargets.load');
@@ -274,6 +280,7 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::get('/waste-tracking', [WasteRecoveryManagementController::class, 'wasteTrackingIndex'])->name('wasteTracking.index');
     Route::get('/waste-recovery-dashboard', [WasteRecoveryManagementController::class, 'wasteRecoveryDashboardIndex'])->name('wasteRecoveryDashboard.index');
     Route::get('/waste-recovery-reports', [WasteRecoveryManagementController::class, 'wasteRecoveryReportsIndex'])->name('wasteRecoveryReports.index');
+    Route::get('/waste-recovery-reports/export-pdf', [WasteRecoveryManagementController::class, 'exportWastePLPdf'])->name('wasteRecoveryReports.exportPdf');
     Route::get('/waste-recovery-automation', [WasteRecoveryManagementController::class, 'wasteRecoveryAutomationIndex'])->name('wasteRecoveryAutomation.index');
 
     // AI Assistant
@@ -295,6 +302,18 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::post('/api/reports/agent-shop-sales/data', [ReportController::class, 'getAgentShopSalesData'])->name('reports.agentShopSales.data');
     Route::post('/api/reports/agent-shop-sales/customer-details', [ReportController::class, 'getAgentShopCustomerDetails'])->name('reports.agentShopSales.customerDetails');
     Route::get('/reports/agent-shop-sales/export', [ReportController::class, 'exportAgentShopSales'])->name('reports.agentShopSales.export');
+
+    Route::get('/reports/weekly-agent-review', [ReportController::class, 'weeklyAgentReviewIndex'])->name('reports.weeklyAgentReview.index');
+    Route::post('/api/reports/weekly-agent-review/data', [ReportController::class, 'getWeeklyAgentReviewData'])->name('reports.weeklyAgentReview.data');
+    Route::get('/reports/weekly-agent-review/export-pdf', [ReportController::class, 'exportWeeklyAgentReviewPdf'])->name('reports.weeklyAgentReview.exportPdf');
+
+    Route::get('/reports/monthly-agent-review', [ReportController::class, 'monthlyAgentReviewIndex'])->name('reports.monthlyAgentReview.index');
+    Route::post('/api/reports/monthly-agent-review/data', [ReportController::class, 'getMonthlyAgentReviewData'])->name('reports.monthlyAgentReview.data');
+    Route::get('/reports/monthly-agent-review/export-pdf', [ReportController::class, 'exportMonthlyAgentReviewPdf'])->name('reports.monthlyAgentReview.exportPdf');
+
+    Route::get('/reports/all-agent-performance', [ReportController::class, 'allAgentPerformanceIndex'])->name('reports.allAgentPerformance.index');
+    Route::post('/api/reports/all-agent-performance/data', [ReportController::class, 'getAllAgentPerformanceData'])->name('reports.allAgentPerformance.data');
+    Route::get('/reports/all-agent-performance/export-pdf', [ReportController::class, 'exportAllAgentPerformancePdf'])->name('reports.allAgentPerformance.exportPdf');
 
     // Product Types
     Route::get('/product-types/fetch', [ProductManagementController::class, 'fetchProductTypes'])->name('productTypes.fetch');

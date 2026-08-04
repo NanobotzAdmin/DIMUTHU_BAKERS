@@ -2124,6 +2124,8 @@ class ApiManagementController extends Controller
             'returns.*.unit_price' => 'required|numeric',
             'returns.*.stm_branch_stock_id' => 'required',
             'returns.*.reason' => 'nullable|string',
+            'lat' => 'nullable|numeric',
+            'long' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -2137,6 +2139,40 @@ class ApiManagementController extends Controller
         $supervisorId = $this->getSupervisorId();
         if (! $supervisorId) {
             return response()->json(['status' => false, 'message' => 'Supervisor not found'], 403);
+        }
+
+        if ($request->filled('lat') && $request->filled('long')) {
+            try {
+                $user = auth()->user();
+                if ($user && $user->user_role_id == 10) {
+                    $supId = $supervisorId ?? $this->getSupervisorId();
+                    if ($supId) {
+                        \App\Models\SmSupervisorTracking::create([
+                            'superviser_id' => $supId,
+                            'agent_id' => $this->getAgentId(),
+                            'lat' => $request->lat,
+                            'long' => $request->long,
+                            'date' => \Carbon\Carbon::now(),
+                            'description' => 'Customer B2B invoice created via mobile app',
+                            'tracking_type' => \App\Models\SmSupervisorTracking::TYPE_CUSTOMER_BILLING, // 3
+                        ]);
+                    }
+                } elseif ($user && $user->user_role_id == 8) {
+                    $agId = $this->getAgentId();
+                    if ($agId) {
+                        \App\Models\AdAgentTracking::create([
+                            'agent_id' => $agId,
+                            'lat' => $request->lat,
+                            'long' => $request->long,
+                            'date' => \Carbon\Carbon::now(),
+                            'description' => 'Customer B2B invoice created via mobile app',
+                            'tracking_type' => \App\Models\AdAgentTracking::TYPE_CUSTOMER_BILLING, // 3
+                        ]);
+                    }
+                }
+            } catch (\Exception $trackEx) {
+                \Illuminate\Support\Facades\Log::warning("Failed to record location on B2B invoice: " . $trackEx->getMessage());
+            }
         }
 
         // Find active daily load for this supervisor
@@ -2544,6 +2580,8 @@ class ApiManagementController extends Controller
             'payment_date' => 'required|date',
             'cheque_number' => 'nullable|string',
             'cheque_date' => 'nullable|date',
+            'lat' => 'nullable|numeric',
+            'long' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -2552,6 +2590,40 @@ class ApiManagementController extends Controller
                 'message' => 'Validation Error',
                 'errors' => $validator->errors(),
             ], 422);
+        }
+
+        if ($request->filled('lat') && $request->filled('long')) {
+            try {
+                $user = auth()->user();
+                if ($user && $user->user_role_id == 10) {
+                    $supId = $this->getSupervisorId();
+                    if ($supId) {
+                        \App\Models\SmSupervisorTracking::create([
+                            'superviser_id' => $supId,
+                            'agent_id' => $this->getAgentId(),
+                            'lat' => $request->lat,
+                            'long' => $request->long,
+                            'date' => \Carbon\Carbon::now(),
+                            'description' => 'Customer payment collected via mobile app',
+                            'tracking_type' => \App\Models\SmSupervisorTracking::TYPE_CUSTOMER_BILLING, // 3
+                        ]);
+                    }
+                } elseif ($user && $user->user_role_id == 8) {
+                    $agId = $this->getAgentId();
+                    if ($agId) {
+                        \App\Models\AdAgentTracking::create([
+                            'agent_id' => $agId,
+                            'lat' => $request->lat,
+                            'long' => $request->long,
+                            'date' => \Carbon\Carbon::now(),
+                            'description' => 'Customer payment collected via mobile app',
+                            'tracking_type' => \App\Models\AdAgentTracking::TYPE_CUSTOMER_BILLING, // 3
+                        ]);
+                    }
+                }
+            } catch (\Exception $trackEx) {
+                \Illuminate\Support\Facades\Log::warning("Failed to record location on payment collection: " . $trackEx->getMessage());
+            }
         }
 
         try {
