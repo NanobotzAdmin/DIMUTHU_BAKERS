@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\StmOrderRequest;
-use App\Models\CmCustomer;
 use App\Models\AdAgent;
-use App\Models\StmStock;
+use App\Models\CmCustomer;
 use App\Models\PlnProductionSchedule;
+use App\Models\StmOrderRequest;
+use App\Models\StmStock;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -27,16 +26,16 @@ class DashboardController extends Controller
             ? round((($todayRevenue - $yesterdayRevenue) / $yesterdayRevenue) * 100, 1)
             : null;
 
-        $todayOrdersCount     = StmOrderRequest::whereDate('created_at', today())->count();
+        $todayOrdersCount = StmOrderRequest::whereDate('created_at', today())->count();
         $yesterdayOrdersCount = StmOrderRequest::whereDate('created_at', today()->subDay())->count();
         $ordersGrowth = $yesterdayOrdersCount > 0
             ? round((($todayOrdersCount - $yesterdayOrdersCount) / $yesterdayOrdersCount) * 100, 1)
             : null;
 
         $totalCustomersCount = CmCustomer::count();
-        $newCustomersToday   = CmCustomer::whereDate('created_at', today())->count();
+        $newCustomersToday = CmCustomer::whereDate('created_at', today())->count();
 
-        $agentCount       = AdAgent::count();
+        $agentCount = AdAgent::count();
         $activeAgentCount = AdAgent::where('status', 1)->count();
 
         // ── PENDING APPROVALS ──────────────────────────────────────────────────
@@ -50,37 +49,37 @@ class DashboardController extends Controller
 
         // ── ORDER STATUS BREAKDOWN (today) ─────────────────────────────────────
         $orderStatusBreakdown = [
-            'pending'    => StmOrderRequest::whereDate('created_at', today())->where('status', 0)->count(),
-            'approved'   => StmOrderRequest::whereDate('created_at', today())->where('status', 1)->count(),
+            'pending' => StmOrderRequest::whereDate('created_at', today())->where('status', 0)->count(),
+            'approved' => StmOrderRequest::whereDate('created_at', today())->where('status', 1)->count(),
             'dispatched' => StmOrderRequest::whereDate('created_at', today())->where('status', 6)->count(),
-            'completed'  => StmOrderRequest::whereDate('created_at', today())->where('status', 7)->count(),
+            'completed' => StmOrderRequest::whereDate('created_at', today())->where('status', 7)->count(),
         ];
 
         // ── WEEKLY REVENUE (last 7 days) ───────────────────────────────────────
         $weeklyRevenue = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date    = now()->subDays($i)->format('Y-m-d');
-            $label   = now()->subDays($i)->format('D');
+            $date = now()->subDays($i)->format('Y-m-d');
+            $label = now()->subDays($i)->format('D');
             $revenue = StmOrderRequest::whereDate('created_at', $date)
                 ->where('status', '!=', 2)
                 ->sum('grand_total');
             $weeklyRevenue[] = [
-                'label'   => $label,
+                'label' => $label,
                 'revenue' => (float) $revenue,
-                'date'    => $date,
+                'date' => $date,
             ];
         }
 
         // ── MONTHLY REVENUE COMPARISON (last 6 months) ─────────────────────────
         $monthlyRevenue = [];
         for ($i = 5; $i >= 0; $i--) {
-            $month   = now()->subMonths($i);
+            $month = now()->subMonths($i);
             $revenue = StmOrderRequest::whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->where('status', '!=', 2)
                 ->sum('grand_total');
             $monthlyRevenue[] = [
-                'label'   => $month->format('M y'),
+                'label' => $month->format('M y'),
                 'revenue' => (float) $revenue,
             ];
         }
@@ -124,6 +123,7 @@ class DashboardController extends Controller
                     7 => '#22c55e',
                     default => '#6b7280'
                 };
+
                 return $order;
             });
 
@@ -175,5 +175,10 @@ class DashboardController extends Controller
             'todayProduction',
             'topAgents'
         ));
+    }
+
+    public function underDevelopment()
+    {
+        return view('errors.under-development');
     }
 }

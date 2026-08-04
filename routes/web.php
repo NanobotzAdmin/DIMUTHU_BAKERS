@@ -32,6 +32,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branch' */])->group(function () {
     Route::get('/adminDashboard', [DashboardController::class, 'adminDashboard'])->name('adminDashboard');
 
+    Route::get('/under-development', [DashboardController::class, 'underDevelopment'])->name('underDevelopment');
+
     // User Management
     Route::get('/user-management', [UserManagementController::class, 'userManageIndex'])->name('userManagement.index');
     Route::post('/user-management/store', [UserManagementController::class, 'store'])->name('userManagement.store');
