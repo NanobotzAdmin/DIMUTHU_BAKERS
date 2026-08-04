@@ -56,10 +56,9 @@
                 <h2 class="text-2xl font-black text-gray-900 uppercase">Waste Profit & Loss Statement</h2>
                 <p class="text-sm text-gray-500 font-medium">Reporting Period: December 2025 | Currency: LKR (Rs.)</p>
             </div>
-            <button class="bg-white border-2 border-gray-400 px-6 py-2 rounded-lg text-sm font-black hover:bg-gray-900 hover:text-white transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                DOWNLOAD PDF REPORT
-            </button>
+            <a href="{{ route('wasteRecoveryReports.exportPdf') }}" target="_blank" class="flex items-center gap-2 bg-[#e60039] hover:bg-[#c90032] text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-md transition-all active:scale-95">
+                <i class="bi bi-file-earmark-pdf-fill text-lg"></i> Export PDF
+            </a>
         </div>
 
         <div class="space-y-10">

@@ -131,6 +131,8 @@ class PosManagementController extends Controller
             'totals.discount' => 'nullable|numeric',
             'totals.discountType' => 'nullable|integer|in:1,2',
             'customerId' => 'nullable|exists:cm_customer,id',
+            'lat' => 'nullable|numeric',
+            'long' => 'nullable|numeric',
         ]);
 
         $user = auth()->user();
@@ -158,6 +160,20 @@ class PosManagementController extends Controller
                 'status' => 1,
                 'created_by' => $user->id,
             ]);
+
+            // Track supervisor location if user is supervisor or supervisor profile exists
+            $supervisor = \Illuminate\Support\Facades\DB::table('sm_superviser')->where('user_id', $user->id)->first();
+            if ($supervisor && isset($validated['lat']) && isset($validated['long'])) {
+                \App\Models\SmSupervisorTracking::create([
+                    'superviser_id' => $supervisor->id,
+                    'agent_id' => $supervisor->agent_id,
+                    'lat' => $validated['lat'],
+                    'long' => $validated['long'],
+                    'date' => \Carbon\Carbon::now(),
+                    'description' => "Invoice #{$invoiceNumber} created for business",
+                    'tracking_type' => \App\Models\SmSupervisorTracking::TYPE_CUSTOMER_BILLING, // 3
+                ]);
+            }
 
             // 3. Process Cart Items (Stock & Barcodes)
             foreach ($validated['cart'] as $item) {

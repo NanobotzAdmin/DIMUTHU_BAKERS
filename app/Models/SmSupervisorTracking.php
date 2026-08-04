@@ -11,6 +11,12 @@ class SmSupervisorTracking extends Model
 
     protected $table = 'sm_supervisor_tracking';
 
+    public const TYPE_PERIODIC_30MIN = 1;
+    public const TYPE_START_TRIP = 2;
+    public const TYPE_CUSTOMER_BILLING = 3;
+    public const TYPE_UNLOAD = 4;
+    public const TYPE_LIVE_TRACKING = 5;
+
     protected $fillable = [
         'superviser_id',
         'agent_id',
@@ -18,6 +24,7 @@ class SmSupervisorTracking extends Model
         'long',
         'date',
         'description',
+        'tracking_type',
     ];
 
     protected $casts = [
@@ -26,6 +33,7 @@ class SmSupervisorTracking extends Model
         'lat' => 'double',
         'long' => 'double',
         'date' => 'datetime',
+        'tracking_type' => 'integer',
     ];
 
     public function supervisor()
