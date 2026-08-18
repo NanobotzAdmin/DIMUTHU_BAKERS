@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AdAgent;
-use App\Models\AdCustomerHasBusiness;
-use App\Models\AdCubusinessHasInvoice;
-use App\Models\AdInvoice;
-use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\AdAgentMonthlyTarget;
-use App\Models\AdRoute;
+use App\Models\AdCubusinessHasInvoice;
 use App\Models\AdCubusinessHasReturnProductItem;
+use App\Models\AdCustomerHasBusiness;
+use App\Models\AdRoute;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+
 class ReportController extends Controller
 {
     /**
@@ -21,7 +21,7 @@ class ReportController extends Controller
     {
         // Load agents for the dropdown
         $agents = AdAgent::where('status', 1)->get(['id', 'agent_name', 'agent_code']);
-        
+
         return view('reports.agentShopSales', compact('agents'));
     }
 
@@ -45,7 +45,7 @@ class ReportController extends Controller
             'date_range' => [
                 'start' => $data['startDate'],
                 'end' => $data['endDate'],
-            ]
+            ],
         ]);
     }
 
@@ -61,9 +61,9 @@ class ReportController extends Controller
         $data = $this->_buildAgentShopSalesData($request);
         $agent = AdAgent::find($data['agentId']);
         $agentName = $agent ? $agent->agent_name : 'All';
-        $dateRange = $data['startDate'] === $data['endDate'] 
-                     ? $data['startDate'] 
-                     : $data['startDate'] . ' to ' . $data['endDate'];
+        $dateRange = $data['startDate'] === $data['endDate']
+                     ? $data['startDate']
+                     : $data['startDate'].' to '.$data['endDate'];
 
         $configPath = public_path('system_config.json');
         $companyInfo = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : null;
@@ -75,16 +75,17 @@ class ReportController extends Controller
             'companyInfo' => $companyInfo,
         ];
 
-        $fileName = 'Agent_Sales_Report_' . $data['startDate'];
+        $fileName = 'Agent_Sales_Report_'.$data['startDate'];
 
         if ($request->type === 'pdf') {
             $pdf = Pdf::loadView('reports.exports.pdf.agentShopSales', $viewData)
-                      ->setPaper('a4', 'landscape');
-            return $pdf->download($fileName . '.pdf');
+                ->setPaper('a4', 'landscape');
+
+            return $pdf->download($fileName.'.pdf');
         } else {
             return response(view('reports.exports.excel.agentShopSales', $viewData))
                 ->header('Content-Type', 'application/vnd.ms-excel')
-                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '.xls"');
+                ->header('Content-Disposition', 'attachment; filename="'.$fileName.'.xls"');
         }
     }
 
@@ -112,11 +113,11 @@ class ReportController extends Controller
             foreach ($invoice->items as $item) {
                 if ($item->product) {
                     $prodName = $item->product->product_name ?? 'Unknown Product';
-                    if (!isset($salesProducts[$prodName])) {
+                    if (! isset($salesProducts[$prodName])) {
                         $salesProducts[$prodName] = [
                             'name' => $prodName,
                             'quantity' => 0,
-                            'total_price' => 0
+                            'total_price' => 0,
                         ];
                     }
                     $salesProducts[$prodName]['quantity'] += $item->quantity;
@@ -127,11 +128,11 @@ class ReportController extends Controller
             foreach ($invoice->returnItems as $returnItem) {
                 if ($returnItem->product) {
                     $prodName = $returnItem->product->product_name ?? 'Unknown Product';
-                    if (!isset($returnProducts[$prodName])) {
+                    if (! isset($returnProducts[$prodName])) {
                         $returnProducts[$prodName] = [
                             'name' => $prodName,
                             'quantity' => 0,
-                            'total_price' => 0
+                            'total_price' => 0,
                         ];
                     }
                     $returnProducts[$prodName]['quantity'] += $returnItem->return_quantity;
@@ -143,7 +144,7 @@ class ReportController extends Controller
         return response()->json([
             'success' => true,
             'sales_products' => array_values($salesProducts),
-            'return_products' => array_values($returnProducts)
+            'return_products' => array_values($returnProducts),
         ]);
     }
 
@@ -206,7 +207,7 @@ class ReportController extends Controller
             'reportData' => $reportData,
             'agentId' => $agentId,
             'startDate' => $startDate->toDateString(),
-            'endDate' => $endDate->toDateString()
+            'endDate' => $endDate->toDateString(),
         ];
     }
 
@@ -214,7 +215,7 @@ class ReportController extends Controller
     {
         // Load agents for the dropdown
         $agents = AdAgent::where('status', 1)->get(['id', 'agent_name', 'agent_code']);
-        
+
         return view('reports.weeklyAgentReview', compact('agents'));
     }
 
@@ -233,7 +234,7 @@ class ReportController extends Controller
         $targetMonth = $endDate->month;
 
         $agent = AdAgent::find($agentId);
-        
+
         // Routes
         $routes = AdRoute::where('agent_id', $agentId)->pluck('route_name')->toArray();
         $routesString = empty($routes) ? 'No assigned routes' : implode(', ', $routes);
@@ -254,15 +255,15 @@ class ReportController extends Controller
         $invoices = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->get();
-            
+
         // Weekly Sales
         $weeklySales = $invoices->sum('invoice_price');
         $totalReturns = $invoices->sum('return_price');
-        
+
         // Visit Compliance
         $uniqueVisited = $invoices->pluck('ad_customer_has_business_id')->unique()->count();
         $visitCompliance = $totalOutlets > 0 ? round(($uniqueVisited / $totalOutlets) * 100) : 0;
-        
+
         // Return %
         $returnPercent = $weeklySales > 0 ? round(($totalReturns / $weeklySales) * 100, 1) : 0;
 
@@ -273,24 +274,24 @@ class ReportController extends Controller
             ->get();
         $mtdSales = $mtdInvoices->sum('invoice_price');
         $remainingTarget = max(0, $monthlyTargetVal - $mtdSales);
-        
+
         // Daily Outlet Visits
-        $dailyVisitsRaw = $invoices->groupBy(function($date) {
+        $dailyVisitsRaw = $invoices->groupBy(function ($date) {
             return Carbon::parse($date->created_at)->format('Y-m-d');
         });
-        
+
         $dailyOutletVisits = [];
         $currentDate = $startDate->copy();
-        while($currentDate <= $endDate) {
+        while ($currentDate <= $endDate) {
             $dateStr = $currentDate->format('Y-m-d');
             $dayInvoices = $dailyVisitsRaw->get($dateStr, collect());
             $outletsVisited = $dayInvoices->pluck('ad_customer_has_business_id')->unique()->count();
-            
+
             $dailyOutletVisits[] = [
                 'day' => $currentDate->format('D d M'),
                 'date' => $dateStr,
                 'outlets_visited' => $outletsVisited,
-                'status' => $outletsVisited >= 30 ? 'OK' : 'Below 30'
+                'status' => $outletsVisited >= 30 ? 'OK' : 'Below 30',
             ];
             $currentDate->addDay();
         }
@@ -300,20 +301,20 @@ class ReportController extends Controller
         $returnItems = AdCubusinessHasReturnProductItem::with('product')
             ->whereIn('ad_cubusiness_has_invoice_id', $invoiceIds)
             ->get();
-            
+
         $returnsByReasonRaw = $returnItems->groupBy('reason');
         $returnsByReason = [];
-        foreach($returnsByReasonRaw as $reason => $items) {
+        foreach ($returnsByReasonRaw as $reason => $items) {
             $val = $items->sum('total_price');
             $pct = $weeklySales > 0 ? round(($val / $weeklySales) * 100, 1) : 0;
             $returnsByReason[] = [
                 'reason' => $reason ?: 'Unknown',
                 'value' => $val,
-                'percent' => $pct
+                'percent' => $pct,
             ];
         }
-        
-        usort($returnsByReason, function($a, $b) {
+
+        usort($returnsByReason, function ($a, $b) {
             return $b['value'] <=> $a['value'];
         });
 
@@ -321,34 +322,34 @@ class ReportController extends Controller
         $topReturnProduct = 'None';
         $topReturnQty = 0;
         $productGroups = $returnItems->groupBy('pm_product_item_id');
-        foreach($productGroups as $items) {
+        foreach ($productGroups as $items) {
             $qty = $items->sum('return_quantity');
-            if($qty > $topReturnQty) {
+            if ($qty > $topReturnQty) {
                 $topReturnQty = $qty;
                 $topReturnProduct = $items->first()->product->product_name ?? 'Unknown';
             }
         }
 
         // Credit & Collections
-        $creditSalesThisWeek = $invoices->sum(function($inv) {
+        $creditSalesThisWeek = $invoices->sum(function ($inv) {
             return max(0, $inv->net_price - $inv->total_amount_paid);
         });
-        
-        $collectionsThisWeek = $invoices->sum('total_amount_paid'); 
+
+        $collectionsThisWeek = $invoices->sum('total_amount_paid');
         $collectionRate = $weeklySales > 0 ? round(($collectionsThisWeek / $weeklySales) * 100) : 0;
-        
+
         // Closing dues (all time outstanding)
         $allInvoices = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
             ->where('created_at', '<=', $endDate)
             ->get();
-        $closingDues = $allInvoices->sum(function($inv) {
+        $closingDues = $allInvoices->sum(function ($inv) {
             return max(0, $inv->net_price - $inv->total_amount_paid);
         });
 
         // Aged 30+ days
         $thirtyDaysAgo = $endDate->copy()->subDays(30);
         $agedInvoices = $allInvoices->where('created_at', '<=', $thirtyDaysAgo);
-        $aged30Days = $agedInvoices->sum(function($inv) {
+        $aged30Days = $agedInvoices->sum(function ($inv) {
             return max(0, $inv->net_price - $inv->total_amount_paid);
         });
 
@@ -360,16 +361,16 @@ class ReportController extends Controller
         $newShopsAdded = AdCustomerHasBusiness::where('agent_id', $agentId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
-            
+
         $fourteenDaysAgo = $endDate->copy()->subDays(14);
-        
+
         // To find dormant shops, find customers who don't have an invoice in the last 14 days
         $activeInLast14DaysIds = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
             ->whereBetween('created_at', [$fourteenDaysAgo, $endDate])
             ->pluck('ad_customer_has_business_id')
             ->unique()
             ->toArray();
-            
+
         $activeOutlets = count($activeInLast14DaysIds);
         $dormantShops = max(0, $totalOutlets - $activeOutlets);
 
@@ -385,7 +386,7 @@ class ReportController extends Controller
             'visit_compliance' => [
                 'percent' => $visitCompliance,
                 'visited' => $uniqueVisited,
-                'total' => $totalOutlets
+                'total' => $totalOutlets,
             ],
             'returns' => [
                 'percent' => $returnPercent,
@@ -394,32 +395,32 @@ class ReportController extends Controller
             'credit_utilization' => [
                 'percent' => $creditUtilization,
                 'used' => $closingDues,
-                'limit' => $totalCreditLimit
+                'limit' => $totalCreditLimit,
             ],
             'target_progress' => [
                 'remaining' => $remainingTarget,
                 'mtd_sales' => $mtdSales,
-                'target' => $monthlyTargetVal
+                'target' => $monthlyTargetVal,
             ],
             'daily_visits' => $dailyOutletVisits,
             'returns_by_reason' => $returnsByReason,
             'top_return_product' => [
                 'name' => $topReturnProduct,
-                'qty' => $topReturnQty
+                'qty' => $topReturnQty,
             ],
             'credit_collections' => [
                 'credit_sales' => $creditSalesThisWeek,
                 'collections' => $collectionsThisWeek,
                 'collection_rate' => $collectionRate,
                 'closing_dues' => $closingDues,
-                'aged_30_days' => $aged30Days
+                'aged_30_days' => $aged30Days,
             ],
             'outlet_growth' => [
                 'new_shops' => $newShopsAdded,
                 'dormant_shops' => $dormantShops,
                 'active_outlets' => $activeOutlets,
-                'total_outlets' => $totalOutlets
-            ]
+                'total_outlets' => $totalOutlets,
+            ],
         ];
     }
 
@@ -445,7 +446,7 @@ class ReportController extends Controller
         ]);
 
         $data = $this->_buildWeeklyAgentReviewData($request);
-        
+
         $startDateFormatted = Carbon::parse($request->input('start_date'))->format('d M Y');
         $endDateFormatted = Carbon::parse($request->input('end_date'))->format('d M Y');
 
@@ -456,15 +457,18 @@ class ReportController extends Controller
             'data' => $data,
             'startDate' => $startDateFormatted,
             'endDate' => $endDateFormatted,
-            'companyInfo' => $companyInfo
+            'companyInfo' => $companyInfo,
         ])->setPaper('a4', 'portrait');
 
-        $fileName = 'Weekly_Agent_Review_' . $data['agent']['name'] . '_' . $request->input('start_date') . '.pdf';
+        $fileName = 'Weekly_Agent_Review_'.$data['agent']['name'].'_'.$request->input('start_date').'.pdf';
+
         return $pdf->download($fileName);
     }
+
     public function monthlyAgentReviewIndex()
     {
         $agents = AdAgent::where('status', 1)->get(['id', 'agent_name', 'agent_code']);
+
         return view('reports.monthlyAgentReview', compact('agents'));
     }
 
@@ -477,7 +481,7 @@ class ReportController extends Controller
 
         $agentId = $request->input('agent_id');
         $monthInput = $request->input('month');
-        
+
         $startDate = Carbon::createFromFormat('Y-m', $monthInput)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $monthInput)->endOfMonth();
         $targetYear = $startDate->year;
@@ -497,8 +501,8 @@ class ReportController extends Controller
             ->where('target_month', $targetMonth)
             ->first();
         $monthlyTargetVal = $monthlyTargetRec ? $monthlyTargetRec->monthly_sales_target : 0;
-        
-        $invoicingCommissionRate = $monthlyTargetRec ? $monthlyTargetRec->invoicing_commission_rate : 15.0; 
+
+        $invoicingCommissionRate = $monthlyTargetRec ? $monthlyTargetRec->invoicing_commission_rate : 15.0;
         $targetCommissionRate = $monthlyTargetRec ? $monthlyTargetRec->target_commission_rate : 5.0;
 
         // All assigned customers for this agent
@@ -510,7 +514,7 @@ class ReportController extends Controller
         $invoices = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->get();
-            
+
         // Previous Month Invoices
         $prevInvoices = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
             ->whereBetween('created_at', [$prevStartDate, $prevEndDate])
@@ -520,7 +524,7 @@ class ReportController extends Controller
         $monthlySales = $invoices->sum('invoice_price');
         $prevMonthlySales = $prevInvoices->sum('invoice_price');
         $salesGrowth = $prevMonthlySales > 0 ? round((($monthlySales - $prevMonthlySales) / $prevMonthlySales) * 100, 1) : 0;
-        
+
         // Target calculations
         $remainingTarget = max(0, $monthlyTargetVal - $monthlySales);
         $targetProgressPercent = $monthlyTargetVal > 0 ? round(($monthlySales / $monthlyTargetVal) * 100) : 0;
@@ -544,7 +548,7 @@ class ReportController extends Controller
         $newShopsPrev = AdCustomerHasBusiness::where('agent_id', $agentId)
             ->whereBetween('created_at', [$prevStartDate, $prevEndDate])
             ->count();
-            
+
         // Dormant Shops Calculation
         $fourteenDaysBeforeEnd = $endDate->copy()->subDays(14);
         $activeCurrent = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
@@ -556,40 +560,44 @@ class ReportController extends Controller
         $activePrev = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
             ->whereBetween('created_at', [$fourteenDaysBeforePrevEnd, $prevEndDate])
             ->pluck('ad_customer_has_business_id')->unique()->count();
-        $dormantPrev = max(0, $totalOutlets - $activePrev); 
-        
+        $dormantPrev = max(0, $totalOutlets - $activePrev);
+
         // Week-by-Week Breakdown
-        $weeklyDataRaw = $invoices->groupBy(function($inv) {
+        $weeklyDataRaw = $invoices->groupBy(function ($inv) {
             return Carbon::parse($inv->created_at)->format('W');
         });
-        
+
         $weekByWeek = [];
-        foreach($weeklyDataRaw as $week => $weekInvoices) {
+        foreach ($weeklyDataRaw as $week => $weekInvoices) {
             $weekStart = Carbon::now()->setISODate($targetYear, $week)->startOfWeek();
             $weekEnd = $weekStart->copy()->endOfWeek();
-            
-            if ($weekStart < $startDate) $weekStart = $startDate->copy();
-            if ($weekEnd > $endDate) $weekEnd = $endDate->copy();
-            
-            $weekLabel = "Week $week (" . $weekStart->format('d M') . '–' . $weekEnd->format('d M') . ')';
-            
+
+            if ($weekStart < $startDate) {
+                $weekStart = $startDate->copy();
+            }
+            if ($weekEnd > $endDate) {
+                $weekEnd = $endDate->copy();
+            }
+
+            $weekLabel = "Week $week (".$weekStart->format('d M').'–'.$weekEnd->format('d M').')';
+
             $wSales = $weekInvoices->sum('invoice_price');
             $wReturns = $weekInvoices->sum('return_price');
             $wRetPct = $wSales > 0 ? round(($wReturns / $wSales) * 100, 1) : 0;
-            
+
             $wVisited = $weekInvoices->pluck('ad_customer_has_business_id')->unique()->count();
             $wVisitComp = $totalOutlets > 0 ? round(($wVisited / $totalOutlets) * 100) : 0;
-            
+
             $weekByWeek[] = [
                 'label' => $weekLabel,
                 'sales' => $wSales,
                 'visit_compliance' => $wVisitComp,
                 'return_percent' => $wRetPct,
-                'week' => (int)$week
+                'week' => (int) $week,
             ];
         }
-        
-        usort($weekByWeek, function($a, $b) {
+
+        usort($weekByWeek, function ($a, $b) {
             return $a['week'] <=> $b['week'];
         });
 
@@ -600,14 +608,14 @@ class ReportController extends Controller
             ->whereIn('ad_cubusiness_has_invoice_id', $invoiceIds)
             ->whereNotIn('reason', $acceptableReasons)
             ->get();
-            
+
         $policyReturns = [];
-        foreach($policyViolationItems as $item) {
+        foreach ($policyViolationItems as $item) {
             $policyReturns[] = [
                 'date' => Carbon::parse($item->created_at)->format('d M'),
                 'outlet' => $item->invoice && $item->invoice->business ? ($item->invoice->business->business_name ?? 'Unknown') : 'Unknown',
                 'value' => $item->total_price,
-                'remark' => $item->reason
+                'remark' => $item->reason,
             ];
         }
 
@@ -624,20 +632,20 @@ class ReportController extends Controller
         $allInvoices = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
             ->where('created_at', '<=', $endDate)
             ->get();
-            
+
         $currentDues = 0;
         $aged30d = 0;
         $aged60d = 0;
         $aged60dPlus = 0;
         $closingDues = 0;
-        
-        foreach($allInvoices as $inv) {
+
+        foreach ($allInvoices as $inv) {
             $outstanding = max(0, $inv->net_price - $inv->total_amount_paid);
             if ($outstanding > 0) {
                 $closingDues += $outstanding;
-                
+
                 $daysOld = $endDate->diffInDays(Carbon::parse($inv->created_at));
-                
+
                 if ($daysOld <= 30) {
                     $currentDues += $outstanding;
                 } elseif ($daysOld <= 60) {
@@ -649,7 +657,7 @@ class ReportController extends Controller
                 }
             }
         }
-        
+
         $totalCreditLimit = $assignedCustomers->sum('credit_limit');
         $creditUtilization = $totalCreditLimit > 0 ? round(($closingDues / $totalCreditLimit) * 100) : 0;
 
@@ -666,7 +674,7 @@ class ReportController extends Controller
                 'prev' => $prevMonthlySales,
                 'growth' => $salesGrowth,
                 'percent_target' => $targetProgressPercent,
-                'remaining' => $remainingTarget
+                'remaining' => $remainingTarget,
             ],
             'mom' => [
                 'prev_month_label' => $prevStartDate->format('F'),
@@ -691,16 +699,16 @@ class ReportController extends Controller
                 'invoicing_commission' => $invoicingCommissionAmount,
                 'target_rate' => $targetCommissionRate,
                 'target_bonus' => $targetBonusAmount,
-                'total_payable' => $totalPayable
+                'total_payable' => $totalPayable,
             ],
             'credit' => [
                 'closing_dues' => $closingDues,
                 'utilization' => $creditUtilization,
                 'current' => $currentDues,
-                'days_1_30' => $aged30d, 
+                'days_1_30' => $aged30d,
                 'days_31_60' => $aged60d,
-                'days_60_plus' => $aged60dPlus
-            ]
+                'days_60_plus' => $aged60dPlus,
+            ],
         ];
     }
 
@@ -712,6 +720,7 @@ class ReportController extends Controller
         ]);
 
         $data = $this->_buildMonthlyAgentReviewData($request);
+
         return response()->json(array_merge(['success' => true], $data));
     }
 
@@ -731,10 +740,11 @@ class ReportController extends Controller
         $pdf = Pdf::loadView('reports.exports.pdf.monthlyAgentReview', [
             'data' => $data,
             'monthYear' => $monthYear,
-            'companyInfo' => $companyInfo
+            'companyInfo' => $companyInfo,
         ])->setPaper('a4', 'portrait');
 
-        $fileName = 'Monthly_Agent_Review_' . $data['agent']['name'] . '_' . $request->input('month') . '.pdf';
+        $fileName = 'Monthly_Agent_Review_'.$data['agent']['name'].'_'.$request->input('month').'.pdf';
+
         return $pdf->download($fileName);
     }
 
@@ -762,12 +772,12 @@ class ReportController extends Controller
         $agents = AdAgent::where('status', 1)->get();
         $leaderboard = [];
         $nextMonthTargets = [];
-        
+
         $allAssignedCustomerIds = [];
 
         foreach ($agents as $agent) {
             $agentId = $agent->id;
-            
+
             // Check ramp-up month status (M1 = created this month, M2 = created last month)
             $badge = null;
             if ($agent->created_at) {
@@ -785,18 +795,18 @@ class ReportController extends Controller
                 ->where('target_month', $nextMonthNum)
                 ->first();
             $nextTargetVal = $nextTargetRec ? $nextTargetRec->monthly_sales_target : null;
-            
+
             if ($nextTargetVal !== null) {
                 $nextMonthTargets[] = [
                     'agent_name' => $agent->agent_name,
                     'badge' => $badge,
-                    'target' => $nextTargetVal
+                    'target' => $nextTargetVal,
                 ];
             } else {
                 $nextMonthTargets[] = [
                     'agent_name' => $agent->agent_name,
                     'badge' => $badge,
-                    'target' => 'Pending'
+                    'target' => 'Pending',
                 ];
             }
 
@@ -807,56 +817,56 @@ class ReportController extends Controller
                 ->first();
             $monthlyTargetVal = $monthlyTargetRec ? $monthlyTargetRec->monthly_sales_target : 0;
             $targetCommissionRate = $monthlyTargetRec ? $monthlyTargetRec->target_commission_rate : 5.0;
-            
+
             $assignedCustomers = AdCustomerHasBusiness::where('agent_id', $agentId)->get();
             $assignedCustomerIds = $assignedCustomers->pluck('id')->toArray();
             $allAssignedCustomerIds = array_merge($allAssignedCustomerIds, $assignedCustomerIds);
-            
+
             $totalOutlets = count($assignedCustomerIds);
             $totalCreditLimit = $assignedCustomers->sum('credit_limit');
 
             $invoices = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->get();
-                
+
             $monthlySales = $invoices->sum('invoice_price');
             $totalReturns = $invoices->sum('return_price');
             $netSales = max(0, $monthlySales - $totalReturns);
             $totalCollections = $invoices->sum('total_amount_paid');
-            
+
             // Achievement %
             $achievementPct = $monthlyTargetVal > 0 ? round(($monthlySales / $monthlyTargetVal) * 100) : 0;
             $remaining = max(0, $monthlyTargetVal - $monthlySales);
-            
+
             // Visit Compliance
             $visitedOutlets = $invoices->pluck('ad_customer_has_business_id')->unique()->count();
             $visitCompliance = $totalOutlets > 0 ? round(($visitedOutlets / $totalOutlets) * 100) : 0;
-            
+
             // Return %
             $returnPercent = $monthlySales > 0 ? round(($totalReturns / $monthlySales) * 100, 1) : 0;
-            
+
             // Collection %
             $collectionPercent = $monthlySales > 0 ? round(($totalCollections / $monthlySales) * 100) : 0;
-            
+
             // New Shops
             $newShops = AdCustomerHasBusiness::where('agent_id', $agentId)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count();
-                
+
             // Credit Util
             $allInvoices = AdCubusinessHasInvoice::whereIn('ad_customer_has_business_id', $assignedCustomerIds)
                 ->where('created_at', '<=', $endDate)
                 ->get();
-                
+
             $closingDues = 0;
-            foreach($allInvoices as $inv) {
+            foreach ($allInvoices as $inv) {
                 $outstanding = max(0, $inv->net_price - $inv->total_amount_paid);
                 if ($outstanding > 0) {
                     $closingDues += $outstanding;
                 }
             }
             $creditUtil = $totalCreditLimit > 0 ? round(($closingDues / $totalCreditLimit) * 100) : 0;
-            
+
             // Bonus (Qualified if >= 100%)
             $bonusQualified = $achievementPct >= 100;
 
@@ -872,12 +882,12 @@ class ReportController extends Controller
                 'new_shops' => $newShops,
                 'credit_util' => $creditUtil,
                 'bonus_qualified' => $bonusQualified,
-                'target_rate' => $targetCommissionRate
+                'target_rate' => $targetCommissionRate,
             ];
         }
 
         // Sort Leaderboard by Achievement % DESC
-        usort($leaderboard, function($a, $b) {
+        usort($leaderboard, function ($a, $b) {
             return $b['achievement'] <=> $a['achievement'];
         });
 
@@ -885,13 +895,13 @@ class ReportController extends Controller
         $allAssignedCustomerIds = array_unique($allAssignedCustomerIds);
         $totalActiveOpening = AdCustomerHasBusiness::where('created_at', '<', $startDate)->count();
         $totalNewShops = AdCustomerHasBusiness::whereBetween('created_at', [$startDate, $endDate])->count();
-        
+
         $fourteenDaysBeforeEnd = $endDate->copy()->subDays(14);
         $activeCurrent = AdCubusinessHasInvoice::whereBetween('created_at', [$fourteenDaysBeforeEnd, $endDate])
             ->pluck('ad_customer_has_business_id')->unique()->count();
         $totalTotalOutlets = AdCustomerHasBusiness::count();
-        $totalDormant = max(0, $totalTotalOutlets - $activeCurrent); 
-        
+        $totalDormant = max(0, $totalTotalOutlets - $activeCurrent);
+
         $closingActive = $activeCurrent;
         $activeGrowth = $totalActiveOpening > 0 ? round((($closingActive - $totalActiveOpening) / $totalActiveOpening) * 100, 1) : 0;
 
@@ -900,45 +910,49 @@ class ReportController extends Controller
         for ($i = 2; $i >= 0; $i--) {
             $mStart = $startDate->copy()->subMonths($i)->startOfMonth();
             $mEnd = $mStart->copy()->endOfMonth();
-            
+
             $mInvoices = AdCubusinessHasInvoice::whereBetween('created_at', [$mStart, $mEnd])->get();
             $mSales = $mInvoices->sum('invoice_price');
-            
+
             $mInvoiceIds = $mInvoices->pluck('id')->toArray();
-            
+
             $acceptableReasons = ['Early fungus', 'Damaged bag (packing)', 'Deformed product'];
-            
+
             $defectReturns = AdCubusinessHasReturnProductItem::whereIn('ad_cubusiness_has_invoice_id', $mInvoiceIds)
                 ->whereIn('reason', $acceptableReasons)
                 ->sum('total_price');
-                
+
             $otherReturns = AdCubusinessHasReturnProductItem::whereIn('ad_cubusiness_has_invoice_id', $mInvoiceIds)
                 ->whereNotIn('reason', $acceptableReasons)
                 ->sum('total_price');
-                
+
             $defPct = $mSales > 0 ? round(($defectReturns / $mSales) * 100, 1) : 0;
             $othPct = $mSales > 0 ? round(($otherReturns / $mSales) * 100, 1) : 0;
             $totPct = $mSales > 0 ? round((($defectReturns + $otherReturns) / $mSales) * 100, 1) : 0;
-            
+
             $months[] = [
                 'month_label' => $mStart->format('M Y'),
                 'defect_pct' => $defPct,
                 'other_pct' => $othPct,
                 'total_pct' => $totPct,
-                'total_val' => $defectReturns + $otherReturns
+                'total_val' => $defectReturns + $otherReturns,
             ];
         }
 
         // Credit Ageing Summary (All Agents)
         $allInvoicesOverall = AdCubusinessHasInvoice::where('created_at', '<=', $endDate)->get();
-        $cCurrent = 0; $c30 = 0; $c60 = 0; $c60Plus = 0; $cTotal = 0;
-        
-        foreach($allInvoicesOverall as $inv) {
+        $cCurrent = 0;
+        $c30 = 0;
+        $c60 = 0;
+        $c60Plus = 0;
+        $cTotal = 0;
+
+        foreach ($allInvoicesOverall as $inv) {
             $outstanding = max(0, $inv->net_price - $inv->total_amount_paid);
             if ($outstanding > 0) {
                 $cTotal += $outstanding;
                 $daysOld = $endDate->diffInDays(Carbon::parse($inv->created_at));
-                
+
                 if ($daysOld <= 30) {
                     $cCurrent += $outstanding;
                 } elseif ($daysOld <= 60) {
@@ -950,7 +964,7 @@ class ReportController extends Controller
                 }
             }
         }
-        
+
         $creditAgeing = [
             'current' => ['amount' => $cCurrent, 'pct' => $cTotal > 0 ? round(($cCurrent / $cTotal) * 100) : 0],
             'days_30' => ['amount' => $c30, 'pct' => $cTotal > 0 ? round(($c30 / $cTotal) * 100) : 0],
@@ -965,14 +979,14 @@ class ReportController extends Controller
                 'new_shops' => $totalNewShops,
                 'newly_dormant' => $totalDormant,
                 'closing' => $closingActive,
-                'growth_pct' => $activeGrowth
+                'growth_pct' => $activeGrowth,
             ],
             'return_trend' => $months,
             'credit_ageing' => $creditAgeing,
             'next_targets' => [
                 'label' => $nextMonthDate->format('M'),
-                'targets' => $nextMonthTargets
-            ]
+                'targets' => $nextMonthTargets,
+            ],
         ];
     }
 
@@ -983,6 +997,7 @@ class ReportController extends Controller
         ]);
 
         $data = $this->_buildAllAgentPerformanceData($request);
+
         return response()->json(array_merge(['success' => true], $data));
     }
 
@@ -1001,10 +1016,312 @@ class ReportController extends Controller
         $pdf = Pdf::loadView('reports.exports.pdf.allAgentPerformance', [
             'data' => $data,
             'monthYear' => $monthYear,
-            'companyInfo' => $companyInfo
+            'companyInfo' => $companyInfo,
         ])->setPaper('a4', 'landscape');
 
-        $fileName = 'All_Agent_Performance_' . $request->input('month') . '.pdf';
+        $fileName = 'All_Agent_Performance_'.$request->input('month').'.pdf';
+
         return $pdf->download($fileName);
+    }
+
+    /**
+     * Show the Agent Order Requests Report view.
+     */
+    public function agentOrderRequestsIndex()
+    {
+        return view('reports.agentOrderRequests');
+    }
+
+    /**
+     * Fetch summary data for all agents (total orders, paid, outstanding).
+     */
+    public function getAgentOrderRequestsData(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))->startOfDay()
+            : null;
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))->endOfDay()
+            : null;
+
+        $agents = AdAgent::where('status', 1)->get();
+        $reportData = [];
+
+        foreach ($agents as $agent) {
+            $query = \App\Models\StmOrderRequest::where('agent_id', $agent->id)->whereNot('status', 2);
+
+            if ($startDate && $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            }
+
+            $orders = $query->get();
+
+            $totalOrderAmount = $orders->sum('grand_total');
+            $paidAmount = $orders->sum('paid_amount');
+            $outstanding = $totalOrderAmount - $paidAmount;
+
+            $reportData[] = [
+                'agent_id' => $agent->id,
+                'agent_name' => $agent->agent_name,
+                'agent_code' => $agent->agent_code,
+                'total_orders' => $orders->count(),
+                'total_order_amount' => $totalOrderAmount,
+                'paid_amount' => $paidAmount,
+                'outstanding' => $outstanding,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $reportData,
+        ]);
+    }
+
+    /**
+     * Fetch order requests and payment details for a specific agent.
+     */
+    public function getAgentOrderRequestDetails(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|integer',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        $agentId = $request->input('agent_id');
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))->startOfDay()
+            : null;
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))->endOfDay()
+            : null;
+
+        $query = \App\Models\StmOrderRequest::with(['payments'])
+            ->where('agent_id', $agentId)->whereNot('status', 2);
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->get();
+
+        $ordersData = [];
+        $paymentsData = [];
+
+        $statusMap = [
+            0 => 'Pending Approval',
+            1 => 'Approved',
+            2 => 'Rejected',
+            3 => 'In Production',
+            4 => 'Ready to Dispatch',
+            5 => 'Dispatch Completed',
+            6 => 'Dispatch Confirmed',
+            7 => 'Completed',
+        ];
+
+        $paymentStatusMap = [
+            1 => 'Pending',
+            2 => 'Active',
+        ];
+
+        foreach ($orders as $order) {
+            $orderGrandTotal = (float) $order->grand_total;
+            $orderPaid = (float) $order->paid_amount;
+            $orderOutstanding = $orderGrandTotal - $orderPaid;
+
+            $ordersData[] = [
+                'id' => $order->id,
+                'order_number' => $order->order_number ?? 'ORD-'.$order->id,
+                'delivery_date' => $order->delivery_date ? Carbon::parse($order->delivery_date)->format('Y-m-d') : 'N/A',
+                'grand_total' => $orderGrandTotal,
+                'paid_amount' => $orderPaid,
+                'outstanding' => $orderOutstanding,
+                'status' => $statusMap[$order->status] ?? 'Unknown',
+                'status_code' => $order->status,
+                'created_at' => Carbon::parse($order->created_at)->format('Y-m-d'),
+            ];
+
+        }
+
+        // Fetch Agent Payments directly
+        $agentPaymentsQuery = \App\Models\AdAgentPayment::where('agent_id', $agentId);
+
+        if ($startDate && $endDate) {
+            $agentPaymentsQuery->whereBetween('payment_date', [$startDate, $endDate]);
+        }
+
+        $agentPayments = $agentPaymentsQuery->orderBy('payment_date', 'desc')->get();
+
+        $agentPaymentMethodMap = [
+            1 => 'Cash',
+            2 => 'Card',
+            3 => 'Bank Transfer',
+            4 => 'Credit Note',
+        ];
+
+        $agentPaymentStatusMap = [
+            0 => 'Pending',
+            1 => 'Approved',
+            2 => 'Rejected',
+        ];
+
+        foreach ($agentPayments as $payment) {
+            $paymentsData[] = [
+                'id' => $payment->id,
+                'payment_number' => 'PAY-'.str_pad($payment->id, 5, '0', STR_PAD_LEFT),
+                'payment_date' => $payment->payment_date ? Carbon::parse($payment->payment_date)->format('Y-m-d') : 'N/A',
+                'payment_amount' => (float) $payment->amount,
+                'payment_method' => $agentPaymentMethodMap[$payment->payment_method] ?? 'Other',
+                'payment_reference' => $payment->rejection_reason ?? '-', // Use rejection_reason as reference or empty if not present, as reference is not there. Or maybe we can just pass empty
+                'status' => $agentPaymentStatusMap[$payment->status] ?? 'Unknown',
+                'status_code' => $payment->status,
+                'notes' => $payment->rejection_reason ?? '-',
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'orders' => $ordersData,
+            'payments' => $paymentsData,
+        ]);
+    }
+
+    /**
+     * Export Agent Order Requests details to Excel.
+     */
+    public function exportAgentOrderRequestsExcel(Request $request)
+    {
+        $request->validate([
+            'agent_id' => 'required|integer',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        $agentId = $request->input('agent_id');
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))->startOfDay()
+            : null;
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))->endOfDay()
+            : null;
+
+        $agent = AdAgent::findOrFail($agentId);
+
+        $query = \App\Models\StmOrderRequest::with(['payments'])->where('agent_id', $agentId)->whereNot('status', 2);
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->get();
+
+        $ordersData = [];
+
+        $statusMap = [
+            0 => 'Pending Approval',
+            1 => 'Approved',
+            2 => 'Rejected',
+            3 => 'In Production',
+            4 => 'Ready to Dispatch',
+            5 => 'Dispatch Completed',
+            6 => 'Dispatch Confirmed',
+            7 => 'Completed',
+        ];
+
+        $totalOrderAmount = 0;
+        $totalPaidAmount = 0;
+        $totalOutstanding = 0;
+
+        foreach ($orders as $order) {
+            $orderGrandTotal = (float) $order->grand_total;
+            $orderPaid = (float) $order->paid_amount;
+            $orderOutstanding = $orderGrandTotal - $orderPaid;
+
+            $totalOrderAmount += $orderGrandTotal;
+            $totalPaidAmount += $orderPaid;
+            $totalOutstanding += $orderOutstanding;
+
+            $ordersData[] = [
+                'id' => $order->id,
+                'order_number' => $order->order_number ?? 'ORD-'.$order->id,
+                'delivery_date' => $order->delivery_date ? Carbon::parse($order->delivery_date)->format('Y-m-d') : 'N/A',
+                'grand_total' => $orderGrandTotal,
+                'paid_amount' => $orderPaid,
+                'outstanding' => $orderOutstanding,
+                'status' => $statusMap[$order->status] ?? 'Unknown',
+            ];
+        }
+
+        // Fetch Agent Payments directly
+        $agentPaymentsQuery = \App\Models\AdAgentPayment::where('agent_id', $agentId);
+
+        if ($startDate && $endDate) {
+            $agentPaymentsQuery->whereBetween('payment_date', [$startDate, $endDate]);
+        }
+
+        $agentPayments = $agentPaymentsQuery->orderBy('payment_date', 'desc')->get();
+
+        $agentPaymentMethodMap = [
+            1 => 'Cash',
+            2 => 'Card',
+            3 => 'Bank Transfer',
+            4 => 'Credit Note',
+        ];
+
+        $agentPaymentStatusMap = [
+            0 => 'Pending',
+            1 => 'Approved',
+            2 => 'Rejected',
+        ];
+
+        $paymentsData = [];
+        $totalPaymentAmount = 0;
+
+        foreach ($agentPayments as $payment) {
+            $paymentAmt = (float) $payment->amount;
+            $totalPaymentAmount += $paymentAmt;
+
+            $paymentsData[] = [
+                'id' => $payment->id,
+                'payment_number' => 'PAY-'.str_pad($payment->id, 5, '0', STR_PAD_LEFT),
+                'payment_date' => $payment->payment_date ? Carbon::parse($payment->payment_date)->format('Y-m-d') : 'N/A',
+                'payment_amount' => $paymentAmt,
+                'payment_method' => $agentPaymentMethodMap[$payment->payment_method] ?? 'Other',
+                'payment_reference' => $payment->rejection_reason ?? '-',
+                'status' => $agentPaymentStatusMap[$payment->status] ?? 'Unknown',
+            ];
+        }
+
+        $dateRange = ($startDate && $endDate)
+            ? $startDate->format('Y-m-d').' to '.$endDate->format('Y-m-d')
+            : 'All Time';
+
+        $configPath = public_path('system_config.json');
+        $companyInfo = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : null;
+
+        $viewData = [
+            'agent' => $agent,
+            'orders' => $ordersData,
+            'payments' => $paymentsData,
+            'summary' => [
+                'total_order_amount' => $totalOrderAmount,
+                'total_paid_amount' => $totalPaidAmount,
+                'total_outstanding' => $totalOutstanding,
+                'total_payment_amount' => $totalPaymentAmount,
+            ],
+            'dateRange' => $dateRange,
+            'companyInfo' => $companyInfo,
+        ];
+
+        $fileName = 'Agent_Order_Requests_'.($startDate ? $startDate->format('Y-m-d') : 'AllTime');
+
+        return response(view('reports.exports.excel.agentOrderRequests', $viewData))
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="'.$fileName.'.xls"');
     }
 }
