@@ -173,9 +173,9 @@
                             <th class="text-left">Agent Name</th>
                             <th class="text-left">Agent Code</th>
                             <th class="text-center">Total Orders</th>
-                            <th class="text-right">Total Order Amount (Rs)</th>
-                            <th class="text-right">Paid Amount (Rs)</th>
+                            <th class="text-right">Total Purchase Amount (Rs)</th>
                             <th class="text-right">Outstanding (Rs)</th>
+                            <th class="text-right">Paid Amount (Rs)</th>
                             <th class="text-center">Action</th>
                         </tr>
                     </thead>
@@ -187,8 +187,8 @@
                             <th colspan="3" class="text-right uppercase px-4 py-3">Total</th>
                             <th class="text-center font-bold text-green-700" id="ft_total_orders">0</th>
                             <th class="text-right" id="ft_total_order_amount">0.00</th>
-                            <th class="text-right" id="ft_paid_amount">0.00</th>
                             <th class="text-right" id="ft_outstanding">0.00</th>
+                            <th class="text-right" id="ft_paid_amount">0.00</th>
                             <th></th>
                         </tr>
                     </tfoot>
@@ -240,22 +240,19 @@
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm text-center">
-                            <span
-                                class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Total
-                                Order Amount</span>
+                            <span class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Total
+                                Purchase Amount</span>
                             <span class="block text-lg font-bold text-gray-900 mt-1" id="modalTotalOrderAmount">0.00</span>
-                        </div>
-                        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm text-center">
-                            <span class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Paid
-                                Amount</span>
-                            <span class="block text-lg font-bold text-emerald-600 mt-1"
-                                id="modalPaidAmount">0.00</span>
                         </div>
                         <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl shadow-sm text-center">
                             <span
                                 class="block text-[10px] font-semibold text-rose-500 uppercase tracking-wide">Outstanding</span>
-                            <span class="block text-lg font-black text-rose-700 mt-1"
-                                id="modalOutstanding">0.00</span>
+                            <span class="block text-lg font-black text-rose-700 mt-1" id="modalOutstanding">0.00</span>
+                        </div>
+                        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm text-center">
+                            <span class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Paid
+                                Amount</span>
+                            <span class="block text-lg font-bold text-emerald-600 mt-1" id="modalPaidAmount">0.00</span>
                         </div>
                     </div>
 
@@ -279,8 +276,8 @@
                                             <th class="text-left px-3">Order No</th>
                                             <th class="text-center px-3">Delivery Date</th>
                                             <th class="text-right px-3">Grand Total</th>
-                                            <th class="text-right px-3">Paid</th>
                                             <th class="text-right px-3">Outstanding</th>
+                                            <th class="text-right px-3">Paid</th>
                                             <th class="text-center px-3">Status</th>
                                         </tr>
                                     </thead>
@@ -292,10 +289,10 @@
                                             <td colspan="3" class="text-right px-3 border-t border-gray-200">Total</td>
                                             <td class="text-right px-3 border-t border-gray-200 text-indigo-700"
                                                 id="modalOrdersGrandTotal">0.00</td>
-                                            <td class="text-right px-3 border-t border-gray-200 text-emerald-700"
-                                                id="modalOrdersPaidTotal">0.00</td>
                                             <td class="text-right px-3 border-t border-gray-200 text-rose-700"
                                                 id="modalOrdersOutstandingTotal">0.00</td>
+                                            <td class="text-right px-3 border-t border-gray-200 text-emerald-700"
+                                                id="modalOrdersPaidTotal">0.00</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -305,6 +302,7 @@
                         </div>
 
                         <!-- Payments Table -->
+                        {{--
                         <div class="px-2">
                             <div class="flex justify-between items-center mb-3">
                                 <h4
@@ -344,6 +342,7 @@
                             </div>
                             <div id="paymentsPagination" class="flex justify-end gap-1 mt-2"></div>
                         </div>
+                        --}}
                     </div>
 
                 </div>
@@ -375,6 +374,19 @@
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+
+        function getPaginationArray(currentPage, totalPages) {
+            const delta = 1;
+            const range = [];
+            for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+                range.push(i);
+            }
+            if (currentPage - delta > 2) range.unshift('...');
+            if (currentPage + delta < totalPages - 1) range.push('...');
+            range.unshift(1);
+            if (totalPages > 1) range.push(totalPages);
+            return range;
+        }
 
         function getStatusBadge(status, statusCode) {
             const classMap = {
@@ -413,7 +425,7 @@
         }
 
         // Form Submit
-        document.getElementById('reportFilterForm').addEventListener('submit', function(e) {
+        document.getElementById('reportFilterForm').addEventListener('submit', function (e) {
             e.preventDefault();
             loadReportData();
         });
@@ -431,7 +443,7 @@
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function(response) {
+                success: function (response) {
                     document.getElementById('loadingIndicator').classList.add('hidden');
 
                     if (response.success && response.data.length > 0) {
@@ -442,7 +454,7 @@
                         document.getElementById('emptyState').classList.remove('hidden');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     document.getElementById('loadingIndicator').classList.add('hidden');
                     let msg = 'Failed to load report data.';
                     if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
@@ -486,22 +498,22 @@
                     'color: #16a34a; font-weight: 600;';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="text-center text-gray-500 font-medium">${index + 1}</td>
-                    <td class="font-medium text-gray-900">${row.agent_name}</td>
-                    <td class="text-gray-600"><span class="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded font-mono">${row.agent_code}</span></td>
-                    <td class="text-center font-bold" style="color: #4f46e5;">${row.total_orders}</td>
-                    <td class="text-right text-gray-700">${formatMoney(row.total_order_amount)}</td>
-                    <td class="text-right text-emerald-600 font-semibold">${formatMoney(row.paid_amount)}</td>
-                    <td class="text-right" style="${outstandingColor}">${formatMoney(row.outstanding)}</td>
-                    <td class="text-center">
-                        <button type="button" onclick="viewAgentDetails(${index})" class="action-btn action-btn-view">
-                            <i class="bi bi-eye"></i> View
-                        </button>
-                        <button type="button" onclick="exportAgentExcel(${row.agent_id})" class="action-btn action-btn-excel ms-1">
-                            <i class="bi bi-file-earmark-excel"></i> Excel
-                        </button>
-                    </td>
-                `;
+                        <td class="text-center text-gray-500 font-medium">${index + 1}</td>
+                        <td class="font-medium text-gray-900">${row.agent_name}</td>
+                        <td class="text-gray-600"><span class="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded font-mono">${row.agent_code}</span></td>
+                        <td class="text-center font-bold" style="color: #4f46e5;">${row.total_orders}</td>
+                        <td class="text-right text-gray-700">${formatMoney(row.total_order_amount)}</td>
+                        <td class="text-right" style="${outstandingColor}">${formatMoney(row.outstanding)}</td>
+                        <td class="text-right text-emerald-600 font-semibold">${formatMoney(row.paid_amount)}</td>
+                        <td class="text-center">
+                            <button type="button" onclick="viewAgentDetails(${index})" class="action-btn action-btn-view">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                            <button type="button" onclick="exportAgentExcel(${row.agent_id})" class="action-btn action-btn-excel ms-1" style="display: none;">
+                                <i class="bi bi-file-earmark-excel"></i> Excel
+                            </button>
+                        </td>
+                    `;
                 tbody.appendChild(tr);
             });
 
@@ -516,13 +528,18 @@
             if (paginationContainer) {
                 let btnHtml = '';
                 if (totalPages > 1) {
-                    for (let i = 1; i <= totalPages; i++) {
-                        const activeClass = i === page ?
-                            'bg-indigo-600 text-white border-indigo-600' :
-                            'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
-                        btnHtml +=
-                            `<button type="button" onclick="renderMainTable(${i})" class="px-3 py-1 border text-sm font-medium rounded transition-colors ${activeClass}">${i}</button>`;
-                    }
+                    const pages = getPaginationArray(page, totalPages);
+                    pages.forEach(p => {
+                        if (p === '...') {
+                            btnHtml += `<span class="px-3 py-1 text-sm font-medium text-gray-500 flex items-end">...</span>`;
+                        } else {
+                            const activeClass = p === page ?
+                                'bg-indigo-600 text-white border-indigo-600' :
+                                'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
+                            btnHtml +=
+                                `<button type="button" onclick="renderMainTable(${p})" class="px-3 py-1 border text-sm font-medium rounded transition-colors ${activeClass}">${p}</button>`;
+                        }
+                    });
                 }
                 paginationContainer.innerHTML = btnHtml;
             }
@@ -532,12 +549,12 @@
         function exportAgentExcel(agentId) {
             const startDate = document.getElementById('start_date').value;
             const endDate = document.getElementById('end_date').value;
-            
+
             let url = `/reports/agent-order-requests/export-excel?agent_id=${agentId}`;
             if (startDate && endDate) {
                 url += `&start_date=${startDate}&end_date=${endDate}`;
             }
-            
+
             window.location.href = url;
         }
 
@@ -554,10 +571,12 @@
             // Show loading in tables
             document.getElementById('modalOrdersBody').innerHTML =
                 '<tr><td colspan="7" class="text-center text-gray-500 py-4"><div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div> Loading orders...</td></tr>';
-            document.getElementById('modalPaymentsBody').innerHTML =
-                '<tr><td colspan="7" class="text-center text-gray-500 py-4"><div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div> Loading payments...</td></tr>';
-            document.getElementById('ordersPagination').innerHTML = '';
-            document.getElementById('paymentsPagination').innerHTML = '';
+            if (document.getElementById('modalPaymentsBody')) {
+                document.getElementById('modalPaymentsBody').innerHTML =
+                    '<tr><td colspan="7" class="text-center text-gray-500 py-4"><div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div> Loading payments...</td></tr>';
+            }
+            if (document.getElementById('ordersPagination')) document.getElementById('ordersPagination').innerHTML = '';
+            if (document.getElementById('paymentsPagination')) document.getElementById('paymentsPagination').innerHTML = '';
 
             document.getElementById('detailsModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -584,8 +603,8 @@
                     currentOrders = res.orders || [];
                     currentPayments = res.payments || [];
 
-                    document.getElementById('searchOrders').value = '';
-                    document.getElementById('searchPayments').value = '';
+                    if (document.getElementById('searchOrders')) document.getElementById('searchOrders').value = '';
+                    if (document.getElementById('searchPayments')) document.getElementById('searchPayments').value = '';
                     ordersSearch = '';
                     paymentsSearch = '';
 
@@ -616,6 +635,7 @@
             const searchStr = isOrders ? ordersSearch : paymentsSearch;
             const tbody = document.getElementById(isOrders ? 'modalOrdersBody' : 'modalPaymentsBody');
             const paginationContainer = document.getElementById(isOrders ? 'ordersPagination' : 'paymentsPagination');
+            if (!tbody) return;
 
             // Filter
             let filteredData;
@@ -651,7 +671,7 @@
                 filteredData.forEach(p => {
                     payTotal += Number(p.payment_amount);
                 });
-                document.getElementById('modalPaymentsTotal').innerText = formatMoney(payTotal);
+                if (document.getElementById('modalPaymentsTotal')) document.getElementById('modalPaymentsTotal').innerText = formatMoney(payTotal);
                 paymentsPage = page;
             }
 
@@ -671,31 +691,31 @@
                         const outColor = Number(o.outstanding) > 0 ? 'text-rose-600 font-semibold' :
                             'text-green-600';
                         tbody.innerHTML += `
-                            <tr>
-                                <td class="text-center px-3 text-gray-500 font-medium">${rowNum}</td>
-                                <td class="px-3 font-medium font-mono text-indigo-700">${o.order_number}</td>
-                                <td class="text-center px-3">${o.delivery_date}</td>
-                                <td class="text-right px-3 font-medium">${formatMoney(o.grand_total)}</td>
-                                <td class="text-right px-3 text-emerald-600">${formatMoney(o.paid_amount)}</td>
-                                <td class="text-right px-3 ${outColor}">${formatMoney(o.outstanding)}</td>
-                                <td class="text-center px-3">${getStatusBadge(o.status, o.status_code)}</td>
-                            </tr>
-                        `;
+                                <tr>
+                                    <td class="text-center px-3 text-gray-500 font-medium">${rowNum}</td>
+                                    <td class="px-3 font-medium font-mono text-indigo-700">${o.order_number}</td>
+                                    <td class="text-center px-3">${o.delivery_date}</td>
+                                    <td class="text-right px-3 font-medium">${formatMoney(o.grand_total)}</td>
+                                    <td class="text-right px-3 ${outColor}">${formatMoney(o.outstanding)}</td>
+                                    <td class="text-right px-3 text-emerald-600">${formatMoney(o.paid_amount)}</td>
+                                    <td class="text-center px-3">${getStatusBadge(o.status, o.status_code)}</td>
+                                </tr>
+                            `;
                     });
                 } else {
                     pagedData.forEach((p, idx) => {
                         const rowNum = startIdx + idx + 1;
                         tbody.innerHTML += `
-                            <tr>
-                                <td class="text-center px-3 text-gray-500 font-medium">${rowNum}</td>
-                                <td class="text-center px-3">${p.payment_date}</td>
-                                <td class="px-3 font-mono text-indigo-700">${p.payment_number}</td>
-                                <td class="text-right px-3 font-medium text-emerald-700">${formatMoney(p.payment_amount)}</td>
-                                <td class="text-center px-3">${p.payment_method}</td>
-                                <td class="px-3 text-gray-600">${p.payment_reference}</td>
-                                <td class="text-center px-3">${getPaymentStatusBadge(p.status, p.status_code)}</td>
-                            </tr>
-                        `;
+                                <tr>
+                                    <td class="text-center px-3 text-gray-500 font-medium">${rowNum}</td>
+                                    <td class="text-center px-3">${p.payment_date}</td>
+                                    <td class="px-3 font-mono text-indigo-700">${p.payment_number}</td>
+                                    <td class="text-right px-3 font-medium text-emerald-700">${formatMoney(p.payment_amount)}</td>
+                                    <td class="text-center px-3">${p.payment_method}</td>
+                                    <td class="px-3 text-gray-600">${p.payment_reference}</td>
+                                    <td class="text-center px-3">${getPaymentStatusBadge(p.status, p.status_code)}</td>
+                                </tr>
+                            `;
                     });
                 }
             } else {
@@ -709,13 +729,18 @@
             let btnHtml = '';
             if (totalPages > 1) {
                 const colorTheme = isOrders ? 'indigo' : 'emerald';
-                for (let i = 1; i <= totalPages; i++) {
-                    const activeClass = i === page ?
-                        `bg-${colorTheme}-600 text-white border-${colorTheme}-600` :
-                        'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
-                    btnHtml +=
-                        `<button type="button" onclick="renderPaginatedTable('${type}', ${i})" class="px-2 py-1 border text-xs font-medium rounded transition-colors ${activeClass}">${i}</button>`;
-                }
+                const pages = getPaginationArray(page, totalPages);
+                pages.forEach(p => {
+                    if (p === '...') {
+                        btnHtml += `<span class="px-2 py-1 text-xs font-medium text-gray-500 flex items-end">...</span>`;
+                    } else {
+                        const activeClass = p === page ?
+                            `bg-${colorTheme}-600 text-white border-${colorTheme}-600` :
+                            'bg-white text-gray-700 border-gray-300 hover:bg-gray-50';
+                        btnHtml +=
+                            `<button type="button" onclick="renderPaginatedTable('${type}', ${p})" class="px-2 py-1 border text-xs font-medium rounded transition-colors ${activeClass}">${p}</button>`;
+                    }
+                });
             }
             paginationContainer.innerHTML = btnHtml;
         }
@@ -726,7 +751,7 @@
         }
 
         // Set default dates and auto-load on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const today = new Date().toISOString().split('T')[0];
             const firstOfMonth = today.substring(0, 7) + '-01';
             document.getElementById('start_date').value = firstOfMonth;
