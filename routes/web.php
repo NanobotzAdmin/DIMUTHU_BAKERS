@@ -315,6 +315,11 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::post('/api/reports/all-agent-performance/data', [ReportController::class, 'getAllAgentPerformanceData'])->name('reports.allAgentPerformance.data');
     Route::get('/reports/all-agent-performance/export-pdf', [ReportController::class, 'exportAllAgentPerformancePdf'])->name('reports.allAgentPerformance.exportPdf');
 
+    Route::get('/reports/agent-order-requests', [ReportController::class, 'agentOrderRequestsIndex'])->name('reports.agentOrderRequests.index');
+    Route::post('/api/reports/agent-order-requests/data', [ReportController::class, 'getAgentOrderRequestsData'])->name('reports.agentOrderRequests.data');
+    Route::post('/api/reports/agent-order-requests/details', [ReportController::class, 'getAgentOrderRequestDetails'])->name('reports.agentOrderRequests.details');
+    Route::get('/reports/agent-order-requests/export-excel', [ReportController::class, 'exportAgentOrderRequestsExcel'])->name('reports.agentOrderRequests.exportExcel');
+
     // Product Types
     Route::get('/product-types/fetch', [ProductManagementController::class, 'fetchProductTypes'])->name('productTypes.fetch');
     Route::post('/product-types/store', [ProductManagementController::class, 'storeProductType'])->name('productTypes.store');

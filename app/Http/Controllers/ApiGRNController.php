@@ -405,7 +405,7 @@ class ApiGRNController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'method' => 'required|string',
             'notes' => 'nullable|string',
-            'credit_note_ids' => 'nullable|array',
+            'credit_note_ids' => 'required_if:method,Credit Note|array',
         ]);
 
         if ($validator->fails()) {
@@ -519,7 +519,7 @@ class ApiGRNController extends Controller
             'notes' => 'nullable|string',
             'is_auto' => 'nullable|boolean',
             'distributions' => 'nullable|array',
-            'credit_note_ids' => 'nullable|array',
+            'credit_note_ids' => 'required_if:method,Credit Note|array',
         ]);
 
         if ($validator->fails()) {
