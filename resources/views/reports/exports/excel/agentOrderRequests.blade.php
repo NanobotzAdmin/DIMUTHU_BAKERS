@@ -35,16 +35,16 @@
         <th colspan="5" style="background-color: #f3f4f6;"></th>
     </tr>
     <tr>
-        <td colspan="2">Total Order Amount (Rs)</td>
+        <td colspan="2">Total Purchase Amount (Rs)</td>
         <td colspan="5" style="font-weight: bold;">{{ number_format($summary['total_order_amount'], 2, '.', '') }}</td>
-    </tr>
-    <tr>
-        <td colspan="2">Total Paid Amount (Rs)</td>
-        <td colspan="5" style="font-weight: bold;">{{ number_format($summary['total_paid_amount'], 2, '.', '') }}</td>
     </tr>
     <tr>
         <td colspan="2">Total Outstanding (Rs)</td>
         <td colspan="5" style="font-weight: bold;">{{ number_format($summary['total_outstanding'], 2, '.', '') }}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Total Paid Amount (Rs)</td>
+        <td colspan="5" style="font-weight: bold;">{{ number_format($summary['total_paid_amount'], 2, '.', '') }}</td>
     </tr>
     <tr>
         <th colspan="7" style="border: none;"></th>
@@ -61,8 +61,8 @@
         <th style="background-color: #e2e8f0; font-weight: bold;">Order No</th>
         <th style="background-color: #e2e8f0; font-weight: bold;">Delivery Date</th>
         <th style="background-color: #e2e8f0; font-weight: bold;">Grand Total (Rs)</th>
-        <th style="background-color: #e2e8f0; font-weight: bold;">Paid (Rs)</th>
         <th style="background-color: #e2e8f0; font-weight: bold;">Outstanding (Rs)</th>
+        <th style="background-color: #e2e8f0; font-weight: bold;">Paid (Rs)</th>
         <th style="background-color: #e2e8f0; font-weight: bold;">Status</th>
     </tr>
     @forelse($orders as $index => $order)
@@ -71,8 +71,8 @@
             <td>{{ $order['order_number'] }}</td>
             <td>{{ $order['delivery_date'] }}</td>
             <td>{{ $order['grand_total'] }}</td>
-            <td>{{ $order['paid_amount'] }}</td>
             <td>{{ $order['outstanding'] }}</td>
+            <td>{{ $order['paid_amount'] }}</td>
             <td>{{ $order['status'] }}</td>
         </tr>
     @empty
@@ -86,6 +86,7 @@
     </tr>
 
     <!-- Payments Section -->
+    {{-- 
     <tr>
         <th colspan="7" style="background-color: {{ $companyInfo['colors']['secondary'] ?? '#0d108e' }}; color: #ffffff; font-weight: bold; font-size: 14px; text-align: left;">
             Payment Details
@@ -120,4 +121,5 @@
         <th style="font-weight: bold;">{{ number_format($summary['total_payment_amount'], 2, '.', '') }}</th>
         <th colspan="3"></th>
     </tr>
+    --}}
 </table>
