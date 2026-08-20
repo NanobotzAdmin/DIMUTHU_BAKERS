@@ -319,6 +319,7 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::post('/api/reports/agent-order-requests/data', [ReportController::class, 'getAgentOrderRequestsData'])->name('reports.agentOrderRequests.data');
     Route::post('/api/reports/agent-order-requests/details', [ReportController::class, 'getAgentOrderRequestDetails'])->name('reports.agentOrderRequests.details');
     Route::get('/reports/agent-order-requests/export-excel', [ReportController::class, 'exportAgentOrderRequestsExcel'])->name('reports.agentOrderRequests.exportExcel');
+    Route::get('/reports/agent-order-requests/export-all-excel', [ReportController::class, 'exportAllAgentOrderRequestsExcel'])->name('reports.agentOrderRequests.exportAllExcel');
 
     // Product Types
     Route::get('/product-types/fetch', [ProductManagementController::class, 'fetchProductTypes'])->name('productTypes.fetch');

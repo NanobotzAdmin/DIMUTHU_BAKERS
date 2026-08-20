@@ -1334,4 +1334,90 @@ class ReportController extends Controller
             ->header('Content-Type', 'application/vnd.ms-excel')
             ->header('Content-Disposition', 'attachment; filename="'.$fileName.'.xls"');
     }
+
+    /**
+     * Export All Agents Order Requests summary to Excel.
+     */
+    public function exportAllAgentOrderRequestsExcel(Request $request)
+    {
+        $request->validate([
+            'date' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        $date = $request->input('date');
+        $startDate = $date
+            ? Carbon::parse($date)->startOfDay()
+            : ($request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : null);
+        $endDate = $date
+            ? Carbon::parse($date)->endOfDay()
+            : ($request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : null);
+
+        $agents = AdAgent::where('status', 1)->get();
+        $reportData = [];
+
+        $totalOrdersSum = 0;
+        $totalOrderAmountSum = 0;
+        $paidAmountSum = 0;
+        $outstandingSum = 0;
+
+        foreach ($agents as $agent) {
+            $query = \App\Models\StmOrderRequest::where('agent_id', $agent->id)->whereNot('status', 2);
+
+            if ($startDate && $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            }
+
+            $orders = $query->get();
+
+            $totalOrderAmount = $orders->sum('grand_total');
+            $paidAmount = $orders->sum('paid_amount');
+            $outstanding = $totalOrderAmount - $paidAmount;
+
+            $totalOrdersSum += $orders->count();
+            $totalOrderAmountSum += $totalOrderAmount;
+            $paidAmountSum += $paidAmount;
+            $outstandingSum += $outstanding;
+
+            $reportData[] = [
+                'agent_id' => $agent->id,
+                'agent_name' => $agent->agent_name,
+                'agent_code' => $agent->agent_code,
+                'total_orders' => $orders->count(),
+                'total_order_amount' => $totalOrderAmount,
+                'paid_amount' => $paidAmount,
+                'outstanding' => $outstanding,
+            ];
+        }
+
+        $selectedDate = $date ?? ($startDate ? $startDate->format('Y-m-d') : null);
+        $dateRange = ($startDate && $endDate)
+            ? ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')
+                ? $startDate->format('Y-m-d')
+                : $startDate->format('Y-m-d').' to '.$endDate->format('Y-m-d'))
+            : 'All Time';
+
+        $configPath = public_path('system_config.json');
+        $companyInfo = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : null;
+
+        $viewData = [
+            'reportData' => $reportData,
+            'summary' => [
+                'total_orders' => $totalOrdersSum,
+                'total_order_amount' => $totalOrderAmountSum,
+                'paid_amount' => $paidAmountSum,
+                'outstanding' => $outstandingSum,
+            ],
+            'selectedDate' => $selectedDate,
+            'dateRange' => $dateRange,
+            'companyInfo' => $companyInfo,
+        ];
+
+        $fileName = 'Agent_Order_Requests_Summary_'.($startDate ? $startDate->format('Y-m-d') : 'AllTime');
+
+        return response(view('reports.exports.excel.allAgentOrderRequests', $viewData))
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="'.$fileName.'.xls"');
+    }
 }
