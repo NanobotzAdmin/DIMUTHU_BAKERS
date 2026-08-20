@@ -1038,16 +1038,18 @@ class ReportController extends Controller
     public function getAgentOrderRequestsData(Request $request)
     {
         $request->validate([
+            'date' => 'nullable|date',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
         ]);
 
-        $startDate = $request->input('start_date')
-            ? Carbon::parse($request->input('start_date'))->startOfDay()
-            : null;
-        $endDate = $request->input('end_date')
-            ? Carbon::parse($request->input('end_date'))->endOfDay()
-            : null;
+        $date = $request->input('date');
+        $startDate = $date
+            ? Carbon::parse($date)->startOfDay()
+            : ($request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : null);
+        $endDate = $date
+            ? Carbon::parse($date)->endOfDay()
+            : ($request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : null);
 
         $agents = AdAgent::where('status', 1)->get();
         $reportData = [];
@@ -1089,17 +1091,19 @@ class ReportController extends Controller
     {
         $request->validate([
             'agent_id' => 'required|integer',
+            'date' => 'nullable|date',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
         ]);
 
         $agentId = $request->input('agent_id');
-        $startDate = $request->input('start_date')
-            ? Carbon::parse($request->input('start_date'))->startOfDay()
-            : null;
-        $endDate = $request->input('end_date')
-            ? Carbon::parse($request->input('end_date'))->endOfDay()
-            : null;
+        $date = $request->input('date');
+        $startDate = $date
+            ? Carbon::parse($date)->startOfDay()
+            : ($request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : null);
+        $endDate = $date
+            ? Carbon::parse($date)->endOfDay()
+            : ($request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : null);
 
         $query = \App\Models\StmOrderRequest::with(['payments'])
             ->where('agent_id', $agentId)->whereNot('status', 2);
@@ -1198,17 +1202,19 @@ class ReportController extends Controller
     {
         $request->validate([
             'agent_id' => 'required|integer',
+            'date' => 'nullable|date',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
         ]);
 
         $agentId = $request->input('agent_id');
-        $startDate = $request->input('start_date')
-            ? Carbon::parse($request->input('start_date'))->startOfDay()
-            : null;
-        $endDate = $request->input('end_date')
-            ? Carbon::parse($request->input('end_date'))->endOfDay()
-            : null;
+        $date = $request->input('date');
+        $startDate = $date
+            ? Carbon::parse($date)->startOfDay()
+            : ($request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : null);
+        $endDate = $date
+            ? Carbon::parse($date)->endOfDay()
+            : ($request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : null);
 
         $agent = AdAgent::findOrFail($agentId);
 
@@ -1297,8 +1303,11 @@ class ReportController extends Controller
             ];
         }
 
+        $selectedDate = $date ?? ($startDate ? $startDate->format('Y-m-d') : null);
         $dateRange = ($startDate && $endDate)
-            ? $startDate->format('Y-m-d').' to '.$endDate->format('Y-m-d')
+            ? ($startDate->format('Y-m-d') === $endDate->format('Y-m-d')
+                ? $startDate->format('Y-m-d')
+                : $startDate->format('Y-m-d').' to '.$endDate->format('Y-m-d'))
             : 'All Time';
 
         $configPath = public_path('system_config.json');
@@ -1314,6 +1323,7 @@ class ReportController extends Controller
                 'total_outstanding' => $totalOutstanding,
                 'total_payment_amount' => $totalPaymentAmount,
             ],
+            'selectedDate' => $selectedDate,
             'dateRange' => $dateRange,
             'companyInfo' => $companyInfo,
         ];
