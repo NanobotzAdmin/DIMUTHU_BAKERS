@@ -22,9 +22,16 @@
     </tr>
     <tr>
         <th colspan="3" style="text-align: right; vertical-align: bottom; background-color: #ffffff; border: none; font-size: 12px;">
+            <strong>Date:</strong> {{ $selectedDate ?? ($dateRange ?? 'All Time') }}
+        </th>
+    </tr>
+    {{-- Temporarily hidden Date Range (uncomment when needed)
+    <tr>
+        <th colspan="3" style="text-align: right; vertical-align: bottom; background-color: #ffffff; border: none; font-size: 12px;">
             <strong>Date Range:</strong> {{ $dateRange }}
         </th>
     </tr>
+    --}}
     <tr>
         <th colspan="7" style="border: none;"></th>
     </tr>
@@ -77,7 +84,7 @@
         </tr>
     @empty
         <tr>
-            <td colspan="7" style="text-align: center;">No orders found in the selected date range.</td>
+            <td colspan="7" style="text-align: center;">No orders found for the selected date.</td>
         </tr>
     @endforelse
 

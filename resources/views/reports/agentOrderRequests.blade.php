@@ -144,6 +144,14 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
             <form id="reportFilterForm" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 @csrf
+                <!-- Single Date Filter -->
+                <div>
+                    <label for="filter_date" class="block text-sm font-semibold text-gray-700 mb-1">Select Date</label>
+                    <input type="date" id="filter_date" name="date" required
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5">
+                </div>
+
+                {{-- Temporarily hidden Date Range (uncomment when needed)
                 <div>
                     <label for="start_date" class="block text-sm font-semibold text-gray-700 mb-1">Start Date</label>
                     <input type="date" id="start_date" name="start_date"
@@ -154,6 +162,8 @@
                     <input type="date" id="end_date" name="end_date"
                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5">
                 </div>
+                --}}
+
                 <div>
                     <button type="submit" id="btnLoadReport"
                         class="w-full flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
@@ -210,7 +220,7 @@
                 <i class="bi bi-clipboard-x text-2xl"></i>
             </div>
             <h3 class="text-lg font-medium text-gray-900">No Data Found</h3>
-            <p class="text-sm text-gray-500 mt-1 max-w-sm mx-auto">No order requests found for the selected date range.
+            <p class="text-sm text-gray-500 mt-1 max-w-sm mx-auto">No order requests found for the selected date.
             </p>
         </div>
     </div>
@@ -498,22 +508,22 @@
                     'color: #16a34a; font-weight: 600;';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                        <td class="text-center text-gray-500 font-medium">${index + 1}</td>
-                        <td class="font-medium text-gray-900">${row.agent_name}</td>
-                        <td class="text-gray-600"><span class="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded font-mono">${row.agent_code}</span></td>
-                        <td class="text-center font-bold" style="color: #4f46e5;">${row.total_orders}</td>
-                        <td class="text-right text-gray-700">${formatMoney(row.total_order_amount)}</td>
-                        <td class="text-right" style="${outstandingColor}">${formatMoney(row.outstanding)}</td>
-                        <td class="text-right text-emerald-600 font-semibold">${formatMoney(row.paid_amount)}</td>
-                        <td class="text-center">
-                            <button type="button" onclick="viewAgentDetails(${index})" class="action-btn action-btn-view">
-                                <i class="bi bi-eye"></i> View
-                            </button>
-                            <button type="button" onclick="exportAgentExcel(${row.agent_id})" class="action-btn action-btn-excel ms-1" style="display: none;">
-                                <i class="bi bi-file-earmark-excel"></i> Excel
-                            </button>
-                        </td>
-                    `;
+                                <td class="text-center text-gray-500 font-medium">${index + 1}</td>
+                                <td class="font-medium text-gray-900">${row.agent_name}</td>
+                                <td class="text-gray-600"><span class="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded font-mono">${row.agent_code}</span></td>
+                                <td class="text-center font-bold" style="color: #4f46e5;">${row.total_orders}</td>
+                                <td class="text-right text-gray-700">${formatMoney(row.total_order_amount)}</td>
+                                <td class="text-right" style="${outstandingColor}">${formatMoney(row.outstanding)}</td>
+                                <td class="text-right text-emerald-600 font-semibold">${formatMoney(row.paid_amount)}</td>
+                                <td class="text-center">
+                                    <button type="button" onclick="viewAgentDetails(${index})" class="action-btn action-btn-view">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                    <button type="button" onclick="exportAgentExcel(${row.agent_id})" class="action-btn action-btn-excel ms-1">
+                                        <i class="bi bi-file-earmark-excel"></i> Excel
+                                    </button>
+                                </td>
+                            `;
                 tbody.appendChild(tr);
             });
 
@@ -547,11 +557,15 @@
 
         // Export Agent Excel
         function exportAgentExcel(agentId) {
-            const startDate = document.getElementById('start_date').value;
-            const endDate = document.getElementById('end_date').value;
+            const dateInput = document.getElementById('filter_date');
+            const selectedDate = dateInput ? dateInput.value : '';
+            const startDate = document.getElementById('start_date')?.value || selectedDate;
+            const endDate = document.getElementById('end_date')?.value || selectedDate;
 
             let url = `/reports/agent-order-requests/export-excel?agent_id=${agentId}`;
-            if (startDate && endDate) {
+            if (selectedDate) {
+                url += `&date=${selectedDate}&start_date=${selectedDate}&end_date=${selectedDate}`;
+            } else if (startDate && endDate) {
                 url += `&start_date=${startDate}&end_date=${endDate}`;
             }
 
@@ -582,8 +596,9 @@
             document.body.style.overflow = 'hidden';
 
             try {
-                const startDate = document.getElementById('start_date').value;
-                const endDate = document.getElementById('end_date').value;
+                const selectedDate = document.getElementById('filter_date')?.value || '';
+                const startDate = document.getElementById('start_date')?.value || selectedDate;
+                const endDate = document.getElementById('end_date')?.value || selectedDate;
 
                 const response = await fetch("{{ route('reports.agentOrderRequests.details') }}", {
                     method: 'POST',
@@ -593,6 +608,7 @@
                     },
                     body: JSON.stringify({
                         agent_id: row.agent_id,
+                        date: selectedDate,
                         start_date: startDate,
                         end_date: endDate
                     })
@@ -691,31 +707,31 @@
                         const outColor = Number(o.outstanding) > 0 ? 'text-rose-600 font-semibold' :
                             'text-green-600';
                         tbody.innerHTML += `
-                                <tr>
-                                    <td class="text-center px-3 text-gray-500 font-medium">${rowNum}</td>
-                                    <td class="px-3 font-medium font-mono text-indigo-700">${o.order_number}</td>
-                                    <td class="text-center px-3">${o.delivery_date}</td>
-                                    <td class="text-right px-3 font-medium">${formatMoney(o.grand_total)}</td>
-                                    <td class="text-right px-3 ${outColor}">${formatMoney(o.outstanding)}</td>
-                                    <td class="text-right px-3 text-emerald-600">${formatMoney(o.paid_amount)}</td>
-                                    <td class="text-center px-3">${getStatusBadge(o.status, o.status_code)}</td>
-                                </tr>
-                            `;
+                                        <tr>
+                                            <td class="text-center px-3 text-gray-500 font-medium">${rowNum}</td>
+                                            <td class="px-3 font-medium font-mono text-indigo-700">${o.order_number}</td>
+                                            <td class="text-center px-3">${o.delivery_date}</td>
+                                            <td class="text-right px-3 font-medium">${formatMoney(o.grand_total)}</td>
+                                            <td class="text-right px-3 ${outColor}">${formatMoney(o.outstanding)}</td>
+                                            <td class="text-right px-3 text-emerald-600">${formatMoney(o.paid_amount)}</td>
+                                            <td class="text-center px-3">${getStatusBadge(o.status, o.status_code)}</td>
+                                        </tr>
+                                    `;
                     });
                 } else {
                     pagedData.forEach((p, idx) => {
                         const rowNum = startIdx + idx + 1;
                         tbody.innerHTML += `
-                                <tr>
-                                    <td class="text-center px-3 text-gray-500 font-medium">${rowNum}</td>
-                                    <td class="text-center px-3">${p.payment_date}</td>
-                                    <td class="px-3 font-mono text-indigo-700">${p.payment_number}</td>
-                                    <td class="text-right px-3 font-medium text-emerald-700">${formatMoney(p.payment_amount)}</td>
-                                    <td class="text-center px-3">${p.payment_method}</td>
-                                    <td class="px-3 text-gray-600">${p.payment_reference}</td>
-                                    <td class="text-center px-3">${getPaymentStatusBadge(p.status, p.status_code)}</td>
-                                </tr>
-                            `;
+                                        <tr>
+                                            <td class="text-center px-3 text-gray-500 font-medium">${rowNum}</td>
+                                            <td class="text-center px-3">${p.payment_date}</td>
+                                            <td class="px-3 font-mono text-indigo-700">${p.payment_number}</td>
+                                            <td class="text-right px-3 font-medium text-emerald-700">${formatMoney(p.payment_amount)}</td>
+                                            <td class="text-center px-3">${p.payment_method}</td>
+                                            <td class="px-3 text-gray-600">${p.payment_reference}</td>
+                                            <td class="text-center px-3">${getPaymentStatusBadge(p.status, p.status_code)}</td>
+                                        </tr>
+                                    `;
                     });
                 }
             } else {
@@ -750,12 +766,20 @@
             document.body.style.overflow = '';
         }
 
-        // Set default dates and auto-load on page load
+        // Set default date and auto-load on page load
         document.addEventListener('DOMContentLoaded', function () {
             const today = new Date().toISOString().split('T')[0];
-            const firstOfMonth = today.substring(0, 7) + '-01';
-            document.getElementById('start_date').value = firstOfMonth;
-            document.getElementById('end_date').value = today;
+            const dateInput = document.getElementById('filter_date');
+            if (dateInput) {
+                dateInput.value = today;
+            }
+            if (document.getElementById('start_date')) {
+                const firstOfMonth = today.substring(0, 7) + '-01';
+                document.getElementById('start_date').value = firstOfMonth;
+            }
+            if (document.getElementById('end_date')) {
+                document.getElementById('end_date').value = today;
+            }
             // Auto-load report
             loadReportData();
         });
