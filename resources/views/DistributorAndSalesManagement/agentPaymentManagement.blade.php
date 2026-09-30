@@ -98,6 +98,7 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt ID</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
@@ -109,6 +110,9 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($payments as $payment)
                     <tr class="hover:bg-gray-50 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                            REC-{{ str_pad($payment->id, 5, '0', STR_PAD_LEFT) }}
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $payment->payment_date ? $payment->payment_date->format('M d, Y h:i A') : $payment->created_at->format('M d, Y') }}
                         </td>
@@ -167,7 +171,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                        <td colspan="7" class="px-6 py-10 text-center text-gray-500">
                             No payment records found matching your criteria.
                         </td>
                     </tr>
@@ -429,19 +433,19 @@
                         const grandTotal = parseFloat(order.grand_total) || 0;
                         const currentPayment = parseFloat(dist.payment_amount) || 0;
                         
-                        // For already approved payments, order.paid_amount ALREADY includes currentPayment
-                        // For pending payments, order.paid_amount does NOT include currentPayment
-                        let alreadyPaidBeforeThis = paidAmount;
-                        if (payment.status == 1 && dist.status == 2) { // Main is Approved AND Dist is Approved
-                            alreadyPaidBeforeThis = Math.max(0, paidAmount - currentPayment);
-                        }
-
                         const isRejected = (payment.status == 2 || dist.status == 3);
-                        const isProcessed = dist.status != 1; // Not Pending
+                        const isPending = (payment.status == 0 && dist.status == 1);
+                        const isProcessed = !isPending;
 
-                        // Percentage Calculations
-                        const percentage = (grandTotal > 0) ? (alreadyPaidBeforeThis / grandTotal) * 100 : 0;
-                        const newPercentage = isRejected ? percentage : ((grandTotal > 0) ? ((alreadyPaidBeforeThis + currentPayment) / grandTotal) * 100 : 0);
+                        // Remaining balance: if pending, project after deducting this payment; otherwise standard remaining
+                        const remainingBalance = isPending
+                            ? Math.max(0, grandTotal - paidAmount - currentPayment)
+                            : Math.max(0, grandTotal - paidAmount);
+
+                        const percentage = (grandTotal > 0) ? (paidAmount / grandTotal) * 100 : 0;
+                        const newPercentage = isPending
+                            ? ((grandTotal > 0) ? ((paidAmount + currentPayment) / grandTotal) * 100 : 0)
+                            : percentage;
 
                         const rowId = `accordion-${index}`;
 
@@ -476,8 +480,8 @@
                                     <div class="max-w-xl">
                                         <h5 class="text-sm font-black text-indigo-700 mb-1">Order #${order.order_number}</h5>
                                         <p class="text-xs text-gray-600 mb-1">Order Total: Rs. ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                                        <p class="text-xs text-gray-600 mb-1">Already Paid: Rs. ${alreadyPaidBeforeThis.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                                        <p class="text-xs font-bold text-red-600 mb-4">Remaining Balance: Rs. ${Math.max(0, grandTotal - alreadyPaidBeforeThis - (isRejected ? 0 : currentPayment)).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                        <p class="text-xs text-gray-600 mb-1">Already Paid: Rs. ${paidAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                        <p class="text-xs font-bold text-red-600 mb-4">Remaining Balance: Rs. ${remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                                         
                                         <div class="relative w-full bg-gray-200 rounded-full h-2 shadow-inner">
                                             <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, percentage)}%"></div>

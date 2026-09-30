@@ -164,10 +164,14 @@
                 </div>
                 --}}
 
-                <div>
+                <div class="flex items-center gap-3">
                     <button type="submit" id="btnLoadReport"
-                        class="w-full flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                        class="flex-1 flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
                         <i class="bi bi-funnel mr-2"></i> Load Report
+                    </button>
+                    <button type="button" id="btnExportAllExcel" onclick="exportAllAgentsExcel()"
+                        class="flex-1 flex justify-center items-center px-4 py-2.5 border border-emerald-600 text-sm font-medium rounded-lg shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all">
+                        <i class="bi bi-file-earmark-excel mr-2"></i> Excel
                     </button>
                 </div>
             </form>
@@ -553,6 +557,31 @@
                 }
                 paginationContainer.innerHTML = btnHtml;
             }
+        }
+
+        // Export All Agents Summary Excel
+        function exportAllAgentsExcel() {
+            const dateInput = document.getElementById('filter_date');
+            const selectedDate = dateInput ? dateInput.value : '';
+            const startDate = document.getElementById('start_date')?.value || selectedDate;
+            const endDate = document.getElementById('end_date')?.value || selectedDate;
+
+            let url = "{{ route('reports.agentOrderRequests.exportAllExcel') }}";
+            const params = [];
+            if (selectedDate) {
+                params.push(`date=${encodeURIComponent(selectedDate)}`);
+                params.push(`start_date=${encodeURIComponent(selectedDate)}`);
+                params.push(`end_date=${encodeURIComponent(selectedDate)}`);
+            } else if (startDate && endDate) {
+                params.push(`start_date=${encodeURIComponent(startDate)}`);
+                params.push(`end_date=${encodeURIComponent(endDate)}`);
+            }
+
+            if (params.length > 0) {
+                url += `?${params.join('&')}`;
+            }
+
+            window.location.href = url;
         }
 
         // Export Agent Excel
