@@ -363,8 +363,9 @@
             <div class="grid grid-cols-1 gap-4">
                 <div>
                     <label for="paymentAmount"
-                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Amount (Rs.)
-                        *</label>
+                        class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                        Amount (Rs.) <span id="maxAmountDisplay" class="normal-case text-indigo-600 font-bold hidden"></span> *
+                    </label>
                     <input type="number" step="0.01" min="0.01" id="paymentAmount"
                         class="w-full px-3 py-2 border border-solid border-gray-200 rounded-xl text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                         placeholder="0.00">
@@ -503,6 +504,7 @@
             $('#paymentAmount').val('').prop('readonly', false).removeClass('bg-slate-100');
             $('#paymentNotes').val('');
             $('#amountHintText').addClass('hidden');
+            $('#manualOrdersCheckboxList').html('<div class="p-4 text-center text-slate-400 italic"><i class="bi bi-arrow-clockwise animate-spin mr-1.5"></i>Loading outstanding orders...</div>');
 
             // Reset UI buttons
             setAutoDistribute(true);
@@ -512,16 +514,23 @@
             $.getJSON('/agent-panel/api/orders')
                 .done(response => {
                     if (response.status && response.data) {
-                        // Filter orders where due balance > 0
+                        // Filter orders where due balance > 0 and exclude rejected orders (status == 2)
                         ordersList = response.data.filter(order => {
-                            const paid = order.payments ? order.payments.filter(p => p.status !== 3).reduce((sum, p) => sum + parseFloat(p.payment_amount), 0) : 0;
-                            order.due_amount = parseFloat(order.grand_total) - paid;
+                            if (parseInt(order.status) === 2) return false;
+                            const paid = order.payments && Array.isArray(order.payments)
+                                ? order.payments.filter(p => p && parseInt(p.status) !== 3).reduce((sum, p) => sum + (parseFloat(p.payment_amount) || 0), 0)
+                                : (parseFloat(order.paid_amount) || 0);
+                            order.due_amount = Math.max(0, (parseFloat(order.grand_total) || 0) - paid);
                             return order.due_amount > 0.01;
                         });
                         populateManualOrdersCheckboxList();
+                        toggleAmountInputState();
                     }
                 })
-                .fail(() => toastr.error('Failed to retrieve orders list.'));
+                .fail(() => {
+                    $('#manualOrdersCheckboxList').html('<div class="p-4 text-center text-rose-500 text-xs">Failed to load outstanding orders.</div>');
+                    toastr.error('Failed to retrieve orders list.');
+                });
 
             // Open Drawer
             $('#paymentDrawerBackdrop').removeClass('hidden');
@@ -574,17 +583,25 @@
 
         // Recalculates amount input fields
         function toggleAmountInputState() {
+            const totalDue = ordersList.reduce((sum, o) => sum + (parseFloat(o.due_amount) || 0), 0);
+            const formattedTotalDue = totalDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
             if (selectedMethod === 'Credit Note') {
-                $('#paymentAmount').prop('readonly', true).addClass('bg-slate-100');
+                $('#paymentAmount').prop('readonly', true).addClass('bg-slate-100').attr('placeholder', '0.00');
+                $('#maxAmountDisplay').addClass('hidden');
                 $('#amountHintText').text('Amount is automatically calculated from selected credit notes.').removeClass('hidden');
                 recalculateCreditNoteTotal();
             } else if (!isAutoDistribute) {
-                $('#paymentAmount').prop('readonly', true).addClass('bg-slate-100');
+                $('#paymentAmount').prop('readonly', true).addClass('bg-slate-100').attr('placeholder', '0.00');
+                $('#maxAmountDisplay').addClass('hidden');
                 $('#amountHintText').text('Amount is automatically calculated from the selected orders above.').removeClass('hidden');
                 recalculateManualOrdersTotal();
             } else {
                 $('#paymentAmount').prop('readonly', false).removeClass('bg-slate-100');
-                $('#amountHintText').addClass('hidden');
+                $('#maxAmountDisplay').text(`(Max: Rs. ${formattedTotalDue})`).removeClass('hidden');
+                $('#paymentAmount').attr('placeholder', `0.00 (Max: Rs. ${formattedTotalDue})`);
+                $('#paymentAmount').attr('max', totalDue.toFixed(2));
+                $('#amountHintText').text(`Maximum enterable amount for auto distribution: Rs. ${formattedTotalDue}`).removeClass('hidden');
             }
         }
 
@@ -728,34 +745,69 @@
                 }
             }
 
-            // Fire API
-            $('#btnSubmitPayment').prop('disabled', true).html('<i class="bi bi-arrow-clockwise animate-spin text-sm"></i> Recording...');
-            $.ajax({
-                url: '/agent-panel/api/orders/bulk-payment',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    agent_id: currentAgentId,
-                    amount: amount,
-                    method: selectedMethod,
-                    notes: notes,
-                    is_auto: isAutoDistribute ? 1 : 0,
-                    distributions: distributions,
-                    credit_note_ids: selectedMethod === 'Credit Note' ? selectedCreditNotes : []
-                },
-                success: function (response) {
-                    if (response.status) {
-                        Swal.fire('Success', 'Bulk payment recorded successfully and pending approval.', 'success')
-                            .then(() => window.location.reload());
-                    } else {
-                        Swal.fire('Error', response.message || 'Failed to record bulk payment.', 'error');
-                        $('#btnSubmitPayment').prop('disabled', false).html('<i class="bi bi-check2-circle"></i> Confirm & Record');
-                    }
-                },
-                error: function (xhr) {
-                    const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Error submitting bulk payment request.';
-                    Swal.fire('Failed', msg, 'error');
-                    $('#btnSubmitPayment').prop('disabled', false).html('<i class="bi bi-check2-circle"></i> Confirm & Record');
+            // Confirmation SweetAlert before submitting
+            Swal.fire({
+                title: 'Confirm Payment Recording',
+                html: `
+                    <div class="text-left text-xs text-slate-600 space-y-2 py-2">
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                            <span class="font-bold text-slate-700">Amount:</span>
+                            <span class="font-bold text-emerald-600 text-sm">Rs. ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                            <span class="font-bold text-slate-700">Payment Method:</span>
+                            <span class="font-semibold text-slate-800">${selectedMethod}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                            <span class="font-bold text-slate-700">Distribution:</span>
+                            <span class="font-semibold text-slate-800">${isAutoDistribute ? 'Auto Distribute' : 'Manual Select (' + distributions.length + ' Orders)'}</span>
+                        </div>
+                        ${notes ? `
+                        <div class="pt-0.5">
+                            <span class="font-bold text-slate-700 block mb-0.5">Reference / Notes:</span>
+                            <span class="text-slate-600 italic break-words">${$('<div>').text(notes).html()}</span>
+                        </div>` : ''}
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="bi bi-check2-circle mr-1"></i> Yes, Confirm & Record',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Fire API
+                    $('#btnSubmitPayment').prop('disabled', true).html('<i class="bi bi-arrow-clockwise animate-spin text-sm"></i> Recording...');
+                    $.ajax({
+                        url: '/agent-panel/api/orders/bulk-payment',
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            agent_id: currentAgentId,
+                            amount: amount,
+                            method: selectedMethod,
+                            notes: notes,
+                            is_auto: isAutoDistribute ? 1 : 0,
+                            distributions: distributions,
+                            credit_note_ids: selectedMethod === 'Credit Note' ? selectedCreditNotes : []
+                        },
+                        success: function (response) {
+                            if (response.status) {
+                                Swal.fire('Success', 'Bulk payment recorded successfully and pending approval.', 'success')
+                                    .then(() => window.location.reload());
+                            } else {
+                                Swal.fire('Error', response.message || 'Failed to record bulk payment.', 'error');
+                                $('#btnSubmitPayment').prop('disabled', false).html('<i class="bi bi-check2-circle"></i> Confirm & Record');
+                            }
+                        },
+                        error: function (xhr) {
+                            const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Error submitting bulk payment request.';
+                            Swal.fire('Failed', msg, 'error');
+                            $('#btnSubmitPayment').prop('disabled', false).html('<i class="bi bi-check2-circle"></i> Confirm & Record');
+                        }
+                    });
                 }
             });
         }

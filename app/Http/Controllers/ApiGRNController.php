@@ -91,12 +91,21 @@ class ApiGRNController extends Controller
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $agentId = $this->getAgentId();
-            $orders = StmOrderRequest::where('agent_id', $agentId)
-                ->with(['products', 'orderProducts', 'payments'])
+            $agentId = $this->getAgentId() ?? $request->query('agent_id') ?? $request->input('agent_id');
+
+            $query = StmOrderRequest::query();
+            if ($agentId) {
+                $query->where('agent_id', $agentId);
+            }
+
+            if ($request->has('exclude_rejected') && $request->boolean('exclude_rejected')) {
+                $query->where('status', '!=', CommonVariables::$orderRequestRejected);
+            }
+
+            $orders = $query->with(['products', 'orderProducts', 'payments'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -420,6 +429,13 @@ class ApiGRNController extends Controller
             DB::beginTransaction();
             $orderRequest = StmOrderRequest::findOrFail($id);
 
+            if ($orderRequest->status == CommonVariables::$orderRequestRejected) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Cannot record payment for a rejected order.',
+                ], 422);
+            }
+
             // Validation: Prevent overpayment after accounting for pending payments
             $pendingAmount = StmOrderRequestHasPayment::where('stm_order_request_id', $orderRequest->id)
                 ->where('status', 1) // Pending Approval
@@ -557,9 +573,10 @@ class ApiGRNController extends Controller
             $finalDistributions = [];
 
             if ($isAuto) {
-                // Auto Distribution Logic: Find oldest outstanding orders
+                // Auto Distribution Logic: Find oldest outstanding orders (excluding rejected orders)
                 $outstandingOrders = StmOrderRequest::where('agent_id', $request->agent_id)
                     ->whereIn('payment_completed', [0, 1, 3]) // 0: Pending, 1: Partial, 3: Credit
+                    ->where('status', '!=', CommonVariables::$orderRequestRejected)
                     ->where('status', '>=', 1) // Approved or further
                     ->orderBy('created_at', 'asc')
                     ->get();
@@ -591,6 +608,14 @@ class ApiGRNController extends Controller
                 // Validate manual distribution amounts against each order's actual outstanding after pending payments
                 foreach ($finalDistributions as $dist) {
                     $order = StmOrderRequest::findOrFail($dist['order_id']);
+
+                    if ($order->status == CommonVariables::$orderRequestRejected) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Cannot allocate payment to rejected Order #'.$order->order_number,
+                        ], 422);
+                    }
+
                     $pendingAmount = StmOrderRequestHasPayment::where('stm_order_request_id', $order->id)
                         ->where('status', 1) // Pending Approval
                         ->sum('payment_amount');

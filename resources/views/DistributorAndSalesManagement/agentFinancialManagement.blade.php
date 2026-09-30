@@ -185,6 +185,7 @@
             <table class="min-w-full text-left border-collapse">
                 <thead class="bg-slate-50">
                     <tr>
+                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Receipt ID</th>
                         <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Date</th>
                         <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Agent</th>
                         <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Amount</th>
@@ -196,6 +197,9 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($payments as $payment)
                         <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-4 text-sm font-black text-slate-900 whitespace-nowrap">
+                                REC-{{ str_pad($payment->id, 5, '0', STR_PAD_LEFT) }}
+                            </td>
                             <td class="px-6 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">
                                 {{ $payment->payment_date ? \Carbon\Carbon::parse($payment->payment_date)->tz('Asia/Colombo')->format('M d, Y h:i A') : $payment->created_at->tz('Asia/Colombo')->format('M d, Y') }}
                             </td>
@@ -253,7 +257,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-slate-500">
+                            <td colspan="7" class="px-6 py-12 text-center text-slate-500">
                                 <div class="flex flex-col items-center justify-center">
                                     <i class="bi bi-inbox text-4xl mb-3 text-slate-300"></i>
                                     <p class="font-medium text-slate-500">No payment records found matching your criteria.</p>
@@ -741,16 +745,19 @@
                         const grandTotal = parseFloat(order.grand_total) || 0;
                         const currentPayment = parseFloat(dist.payment_amount) || 0;
                         
-                        let alreadyPaidBeforeThis = paidAmount;
-                        if (payment.status == 1 && dist.status == 2) {
-                            alreadyPaidBeforeThis = Math.max(0, paidAmount - currentPayment);
-                        }
-
                         const isRejected = (payment.status == 2 || dist.status == 3);
-                        const isProcessed = dist.status != 1;
+                        const isPending = (payment.status == 0 && dist.status == 1);
+                        const isProcessed = !isPending;
 
-                        const percentage = (grandTotal > 0) ? (alreadyPaidBeforeThis / grandTotal) * 100 : 0;
-                        const newPercentage = isRejected ? percentage : ((grandTotal > 0) ? ((alreadyPaidBeforeThis + currentPayment) / grandTotal) * 100 : 0);
+                        // Remaining balance: if pending, project after deducting this payment; otherwise standard remaining
+                        const remainingBalance = isPending
+                            ? Math.max(0, grandTotal - paidAmount - currentPayment)
+                            : Math.max(0, grandTotal - paidAmount);
+
+                        const percentage = (grandTotal > 0) ? (paidAmount / grandTotal) * 100 : 0;
+                        const newPercentage = isPending
+                            ? ((grandTotal > 0) ? ((paidAmount + currentPayment) / grandTotal) * 100 : 0)
+                            : percentage;
                         const rowId = `payment-accordion-${index}`;
 
                         ordersList.innerHTML += `
@@ -784,8 +791,8 @@
                                     <div class="max-w-xl">
                                         <h5 class="text-sm font-black text-indigo-700 mb-1">Order #${order.order_number}</h5>
                                         <p class="text-xs text-slate-600 mb-1">Order Total: Rs. ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                                        <p class="text-xs text-slate-600 mb-1">Already Paid: Rs. ${alreadyPaidBeforeThis.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                                        <p class="text-xs font-bold text-rose-600 mb-4">Remaining Balance: Rs. ${Math.max(0, grandTotal - alreadyPaidBeforeThis - (isRejected ? 0 : currentPayment)).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                        <p class="text-xs text-slate-600 mb-1">Already Paid: Rs. ${paidAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                        <p class="text-xs font-bold text-rose-600 mb-4">Remaining Balance: Rs. ${remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                                         
                                         <div class="relative w-full bg-slate-200 rounded-full h-2 shadow-inner">
                                             <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, percentage)}%"></div>
