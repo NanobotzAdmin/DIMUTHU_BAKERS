@@ -3547,11 +3547,11 @@ class ApiManagementController extends Controller
     public function getActiveAgentCount(Request $request)
     {
         try {
-            $token = $request->input('application_token');
+            $token = $request->bearerToken();
 
             $expectedToken = config('app.application_token') ?: env('APPLICATION_TOKEN');
 
-            if (empty($token) || empty($expectedToken) || !hash_equals((string) $expectedToken, (string) $token)) {
+            if (empty($token) || empty($expectedToken) || $token !== $expectedToken) {
                 return response()->json([
                     'response_title' => 'UNAUTHORIZED',
                     'response_message' => 'Unauthorized access. Invalid application token.',
