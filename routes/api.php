@@ -16,7 +16,7 @@ Route::get('/user', function (Request $request) {
 
 Route::middleware('guest')->group(function () {
     Route::post('/login', [ApiUserController::class , 'login']);
-
+    Route::match(['get', 'post'], '/active-agent-count', [ApiManagementController::class, 'getActiveAgentCount']);
 });
 
 

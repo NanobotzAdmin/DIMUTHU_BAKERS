@@ -3543,4 +3543,46 @@ class ApiManagementController extends Controller
             Log::error('Credit Note Email Queueing Failed: '.$ex->getMessage());
         }
     }
+
+    public function getActiveAgentCount(Request $request)
+    {
+        try {
+            $token = $request->input('application_token');
+
+            $expectedToken = config('app.application_token') ?: env('APPLICATION_TOKEN');
+
+            if (empty($token) || empty($expectedToken) || !hash_equals((string) $expectedToken, (string) $token)) {
+                return response()->json([
+                    'response_title' => 'UNAUTHORIZED',
+                    'response_message' => 'Unauthorized access. Invalid application token.',
+                    'response_type' => 'error',
+                    'status' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            $agentCount = AdAgent::where('status', 1)->count();
+            Log::info('Agent count api called. Count : ' . $agentCount);
+
+            return response()->json([
+                'response_title' => 'SUCCESS',
+                'response_message' => 'Agent count retrieved successfully',
+                'response_type' => 'success',
+                'status' => true,
+                'data' => [
+                    'active_agent_count' => $agentCount,
+                ],
+            ]);
+        } catch (\Throwable $th) {
+            Log::error('Agent count api FAILED: ' . $th->getMessage());
+
+            return response()->json([
+                'response_title' => 'ERROR',
+                'response_message' => $th->getMessage(),
+                'response_type' => 'error',
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
 }
