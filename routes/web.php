@@ -312,6 +312,10 @@ Route::middleware(['auth', 'permission', 'force.password.change'/* 'ensure.branc
     Route::get('/reports/monthly-agent-review/export-pdf', [ReportController::class, 'exportMonthlyAgentReviewPdf'])->name('reports.monthlyAgentReview.exportPdf');
 
     Route::get('/reports/all-agent-performance', [ReportController::class, 'allAgentPerformanceIndex'])->name('reports.allAgentPerformance.index');
+
+    Route::get('/reports/sku-target-vs-actual', [ReportController::class, 'skuTargetVsActualIndex'])->name('reports.skuTargetVsActual.index');
+    Route::post('/api/reports/sku-target-vs-actual/data', [ReportController::class, 'getSkuTargetVsActualData'])->name('reports.skuTargetVsActual.data');
+    Route::get('/reports/sku-target-vs-actual/export-pdf', [ReportController::class, 'exportSkuTargetVsActualPdf'])->name('reports.skuTargetVsActual.exportPdf');
     Route::post('/api/reports/all-agent-performance/data', [ReportController::class, 'getAllAgentPerformanceData'])->name('reports.allAgentPerformance.data');
     Route::get('/reports/all-agent-performance/export-pdf', [ReportController::class, 'exportAllAgentPerformancePdf'])->name('reports.allAgentPerformance.exportPdf');
 
